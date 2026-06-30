@@ -9,73 +9,100 @@
 <div class="container-fluid py-4">
     <ModuleBanner Icon="speedometer2"
                   Title="Administration Hub"
-                  Subtitle="Every DLD operational surface in one place — from EWRS risk monitoring through to PDPL compliance.">
+                  Subtitle="Operational overview plus the admin tools that have no dedicated sidebar entry. Every other admin surface now lives in the sidebar under Administration.">
         <ActionsContent>
             <span class="admin-env-badge"><span class="dot"></span> Live · DLD</span>
         </ActionsContent>
     </ModuleBanner>
 
-    @* ===== KPI status strip — at-a-glance operational health ===== *@
-    <div class="row g-3 mb-4 admin-kpi">
-        <div class="col-6 col-lg-3">
-            <KpiCard Title="High-Risk Projects" Value="@K(_d?.TotalHighRiskProjects)" Icon="exclamation-triangle" Color="danger" />
-        </div>
-        <div class="col-6 col-lg-3">
-            <KpiCard Title="Active Alerts" Value="@K(_d?.TotalActiveAlerts)" Icon="bell" Color="warning" />
-        </div>
-        <div class="col-6 col-lg-3">
-            <KpiCard Title="Escrow Shortfalls" Value="@K(_d?.ProjectsWithEscrowShortfall)" Icon="safe2" Color="info" />
-        </div>
-        <div class="col-6 col-lg-3">
-            <KpiCard Title="Unacknowledged" Value="@K(_d?.UnacknowledgedAlerts)" Icon="inbox" Color="primary" />
-        </div>
-    </div>
+    @* Tab strip — swap between the operational overview and the two admin tools
+       that aren't surfaced in the sidebar. Tool panels are mounted only while
+       their tab is active so their charts size correctly and dispose on switch. *@
+    <ul class="nav nav-tabs admin-hub-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link @TabClass("overview")" role="tab"
+                    aria-selected="@(_tab == "overview")" @onclick='() => SetTab("overview")'>
+                <i class="bi bi-speedometer2 me-1"></i> Overview
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link @TabClass("playbooks")" role="tab"
+                    aria-selected="@(_tab == "playbooks")" @onclick='() => SetTab("playbooks")'>
+                <i class="bi bi-journal-check me-1"></i> EWRS Playbooks
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link @TabClass("compare")" role="tab"
+                    aria-selected="@(_tab == "compare")" @onclick='() => SetTab("compare")'>
+                <i class="bi bi-bar-chart-steps me-1"></i> Developer Comparison
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link @TabClass("ai-models")" role="tab"
+                    aria-selected="@(_tab == "ai-models")" @onclick='() => SetTab("ai-models")'>
+                <i class="bi bi-cpu me-1"></i> AI Models
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link @TabClass("fabric")" role="tab"
+                    aria-selected="@(_tab == "fabric")" @onclick='() => SetTab("fabric")'>
+                <i class="bi bi-diagram-3 me-1"></i> Fabric / OneLake
+            </button>
+        </li>
+    </ul>
 
-    @foreach (var group in _groups)
+    @if (_tab == "overview")
     {
-        <section class="mb-4">
-            <div class="admin-group-head">
-                <i class="bi @group.Icon" aria-hidden="true"></i>
-                <h2 class="admin-group-title">@group.Title</h2>
+        <div class="row g-3 admin-kpi">
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="High-Risk Projects" Value="@K(_d?.TotalHighRiskProjects)" Icon="exclamation-triangle" Color="danger" />
             </div>
-            <div class="row g-3">
-                @foreach (var item in group.Items)
-                {
-                    var badge = Badge(item.Href);
-                    <div class="col-sm-6 col-md-4 col-xl-3">
-                        <a href="@item.Href" class="admin-tile"
-                           style="@(badge is not null ? $"--tile-status: var(--bs-{badge.Value.Color});" : "")">
-                            <div class="admin-tile-icon"><i class="bi @item.Icon" aria-hidden="true"></i></div>
-                            <div class="admin-tile-body">
-                                <div class="admin-tile-title">
-                                    <span>@item.Title</span>
-                                    @if (badge is not null)
-                                    {
-                                        <span class="admin-tile-count text-bg-@badge.Value.Color">@badge.Value.Count</span>
-                                    }
-                                </div>
-                                <div class="admin-tile-desc">@item.Description</div>
-                                <div class="admin-tile-ref">@item.RfpRef</div>
-                            </div>
-                            <i class="bi bi-chevron-right admin-tile-chev" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                }
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Active Alerts" Value="@K(_d?.TotalActiveAlerts)" Icon="bell" Color="warning" />
             </div>
-        </section>
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Escrow Shortfalls" Value="@K(_d?.ProjectsWithEscrowShortfall)" Icon="safe2" Color="info" />
+            </div>
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Unacknowledged" Value="@K(_d?.UnacknowledgedAlerts)" Icon="inbox" Color="primary" />
+            </div>
+        </div>
+        <p class="text-muted small mt-3 mb-0">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+            Risk &amp; Compliance and Developer Oversight have their own entries in the
+            sidebar under <strong>Administration</strong>. The tabs above are the tools
+            without a dedicated sidebar entry.
+        </p>
+    }
+    else if (_tab == "playbooks")
+    {
+        <PlaybooksPanel />
+    }
+    else if (_tab == "compare")
+    {
+        <DeveloperComparisonPanel />
+    }
+    else if (_tab == "ai-models")
+    {
+        <AIModelsPanel />
+    }
+    else if (_tab == "fabric")
+    {
+        <FabricStatusPanel />
     }
 </div>
 
 @code {
     private EwrsDashboardData? _d;
+    private string _tab = "overview";
 
-    private record AdminItem(string Href, string Icon, string Title, string Description, string RfpRef);
-    private record AdminGroup(string Title, string Icon, AdminItem[] Items);
+    private string TabClass(string tab) => _tab == tab ? "active" : "";
+    private void SetTab(string tab) => _tab = tab;
 
     protected override async Task OnInitializedAsync()
     {
         // Same resilient pattern as the EWRS page: try the AdminAPI, fall back to
-        // seeded fixtures so the landing always shows live operational counts.
+        // seeded fixtures so the overview always shows live operational counts.
         try
         {
             var login = await Api.LoginAsync("admin@dld.gov.ae", "Admin@DLD2026!");
@@ -87,48 +114,4 @@
     }
 
     private static string K(int? v) => v?.ToString("N0") ?? "—";
-
-    // Live status badge for tiles that map to a monitored count.
-    private (int Count, string Color)? Badge(string href) => href switch
-    {
-        "/admin/ewrs"        => (_d?.TotalActiveAlerts ?? 0,           (_d?.TotalActiveAlerts ?? 0) > 0           ? "warning" : "secondary"),
-        "/admin/ewrs/alerts" => (_d?.UnacknowledgedAlerts ?? 0,        (_d?.UnacknowledgedAlerts ?? 0) > 0        ? "danger"  : "secondary"),
-        "/admin/escrow"      => (_d?.ProjectsWithEscrowShortfall ?? 0, (_d?.ProjectsWithEscrowShortfall ?? 0) > 0 ? "info"    : "secondary"),
-        _ => null
-    };
-
-    private readonly AdminGroup[] _groups = new AdminGroup[]
-    {
-        new("Risk & compliance", "bi-shield-exclamation", new AdminItem[]
-        {
-            new("/admin/ewrs", "bi-bell", "EWRS Dashboard",
-                "Live risk alerts, 4-level escalation, project risk heatmap.", "Section 8"),
-            new("/admin/ewrs/alerts", "bi-list-check", "Risk alert queue",
-                "Acknowledge, resolve, and run playbook checklists.", "FR-EWRS 8.2"),
-            new("/admin/playbooks", "bi-journal-check", "EWRS playbooks",
-                "Edit response SOPs per indicator.", "Section 8.3"),
-            new("/admin/escrow", "bi-bank", "Escrow monitoring",
-                "Balance, adequacy ratio, monthly PDF reports.", "ESC-001 · 8.4"),
-            new("/admin/audit", "bi-clipboard-data", "Audit trail",
-                "Immutable change log across the platform.", "Section 10.3"),
-        }),
-
-        new("Developer performance & content", "bi-star", new AdminItem[]
-        {
-            new("/admin/developers", "bi-people", "Developer rating",
-                "Composite scoring, leaderboard, trend analysis.", "Section 9"),
-            new("/admin/developers/compare", "bi-bar-chart-steps", "Developer comparison",
-                "Side-by-side scoring for up to 4 developers.", "Section 9.1.2"),
-            new("/admin/cms", "bi-file-earmark-text", "Content management",
-                "Bilingual CMS with staging, preview, and rollback.", "FR001 · FR002"),
-        }),
-
-        new("Platform operations", "bi-gear", new AdminItem[]
-        {
-            new("/admin/ai-models", "bi-cpu", "AI model performance",
-                "Live metrics, fallback status, query audit log.", "Section 5.3 · FR005"),
-            new("/admin/fabric", "bi-diagram-3", "Fabric / OneLake",
-                "Active mode, Gold semantic models, Data Factory freshness.", "v1.3 §11.4"),
-        })
-    };
 }

@@ -155,6 +155,19 @@ tr:hover .row-actions { opacity: 1; }
 
 /* Sidebar nav items */
 .sidebar .section-title { font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; color: rgba(255,255,255,.4); padding: 1.25rem 1.25rem .5rem; font-weight: 600; }
+/* Audience separators (Public / Investor / Administration). A top rule + brighter,
+   bolder label makes the three role areas read as distinct blocks rather than just
+   another collapsible group header. */
+.sidebar .nav-audience { margin-top: .85rem; padding-top: .95rem; border-top: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.62); font-weight: 700; letter-spacing: .15em; }
+.sidebar .nav-audience:first-child { margin-top: 0; padding-top: .6rem; border-top: none; }
+.sidebar.collapsed .nav-audience { border-top-color: rgba(255,255,255,.14); }
+
+/* Administration-hub tab strip (underline tabs, DLD-green active) */
+.admin-hub-tabs { border-bottom: 2px solid #e5e7eb; gap: .25rem; flex-wrap: wrap; }
+.admin-hub-tabs .nav-link { color: #5b6b7b; font-weight: 600; font-size: .9rem; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; background: none; }
+.admin-hub-tabs .nav-link:hover { color: #066735; border-bottom-color: rgba(6,103,53,.35); }
+.admin-hub-tabs .nav-link.active { color: #066735; border-bottom-color: #066735; background: none; }
+.admin-hub-tabs .nav-link:focus-visible { outline: 2px solid #066735; outline-offset: 2px; }
 .sidebar-nav-link { display: flex; align-items: center; gap: .75rem; padding: .65rem 1.25rem; color: rgba(255,255,255,.8); text-decoration: none; font-size: .875rem; font-weight: 500; transition: all .15s ease; border-left: 3px solid transparent; }
 .sidebar-nav-link:hover { background: rgba(255,255,255,.1); color: #fff; border-left-color: rgba(255,255,255,.3); }
 .sidebar-nav-link.active { background: rgba(255,255,255,.15); color: #fff; border-left-color: #34C38F; }

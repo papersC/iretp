@@ -44,16 +44,23 @@
 <nav id="app-sidebar" class="sidebar d-flex flex-column">
     <div class="flex-grow-1 py-3">
 
+        @* ===== AUDIENCE: Public (open to anyone, no sign-in) ===== *@
+        <div class="section-title nav-audience">@T["nav.areaPublic"]</div>
+
         <a href="/" class="sidebar-nav-link @NavActive("/")">
             <i class="bi bi-speedometer2"></i><span class="nav-label">@T["nav.dashboard"]</span>
         </a>
 
-        <details class="nav-section" open="@PublicOpen">
+        @* Market Data — the core transactional figures investors hit most. *@
+        <details class="nav-section" open="@MarketOpen">
             <summary class="section-title">
-                <span>@T["nav.publicPortal"]</span><i class="bi bi-chevron-right chevron"></i>
+                <span>@T["nav.marketData"]</span><i class="bi bi-chevron-right chevron"></i>
             </summary>
             <a href="/map" class="sidebar-nav-link @NavActive("/map")">
                 <i class="bi bi-map"></i><span class="nav-label">@T["nav.map"]</span>
+            </a>
+            <a href="/transactions" class="sidebar-nav-link @NavActive("/transactions")">
+                <i class="bi bi-receipt"></i><span class="nav-label">@T["nav.transactions"]</span>
             </a>
             <a href="/price-index" class="sidebar-nav-link @NavActive("/price-index")">
                 <i class="bi bi-graph-up-arrow"></i><span class="nav-label">@T["nav.priceIndex"]</span>
@@ -61,9 +68,16 @@
             <a href="/rental-index" class="sidebar-nav-link @NavActive("/rental-index")">
                 <i class="bi bi-house"></i><span class="nav-label">@T["nav.rentalIndex"]</span>
             </a>
-            <a href="/transactions" class="sidebar-nav-link @NavActive("/transactions")">
-                <i class="bi bi-receipt"></i><span class="nav-label">@T["nav.transactions"]</span>
+            <a href="/mortgage" class="sidebar-nav-link @NavActive("/mortgage")">
+                <i class="bi bi-bank"></i><span class="nav-label">@T["nav.mortgage"]</span>
             </a>
+        </details>
+
+        @* Projects & Developers — the supply-side entities and who's behind them. *@
+        <details class="nav-section" open="@EntitiesOpen">
+            <summary class="section-title">
+                <span>@T["nav.entities"]</span><i class="bi bi-chevron-right chevron"></i>
+            </summary>
             <a href="/projects" class="sidebar-nav-link @NavActive("/projects")">
                 <i class="bi bi-buildings"></i><span class="nav-label">@T["nav.projects"]</span>
             </a>
@@ -73,43 +87,100 @@
             <a href="/developers/scorecards" class="sidebar-nav-link @NavActive("/developers/scorecards")">
                 <i class="bi bi-award"></i><span class="nav-label">@T["nav.scorecards"]</span>
             </a>
+            <a href="/beneficial-ownership" class="sidebar-nav-link @NavActive("/beneficial-ownership")">
+                <i class="bi bi-diagram-3"></i><span class="nav-label">@T["nav.beneficialOwnership"]</span>
+            </a>
+        </details>
+
+        @* Insights & Analytics — derived intelligence on top of the raw market data. *@
+        <details class="nav-section" open="@InsightsOpen">
+            <summary class="section-title">
+                <span>@T["nav.insights"]</span><i class="bi bi-chevron-right chevron"></i>
+            </summary>
             <a href="/analytics" class="sidebar-nav-link @NavActive("/analytics")">
                 <i class="bi bi-bar-chart-line"></i><span class="nav-label">@T["nav.analytics"]</span>
             </a>
             <a href="/analytics/compare" class="sidebar-nav-link @NavActive("/analytics/compare")">
                 <i class="bi bi-bar-chart-steps"></i><span class="nav-label">@T["nav.compare"]</span>
             </a>
-            <a href="/ai-agent" class="sidebar-nav-link @NavActive("/ai-agent")">
-                <i class="bi bi-robot"></i><span class="nav-label">@T["nav.aiAgent"]</span>
+            <a href="/benchmark" class="sidebar-nav-link @NavActive("/benchmark")">
+                <i class="bi bi-globe2"></i><span class="nav-label">@T["nav.benchmark"]</span>
+            </a>
+            <a href="/esg" class="sidebar-nav-link @NavActive("/esg")">
+                <i class="bi bi-tree"></i><span class="nav-label">@T["nav.esg"]</span>
             </a>
             <a href="/greti" class="sidebar-nav-link @NavActive("/greti")">
                 <i class="bi bi-trophy-fill"></i><span class="nav-label">@T["nav.greti"]</span>
             </a>
         </details>
 
-        <details class="nav-section" open="@InvestorOpen">
+        @* Tools & Data — cross-cutting ways to query the platform (AI + programmatic). *@
+        <details class="nav-section" open="@ToolsOpen">
             <summary class="section-title">
-                <span>@T["nav.investor"]</span><i class="bi bi-chevron-right chevron"></i>
+                <span>@T["nav.toolsData"]</span><i class="bi bi-chevron-right chevron"></i>
             </summary>
-            <a href="/watchlist" class="sidebar-nav-link @NavActive("/watchlist")">
-                <i class="bi bi-bookmark-star"></i><span class="nav-label">@T["nav.watchlist"]</span>
-            </a>
-            <a href="/alerts" class="sidebar-nav-link @NavActive("/alerts")">
-                <i class="bi bi-bell"></i><span class="nav-label">@T["nav.alerts"]</span>
-            </a>
-            <a href="/notifications" class="sidebar-nav-link @NavActive("/notifications")">
-                <i class="bi bi-inbox"></i><span class="nav-label">@T["nav.notifications"]</span>
+            <a href="/ai-agent" class="sidebar-nav-link @NavActive("/ai-agent")">
+                <i class="bi bi-robot"></i><span class="nav-label">@T["nav.aiAgent"]</span>
             </a>
             <a href="/api-portal" class="sidebar-nav-link @NavActive("/api-portal")">
                 <i class="bi bi-code-slash"></i><span class="nav-label">@T["nav.apiPortal"]</span>
             </a>
         </details>
 
-        @* Single entry point — the Administrator Hub (/admin) tiles out to every
-           admin surface (EWRS, escrow, developer rating, CMS, AI models, Fabric,
-           audit), so the sidebar carries one link instead of the full list.
-           The section-title is the (non-collapsible) group divider. *@
-        <div class="section-title">@T["nav.admin"]</div>
+        @* ===== AUDIENCE: Investor (requires sign-in; personal saved surfaces) ===== *@
+        <div class="section-title nav-audience">@T["nav.areaInvestor"]</div>
+
+        <a href="/watchlist" class="sidebar-nav-link @NavActive("/watchlist")">
+            <i class="bi bi-bookmark-star"></i><span class="nav-label">@T["nav.watchlist"]</span>
+        </a>
+        <a href="/alerts" class="sidebar-nav-link @NavActive("/alerts")">
+            <i class="bi bi-bell"></i><span class="nav-label">@T["nav.alerts"]</span>
+        </a>
+        <a href="/notifications" class="sidebar-nav-link @NavActive("/notifications")">
+            <i class="bi bi-inbox"></i><span class="nav-label">@T["nav.notifications"]</span>
+        </a>
+
+        @* ===== AUDIENCE: Administration (staff only) =====
+           Direct entries to the high-traffic admin surfaces, grouped by function.
+           The hub (/admin) sits at the bottom as a catch-all for tools that have
+           no dedicated sidebar entry — nothing here is duplicated there. *@
+        <div class="section-title nav-audience">@T["nav.admin"]</div>
+
+        @* Risk & Compliance — EWRS, escrow, audit. *@
+        <details class="nav-section" open="@AdminRiskOpen">
+            <summary class="section-title">
+                <span>@T["nav.adminRisk"]</span><i class="bi bi-chevron-right chevron"></i>
+            </summary>
+            <a href="/admin/ewrs" class="sidebar-nav-link @NavActive("/admin/ewrs")">
+                <i class="bi bi-bell"></i><span class="nav-label">@T["nav.ewrs"]</span>
+            </a>
+            <a href="/admin/ewrs/alerts" class="sidebar-nav-link @NavActive("/admin/ewrs/alerts")">
+                <i class="bi bi-list-check"></i><span class="nav-label">@T["nav.ewrsAlerts"]</span>
+            </a>
+            <a href="/admin/escrow" class="sidebar-nav-link @NavActive("/admin/escrow")">
+                <i class="bi bi-bank"></i><span class="nav-label">@T["nav.escrow"]</span>
+            </a>
+            <a href="/admin/audit" class="sidebar-nav-link @NavActive("/admin/audit")">
+                <i class="bi bi-clipboard-data"></i><span class="nav-label">@T["nav.audit"]</span>
+            </a>
+        </details>
+
+        @* Developer Oversight — ratings + content governance. *@
+        <details class="nav-section" open="@AdminDevOpen">
+            <summary class="section-title">
+                <span>@T["nav.adminDev"]</span><i class="bi bi-chevron-right chevron"></i>
+            </summary>
+            <a href="/admin/developers" class="sidebar-nav-link @NavActive("/admin/developers")">
+                <i class="bi bi-people"></i><span class="nav-label">@T["nav.developerRating"]</span>
+            </a>
+            <a href="/admin/cms" class="sidebar-nav-link @NavActive("/admin/cms")">
+                <i class="bi bi-file-earmark-text"></i><span class="nav-label">@T["nav.cms"]</span>
+            </a>
+        </details>
+
+        @* Hub sits at the bottom of the section — a catch-all for the admin tools
+           that have no dedicated sidebar entry (EWRS playbooks, developer
+           comparison, AI models, Fabric/OneLake), reached as tabs inside it. *@
         <a href="/admin" class="sidebar-nav-link @NavActive("/admin")">
             <i class="bi bi-grid-1x2"></i><span class="nav-label">@T["nav.adminHub"]</span>
         </a>
@@ -157,11 +228,13 @@
         Nav.LocationChanged += OnLocationChanged;
         Ui.OnChange += HandleUiChange;
         _currentPath = new Uri(Nav.Uri).AbsolutePath;
+        _activeHref = ComputeActiveHref();
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         _currentPath = new Uri(e.Location).AbsolutePath;
+        _activeHref = ComputeActiveHref();
         InvokeAsync(StateHasChanged);
     }
 
@@ -173,26 +246,71 @@
         Ui.OnChange -= HandleUiChange;
     }
 
-    private string NavActive(string href)
-    {
-        if (href == "/") return _currentPath == "/" ? "active" : "";
-        // "/admin" is now the single admin entry — keep it highlighted across the
-        // whole /admin/* area (the individual links were removed from the sidebar).
-        return _currentPath.StartsWith(href, StringComparison.OrdinalIgnoreCase) ? "active" : "";
-    }
+    // A link is "active" only when it is the single most-specific match for the
+    // current path. Resolving the best match (longest matching href) up-front
+    // avoids the old prefix bug where, e.g., /analytics stayed highlighted on
+    // /analytics/compare, or the admin hub lit up across the whole /admin/* area.
+    private string NavActive(string href) =>
+        string.Equals(href, _activeHref, StringComparison.OrdinalIgnoreCase) ? "active" : "";
 
     // Accordion sidebar: a collapsible group is expanded only when the current
-    // page lives inside it. Dashboard ("/") and the admin hub belong to no group,
-    // so both collapse there. Manual expand/collapse (closing siblings) is wired
-    // up in JS — see the accordion handler in App.razor.
-    private static readonly string[] PublicRoutes =
-        { "/map", "/price-index", "/rental-index", "/transactions", "/projects",
-          "/developers", "/analytics", "/ai-agent", "/greti" };
-    private static readonly string[] InvestorRoutes =
-        { "/watchlist", "/alerts", "/notifications", "/api-portal" };
+    // page lives inside it. Standalone links (Dashboard "/", admin hub "/admin")
+    // belong to no group. Manual expand/collapse (closing siblings) is wired up
+    // in JS — see the accordion handler in App.razor.
+    // Each array mirrors one <details> group in the markup above, in the same order.
+    private static readonly string[] MarketRoutes =
+        { "/map", "/transactions", "/price-index", "/rental-index", "/mortgage" };
+    private static readonly string[] EntitiesRoutes =
+        { "/projects", "/developers", "/developers/scorecards", "/beneficial-ownership" };
+    private static readonly string[] InsightsRoutes =
+        { "/analytics", "/analytics/compare", "/benchmark", "/esg", "/greti" };
+    private static readonly string[] WorkspaceRoutes =
+        { "/watchlist", "/alerts", "/notifications" };
+    private static readonly string[] ToolsRoutes =
+        { "/ai-agent", "/api-portal" };
+    private static readonly string[] AdminRiskRoutes =
+        { "/admin/ewrs", "/admin/ewrs/alerts", "/admin/escrow", "/admin/audit" };
+    private static readonly string[] AdminDevRoutes =
+        { "/admin/developers", "/admin/cms" };
 
-    private bool PublicOpen   => PublicRoutes.Any(r => _currentPath.StartsWith(r, StringComparison.OrdinalIgnoreCase));
-    private bool InvestorOpen => InvestorRoutes.Any(r => _currentPath.StartsWith(r, StringComparison.OrdinalIgnoreCase));
+    // Segment-aware containment: the path is the route itself or a child of it.
+    private bool GroupOpen(string[] routes) => routes.Any(r => IsUnder(_currentPath, r));
+
+    private static bool IsUnder(string path, string route) =>
+        string.Equals(path, route, StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith(route + "/", StringComparison.OrdinalIgnoreCase);
+
+    private bool MarketOpen    => GroupOpen(MarketRoutes);
+    private bool EntitiesOpen  => GroupOpen(EntitiesRoutes);
+    private bool InsightsOpen  => GroupOpen(InsightsRoutes);
+    private bool ToolsOpen     => GroupOpen(ToolsRoutes);
+    private bool AdminRiskOpen => GroupOpen(AdminRiskRoutes);
+    private bool AdminDevOpen  => GroupOpen(AdminDevRoutes);
+
+    // Every concrete link target in the sidebar. Declared after the group arrays
+    // so the static initializer can fold them together (textual order matters).
+    private static readonly string[] AllNavHrefs =
+        new[] { "/", "/admin" }
+            .Concat(MarketRoutes).Concat(EntitiesRoutes).Concat(InsightsRoutes)
+            .Concat(WorkspaceRoutes).Concat(ToolsRoutes)
+            .Concat(AdminRiskRoutes).Concat(AdminDevRoutes)
+            .ToArray();
+
+    private string _activeHref = "/";
+
+    // Pick the longest href that contains the current path. "/" only matches the
+    // root exactly; admin pages not surfaced in the sidebar (e.g. /admin/playbooks)
+    // fall back to the next-longest match, which is the hub "/admin".
+    private string ComputeActiveHref()
+    {
+        var best = "";
+        foreach (var h in AllNavHrefs)
+        {
+            var matches = h == "/" ? _currentPath == "/" : IsUnder(_currentPath, h);
+            if (matches && h.Length > best.Length) best = h;
+        }
+        return best;
+    }
 
     private async Task ToggleSidebar() => await JS.InvokeVoidAsync("sidebarInterop.toggle");
     private async Task CloseSidebar()  => await JS.InvokeVoidAsync("sidebarInterop.close");

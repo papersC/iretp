@@ -1,0 +1,207 @@
+@* Reusable Fabric / OneLake status view. No @@page / @@rendermode so it can be hosted
+   both by the /admin/fabric route AND embedded as a tab in the admin hub. *@
+@inject AdminApiClient AdminApi
+@inject WebApiClient Api
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="diagram-3"
+                  Title="Microsoft Fabric / OneLake"
+                  Subtitle="RFP v1.3 §11.4 — alignment with DLD's existing data ecosystem. Active source mode, published Gold-layer semantic models, and Data Factory freshness watermark.">
+        <ActionsContent>
+            <span class="admin-env-badge"><span class="dot"></span> Live</span>
+            <button class="btn btn-outline-primary btn-sm" @onclick="Refresh">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </ActionsContent>
+    </ModuleBanner>
+
+    @if (_loading)
+    {
+        <SkeletonKpiGrid Count="4" />
+        <div class="mt-4"><SkeletonTable Rows="5" Columns="4" WithCard="true" /></div>
+    }
+    else if (_status is null)
+    {
+        <NetworkError Service="Fabric / OneLake admin"
+                      Detail="Ensure the Admin API is running and you are signed in as a Supervisor or System Administrator." />
+    }
+    else
+    {
+        <!-- Status cards -->
+        <div class="row g-3 mb-4 admin-kpi">
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Active mode" Value="@_status.Mode.ToString()" Icon="diagram-3" Color="primary" />
+            </div>
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Connectivity" Value="@(_status.Available ? "Reachable" : "Unreachable")" Icon="hdd-network" Color="@(_status.Available ? "success" : "danger")" />
+            </div>
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Region" Value="@(_status.Region ?? "—")" Icon="globe" Color="info" />
+            </div>
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Pipeline status" Value="@(_freshness?.LastPipelineStatus ?? "—")" Icon="arrow-repeat" Color="primary" />
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_status.Detail))
+        {
+            <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>@_status.Detail</div>
+        }
+
+        <!-- Workspace metadata -->
+        <div class="admin-card mb-4">
+            <div class="admin-card-head"><h2 class="admin-card-title"><i class="bi bi-hdd-network"></i> Workspace metadata</h2></div>
+            <div class="admin-card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-3">Workspace ID</dt>
+                    <dd class="col-sm-9"><code>@(_status.WorkspaceId ?? "(not configured)")</code></dd>
+                    <dt class="col-sm-3">Lakehouse ID</dt>
+                    <dd class="col-sm-9"><code>@(_status.LakehouseId ?? "(not configured)")</code></dd>
+                    <dt class="col-sm-3">Last probed</dt>
+                    <dd class="col-sm-9">@_status.ProbedAtUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Freshness -->
+        @if (_freshness is not null)
+        {
+            <div class="admin-card mb-4">
+                <div class="admin-card-head"><h2 class="admin-card-title"><i class="bi bi-clock-history"></i> Freshness</h2></div>
+                <div class="admin-card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-3">Gold-layer watermark</dt>
+                        <dd class="col-sm-9">@FormatWatermark(_freshness.GoldLayerLastWriteUtc)</dd>
+                        <dt class="col-sm-3">Silver-layer watermark</dt>
+                        <dd class="col-sm-9">@FormatWatermark(_freshness.SilverLayerLastWriteUtc)</dd>
+                        <dt class="col-sm-3">Transaction lag (§10.1 budget 24 h)</dt>
+                        <dd class="col-sm-9">
+                            @if (_freshness.TransactionLag is { } lag)
+                            {
+                                <span class="@(lag > TimeSpan.FromHours(24) ? "text-danger fw-bold" : "text-success")">
+                                    @FormatLag(lag)
+                                </span>
+                            }
+                            else { <span class="text-muted">—</span> }
+                        </dd>
+                        <dt class="col-sm-3">KPI lag (FR-003 budget 15 min)</dt>
+                        <dd class="col-sm-9">
+                            @if (_freshness.KpiLag is { } kpi)
+                            {
+                                <span class="@(kpi > TimeSpan.FromMinutes(15) ? "text-warning fw-bold" : "text-success")">
+                                    @FormatLag(kpi)
+                                </span>
+                            }
+                            else { <span class="text-muted">—</span> }
+                        </dd>
+                        <dt class="col-sm-3">Last pipeline run</dt>
+                        <dd class="col-sm-9"><code>@(_freshness.LastPipelineRunId ?? "—")</code></dd>
+                    </dl>
+                </div>
+            </div>
+        }
+
+        <!-- Semantic models -->
+        <div class="admin-card">
+            <div class="admin-card-head flex-column align-items-start gap-0">
+                <h2 class="admin-card-title"><i class="bi bi-diagram-3"></i> Gold-layer semantic models consumed by IRETP</h2>
+                <small class="text-muted">Per Architecture Integration Map §7 — see <code>docs/ARCHITECTURE_INTEGRATION_MAP.md</code></small>
+            </div>
+            @if (_models is null || _models.Count == 0)
+            {
+                <EmptyState Icon="diagram-3"
+                            Title="No semantic models surfaced"
+                            Message="The Fabric adapter has not published a catalogue. Check Fabric:Mode in appsettings.json." />
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Layer</th>
+                                <th>Measures</th>
+                                <th>Dimensions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in _models)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@m.Name</strong><br />
+                                        <small class="text-muted">@m.Description</small>
+                                    </td>
+                                    <td><span class="badge bg-warning text-dark">@m.Layer</span></td>
+                                    <td>
+                                        @foreach (var measure in m.Measures)
+                                        {
+                                            <span class="badge bg-light text-dark border me-1 mb-1">@measure</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @foreach (var dim in m.Dimensions)
+                                        {
+                                            <span class="badge bg-light text-dark border me-1 mb-1">@dim</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private FabricStatusItem? _status;
+    private List<FabricSemanticModelItem>? _models;
+    private FabricFreshnessItem? _freshness;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Self-authenticate as the seeded admin so the gated AdminAPI calls
+        // carry a bearer token — same pattern as the other internal pages.
+        try
+        {
+            var login = await Api.LoginAsync("admin@dld.gov.ae", "Admin@DLD2026!");
+            if (login != null) AdminApi.SetToken(login.AccessToken);
+        }
+        catch { /* backend offline — page shows the NetworkError state */ }
+
+        await Refresh();
+    }
+
+    private async Task Refresh()
+    {
+        _loading = true;
+        try
+        {
+            var statusTask = AdminApi.GetFabricStatusAsync();
+            var modelsTask = AdminApi.GetFabricSemanticModelsAsync();
+            var freshnessTask = AdminApi.GetFabricFreshnessAsync();
+            await Task.WhenAll(statusTask, modelsTask, freshnessTask);
+            _status = statusTask.Result;
+            _models = modelsTask.Result;
+            _freshness = freshnessTask.Result;
+        }
+        finally { _loading = false; }
+    }
+
+    private static string FormatWatermark(DateTime? watermark)
+        => watermark.HasValue
+            ? $"{watermark.Value:yyyy-MM-dd HH:mm:ss} UTC"
+            : "—";
+
+    private static string FormatLag(TimeSpan lag)
+    {
+        if (lag < TimeSpan.FromMinutes(1)) return $"{(int)lag.TotalSeconds} sec";
+        if (lag < TimeSpan.FromHours(1)) return $"{(int)lag.TotalMinutes} min";
+        if (lag < TimeSpan.FromDays(1)) return $"{lag.TotalHours:F1} h";
+        return $"{lag.TotalDays:F1} d";
+    }
+}
