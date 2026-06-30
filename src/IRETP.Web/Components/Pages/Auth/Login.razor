@@ -1,0 +1,109 @@
+@page "/auth/login"
+@rendermode InteractiveServer
+@inject WebApiClient Api
+@inject AdminApiClient AdminApi
+@inject AuthStateService Auth
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Login</PageTitle>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold" style="color: var(--primary-color);">IRETP Login</h3>
+                        <p class="text-muted">Dubai Land Department</p>
+                    </div>
+
+                    @if (_error != null)
+                    {
+                        <div class="alert alert-danger">@_error</div>
+                    }
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" type="email" class="form-control" @bind="_email" placeholder="you@example.com" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input id="password" type="password" class="form-control" @bind="_password" />
+                    </div>
+                    <button class="btn btn-primary w-100 py-2" @onclick="LoginAsync" disabled="@_submitting">
+                        @if (_submitting) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                        Login
+                    </button>
+                    <div class="text-center mt-3">
+                        <a href="/auth/register">Don't have an account? Register</a>
+                    </div>
+
+                    <hr />
+                    <div class="text-muted small text-center">
+                        <p class="mb-1">Demo credentials:</p>
+                        <code>admin@@dld.gov.ae / Admin@@DLD2026!</code>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-link p-0" @onclick="UseDemoLogin">Use demo login (offline mode)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _email = "";
+    private string _password = "";
+    private string? _error;
+    private bool _submitting;
+
+    private async Task LoginAsync()
+    {
+        _error = null;
+        _submitting = true;
+        try
+        {
+            var result = await Api.LoginAsync(_email, _password);
+            if (result != null)
+            {
+                await PersistAndRedirect(result.AccessToken, _email,
+                    $"{result.User?.FirstName} {result.User?.LastName}".Trim());
+            }
+            else
+            {
+                _error = "Invalid email or password.";
+            }
+        }
+        catch
+        {
+            // Fallback demo login when the backend isn't reachable.
+            if (_email.Equals("admin@dld.gov.ae", StringComparison.OrdinalIgnoreCase) && _password == "Admin@DLD2026!")
+                await PersistAndRedirect("demo-offline-token", _email, "DLD Administrator");
+            else
+                _error = "Connection error. Try the demo login link below.";
+        }
+        _submitting = false;
+    }
+
+    private Task UseDemoLogin()
+    {
+        _email = "admin@dld.gov.ae";
+        _password = "Admin@DLD2026!";
+        return LoginAsync();
+    }
+
+    private async Task PersistAndRedirect(string token, string email, string displayName)
+    {
+        Api.SetToken(token);
+        AdminApi.SetToken(token);
+        Auth.SetToken(token, email, displayName);
+        try
+        {
+            await JS.InvokeVoidAsync("iretpUi.setSessionCookie", Auth.Encode());
+        }
+        catch { }
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+}

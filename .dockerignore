@@ -1,0 +1,37 @@
+# Build output
+**/bin/
+**/obj/
+**/out/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Git + CI
+.git/
+.gitignore
+.github/
+.claude/
+
+# Deployment artifacts
+**/publish/
+*.tar
+*.zip
+
+# Local-only config
+**/appsettings.*.Development.json
+**/appsettings.Development.json.local
+
+# Tests
+tests/
+TestResults/
+
+# Editor
+*.swp
+.DS_Store
+
+# Docker
+docker-compose.override.yml

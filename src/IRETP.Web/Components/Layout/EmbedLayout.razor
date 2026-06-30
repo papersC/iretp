@@ -1,0 +1,24 @@
+@inherits LayoutComponentBase
+
+@*
+    Minimal chrome-free layout for iframe-embeddable views (RFP AN006). Drops
+    the global navigation + header widgets so the embed fits inside a host
+    page without visual conflicts, while still loading Bootstrap + Chart.js
+    from the main app bundle.
+*@
+
+<div class="iretp-embed-root">
+    @Body
+</div>
+
+<style>
+    .iretp-embed-root {
+        min-height: 100vh;
+        background: #f7f7f9;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .iretp-embed-root .embed-frame {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+</style>

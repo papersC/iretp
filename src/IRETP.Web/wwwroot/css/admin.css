@@ -1,0 +1,136 @@
+/* ===================================================================
+   Refined Console — template-grade admin styling for IRETP /admin/*
+   Benchmarked on premium admin kits (DashStack / SnowUI): soft layered
+   shadows, generous radii, tinted icon chips, airy tables, soft status
+   pills. Class-namespaced .admin-* so it never leaks to public pages.
+   =================================================================== */
+
+:root {
+    --adm-radius:       14px;
+    --adm-radius-sm:    10px;
+    --adm-border:       #eceef2;
+    --adm-border-soft:  #f2f4f7;
+    --adm-shadow:       0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+    --adm-shadow-hover: 0 8px 18px rgba(16,24,40,.10), 0 2px 6px rgba(16,24,40,.05);
+    --adm-muted:        #667085;
+    --adm-heading:      #101828;
+}
+
+/* --- Group section header (landing) --- */
+.admin-group-head {
+    display: flex; align-items: center; gap: .5rem;
+    margin: 0 0 .85rem; padding-bottom: .4rem;
+}
+.admin-group-head > .bi { color: var(--primary-color, #005B99); font-size: 1.05rem; }
+.admin-group-title {
+    margin: 0; font-size: .72rem; font-weight: 700; color: #5b6573;
+    text-transform: uppercase; letter-spacing: .06em;
+}
+
+/* --- KPI status strip — premium cards via the shared KpiCard --- */
+.admin-kpi .kpi-card {
+    background: #fff; border: 1px solid var(--adm-border); border-radius: var(--adm-radius);
+    box-shadow: var(--adm-shadow); height: 100%;
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+.admin-kpi .kpi-card:hover { box-shadow: var(--adm-shadow-hover); transform: translateY(-2px); }
+.admin-kpi .kpi-card .card-body { padding: 1.05rem 1.15rem; }
+.admin-kpi .kpi-label { font-size: .78rem; font-weight: 600; color: var(--adm-muted); text-transform: none; letter-spacing: 0; }
+.admin-kpi .kpi-value { font-size: 1.85rem; font-weight: 700; color: var(--adm-heading); line-height: 1.1; letter-spacing: -.01em; }
+.admin-kpi .kpi-icon-wrap { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+
+/* --- Navigation tile (landing) --- */
+.admin-tile {
+    position: relative; display: flex; align-items: flex-start; gap: .9rem;
+    height: 100%; padding: 1.05rem 2.1rem 1.05rem 1.15rem;
+    background: #fff; border: 1px solid var(--adm-border); border-radius: var(--adm-radius);
+    text-decoration: none; color: inherit; box-shadow: var(--adm-shadow);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    overflow: hidden;
+}
+.admin-tile::before {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 3px;
+    background: var(--tile-status, transparent);
+}
+.admin-tile:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--primary-color-rgb, 0,91,153), .30);
+    box-shadow: var(--adm-shadow-hover);
+}
+.admin-tile-icon {
+    flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--primary-color-rgb, 0,91,153), .09);
+    color: var(--primary-color, #005B99); font-size: 1.3rem;
+}
+.admin-tile-body { min-width: 0; flex: 1; }
+.admin-tile-title {
+    display: flex; align-items: center; gap: .45rem; flex-wrap: wrap;
+    font-weight: 600; color: var(--adm-heading); line-height: 1.25; font-size: .97rem;
+}
+.admin-tile-desc { font-size: .82rem; color: var(--adm-muted); margin-top: .2rem; line-height: 1.4; }
+.admin-tile-ref { font-size: .72rem; color: #5b6573; font-style: italic; margin-top: .4rem; }
+.admin-tile-count {
+    font-size: .68rem; font-weight: 700; line-height: 1; padding: .22rem .45rem;
+    border-radius: 999px; min-width: 1.35rem; text-align: center;
+}
+.admin-tile-chev {
+    position: absolute; top: 1.1rem; right: 1rem; color: #d0d5dd;
+    transition: transform .15s ease, color .15s ease;
+}
+.admin-tile:hover .admin-tile-chev { color: var(--primary-color, #005B99); transform: translateX(3px); }
+
+/* --- "Live" environment badge --- */
+.admin-env-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .78rem; font-weight: 600; color: #067647;
+    background: #ecfdf3; border: 1px solid #abefc6;
+    padding: .25rem .65rem; border-radius: 999px;
+}
+.admin-env-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: #16b364; box-shadow: 0 0 0 3px rgba(22,179,100,.18); }
+
+/* --- Content card --- */
+.admin-card {
+    background: #fff; border: 1px solid var(--adm-border); border-radius: var(--adm-radius);
+    box-shadow: var(--adm-shadow); overflow: hidden; height: 100%;
+}
+.admin-card-head {
+    display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+    padding: .85rem 1.15rem; border-bottom: 1px solid var(--adm-border-soft);
+}
+.admin-card-head .admin-card-title {
+    margin: 0; font-size: .95rem; font-weight: 600; color: var(--adm-heading);
+    display: flex; align-items: center; gap: .5rem;
+}
+.admin-card-head .admin-card-title > .bi { color: var(--primary-color, #005B99); }
+.admin-card-body { padding: 1.15rem; }
+
+/* --- Tables: airy, premium --- */
+.admin-card .table { margin-bottom: 0; }
+.admin-card .table > thead th {
+    background: #fcfcfd; color: #667085; font-weight: 600; font-size: .72rem;
+    text-transform: uppercase; letter-spacing: .04em;
+    border-bottom: 1px solid #eaecf0; padding: .7rem 1rem; white-space: nowrap;
+}
+.admin-card .table > tbody > tr > td { padding: .7rem 1rem; border-color: var(--adm-border-soft); vertical-align: middle; }
+.admin-card .table > tbody > tr:hover > td { background: #fafbfc; }
+.admin-scroll { max-height: 60vh; overflow-y: auto; }
+
+/* --- Status badges -> soft rounded pills (admin scope only) --- */
+.admin-card .badge, .admin-kpi .badge {
+    font-weight: 600; border-radius: 999px; padding: .34em .62em; font-size: .72rem; letter-spacing: .01em;
+}
+
+/* Status dot helper */
+.admin-dot { width: .55rem; height: .55rem; border-radius: 50%; display: inline-block; vertical-align: middle; }
+.admin-dot.is-danger  { background: #F46A6A; }
+.admin-dot.is-warning { background: #F1B44C; }
+.admin-dot.is-success { background: #34C38F; }
+.admin-dot.is-info    { background: #50A5F1; }
+.admin-dot.is-muted   { background: #cbd5e1; }
+
+/* --- RTL flips --- */
+[dir="rtl"] .admin-tile { padding: 1.05rem 1.15rem 1.05rem 2.1rem; }
+[dir="rtl"] .admin-tile::before { inset: 0 0 0 auto; }
+[dir="rtl"] .admin-tile-chev { right: auto; left: 1rem; }
+[dir="rtl"] .admin-tile:hover .admin-tile-chev { transform: translateX(-3px) scaleX(-1); }

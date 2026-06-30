@@ -1,0 +1,156 @@
+"""
+Financial Proposal content data for IRETP RFP DLD-IRETP-2026-001.
+Cost figures are indicative ranges — the vendor must substitute actual
+pricing before submission.  All amounts in AED.
+"""
+
+# ---------------------------------------------------------------------------
+# §14.1  Infrastructure & Hosting Setup Costs (One-Time CAPEX)
+# ---------------------------------------------------------------------------
+INFRA_CAPEX = {
+    "headers": ["Infrastructure Item", "Option A: Azure UAE North", "Option B: On-Premises", "Option C: Hybrid"],
+    "rows": [
+        ["Compute — App Service Plan / VMs (3 hosts)",       "AED 48,000",  "AED 320,000",  "AED 48,000"],
+        ["SQL Server managed / licensed",                    "AED 36,000",  "AED 180,000",  "AED 36,000"],
+        ["Redis Cache cluster",                              "AED 18,000",  "AED 85,000",   "AED 18,000"],
+        ["Azure AI Search / vector index",                   "AED 24,000",  "AED 65,000",   "AED 24,000"],
+        ["Microsoft Fabric / OneLake lakehouse tier",        "AED 42,000",  "AED 200,000",  "AED 42,000"],
+        ["Azure Blob Storage / on-prem NAS (assets/export)", "AED 12,000",  "AED 55,000",   "AED 12,000"],
+        ["WAF + Front Door / on-prem F5",                    "AED 30,000",  "AED 140,000",  "AED 30,000"],
+        ["CDN (public static assets)",                       "AED 8,000",   "AED 25,000",   "AED 8,000"],
+        ["Private endpoints / network config",               "AED 14,000",  "AED 60,000",   "AED 14,000"],
+        ["DR / secondary-region replication (≤ 4 h RPO)",   "AED 28,000",  "AED 180,000",  "AED 28,000"],
+        ["SSL certificates (wildcard, 3 yr)",                "AED 4,500",   "AED 4,500",    "AED 4,500"],
+        ["Monitoring & telemetry (Azure Monitor / Seq)",     "AED 16,000",  "AED 45,000",   "AED 16,000"],
+        ["Initial security hardening & penetration test",   "AED 55,000",  "AED 55,000",   "AED 55,000"],
+        ["TOTAL INFRA CAPEX (indicative)",                   "AED 335,500", "AED 1,414,500","AED 335,500"],
+    ],
+    "widths_cm": [7.5, 3.8, 3.8, 3.8],
+}
+
+# ---------------------------------------------------------------------------
+# §14.2  Software Licences & Subscriptions (Setup / First Year)
+# ---------------------------------------------------------------------------
+SW_LICENCES = {
+    "headers": ["Licence / Subscription", "Vendor", "Unit Cost (AED)", "Qty", "Annual Cost (AED)"],
+    "rows": [
+        [".NET 8 runtime + ASP.NET Core",       "Microsoft",     "Open-source / included",  "—",    "AED 0"],
+        ["Visual Studio Enterprise (dev seats)", "Microsoft",     "AED 12,800 / seat / yr",  "5",    "AED 64,000"],
+        ["Hangfire Pro",                         "HangfireIO",    "AED 7,200 / server / yr", "2",    "AED 14,400"],
+        ["Azure OpenAI Service (tokens)",        "Microsoft",     "Consumption-based",        "—",    "AED 90,000 est."],
+        ["AI fallback model (Anthropic API)",    "Anthropic",     "Consumption-based",        "—",    "AED 40,000 est."],
+        ["SMTP relay (SendGrid / Postmark)",      "Twilio/Postmark","AED 2,400 / yr",          "1",    "AED 2,400"],
+        ["SMS gateway (UAE operator)",           "Operator",      "Per-message",              "—",    "AED 18,000 est."],
+        ["PDF generation library (QuestPDF)",    "QuestPDF",      "AED 2,800 / yr",           "1",    "AED 2,800"],
+        ["Seq log server (cloud)",               "Datalust",      "AED 3,600 / yr",           "1",    "AED 3,600"],
+        ["TOTAL SW LICENCES (indicative)",       "",              "",                         "",     "AED 235,200"],
+    ],
+    "widths_cm": [5.5, 3.0, 3.5, 1.5, 4.0],
+}
+
+# ---------------------------------------------------------------------------
+# §14.3  Application Development & Implementation by Phase
+# ---------------------------------------------------------------------------
+DEV_COSTS = {
+    "headers": ["Deliverable", "Phase", "Duration", "Effort (person-days)", "Cost (AED)"],
+    "rows": [
+        # Phase 1
+        ["External Public Portal (CMS, Dashboard, Transactions, Map, PriceIndex, RentalIndex)",
+         "P1", "M1–3", "120", "AED 216,000"],
+        ["Bilingual EN/AR RTL + i18n resource pipeline",
+         "P1", "M1–2", "40",  "AED 72,000"],
+        ["Slice & Dice Analytics Engine",
+         "P1", "M2–3", "60",  "AED 108,000"],
+        ["Real Estate AI Agent (AIOrchestrator, RAG, guardrails, Admin/AIModels)",
+         "P1", "M2–4", "100", "AED 180,000"],
+        ["Investor Notification & Alert System (email/SMS/in-platform)",
+         "P1", "M3–4", "60",  "AED 108,000"],
+        ["Open Data API + Developer Portal + API key management",
+         "P1", "M4–5", "50",  "AED 90,000"],
+        ["Performance hardening (Redis cache, caching behavior, EF tuning)",
+         "P1", "M5–6", "30",  "AED 54,000"],
+        ["Phase 1 QA, UAT support, security review",
+         "P1", "M6",   "30",  "AED 54,000"],
+        ["PHASE 1 SUBTOTAL",                    "P1", "M1–6", "490", "AED 882,000"],
+        # Phase 2
+        ["Watchlist v2, ESG indicators, GRETI sub-index tracker",
+         "P2", "M6–8", "80",  "AED 144,000"],
+        ["Analytics enhancements, saved-view sharing, embed improvements",
+         "P2", "M7–8", "40",  "AED 72,000"],
+        ["Performance hardening (load-testing P95 sign-off, OpenTelemetry)",
+         "P2", "M8–9", "30",  "AED 54,000"],
+        ["Phase 2 QA & UAT",                    "P2", "M9",   "20",  "AED 36,000"],
+        ["PHASE 2 SUBTOTAL",                    "P2", "M6–9", "170", "AED 306,000"],
+        # Phase 3
+        ["EWRS (risk engine, escalation L1–L4, dashboard, playbooks)",
+         "P3", "M9–10","100", "AED 180,000"],
+        ["Developer Performance & Rating + Escrow Monitoring",
+         "P3", "M10–11","80", "AED 144,000"],
+        ["Beneficial Ownership, Mortgage Analytics, Name Validation",
+         "P3", "M11",  "40",  "AED 72,000"],
+        ["DESC ISR v3 hardening + VAPT (external consultant)",
+         "P3", "M11–12","30", "AED 90,000"],
+        ["Phase 3 QA, UAT, security acceptance",
+         "P3", "M12",  "25",  "AED 45,000"],
+        ["PHASE 3 SUBTOTAL",                    "P3", "M9–12","275", "AED 531,000"],
+        # Phase 4
+        ["Multilingual extension (ZH, RU, UR, FR, HI, DE) + AI multi-language",
+         "P4", "M12–14","90", "AED 162,000"],
+        ["Advanced analytics, AI fine-tuning pipeline",
+         "P4", "M13–14","50", "AED 90,000"],
+        ["Phase 4 QA, UAT, language acceptance",
+         "P4", "M15",  "20",  "AED 36,000"],
+        ["PHASE 4 SUBTOTAL",                    "P4", "M12–15","160","AED 288,000"],
+        # Total
+        ["TOTAL DEVELOPMENT CAPEX",             "P1–P4","M1–15","1,095","AED 2,007,000"],
+    ],
+    "widths_cm": [7.5, 1.4, 1.6, 2.8, 3.2],
+}
+
+# ---------------------------------------------------------------------------
+# §14.4  Annual Recurring Costs (OPEX) per hosting option
+# ---------------------------------------------------------------------------
+OPEX_ANNUAL = {
+    "headers": ["OPEX Item", "Option A: Azure UAE", "Option B: On-Premises", "Option C: Hybrid"],
+    "rows": [
+        ["Compute / VM / App Service (annual)",          "AED 48,000",  "AED 85,000",   "AED 48,000"],
+        ["SQL Server managed annual",                    "AED 36,000",  "AED 24,000",   "AED 36,000"],
+        ["Redis / caching annual",                       "AED 18,000",  "AED 12,000",   "AED 18,000"],
+        ["AI model API consumption (annual est.)",       "AED 130,000", "AED 130,000",  "AED 130,000"],
+        ["OneLake / Fabric storage & compute",           "AED 42,000",  "AED 68,000",   "AED 42,000"],
+        ["Monitoring & SIEM",                            "AED 16,000",  "AED 28,000",   "AED 16,000"],
+        ["SMTP / SMS channels",                          "AED 20,400",  "AED 20,400",   "AED 20,400"],
+        ["Software licences (annual renewal)",           "AED 84,800",  "AED 84,800",   "AED 84,800"],
+        ["Warranty & support (12 months post go-live)",  "AED 180,000", "AED 180,000",  "AED 180,000"],
+        ["Security patching & monthly pen-test scans",   "AED 36,000",  "AED 36,000",   "AED 36,000"],
+        ["Data quality & reconciliation tooling",        "AED 18,000",  "AED 18,000",   "AED 18,000"],
+        ["TOTAL ANNUAL OPEX (indicative)",               "AED 629,200", "AED 686,200",  "AED 629,200"],
+    ],
+    "widths_cm": [6.5, 3.5, 3.8, 3.7],
+}
+
+# ---------------------------------------------------------------------------
+# Payment Milestone Schedule (Phase-gate model)
+# ---------------------------------------------------------------------------
+MILESTONES = [
+    ["M0", "Contract signature",                                              "10 %", "AED 200,700"],
+    ["M1", "Phase 1 mobilisation complete (infrastructure live, team onboard)","10 %", "AED 200,700"],
+    ["M2", "Phase 1 UAT sign-off (External Portal + AI Agent + Open Data API)","25 %", "AED 501,750"],
+    ["M3", "Phase 2 UAT sign-off (ESG, GRETI, Analytics v2)",                "15 %", "AED 301,050"],
+    ["M4", "Phase 3 UAT sign-off (EWRS, Developer Rating, Escrow; VAPT clean)","25 %", "AED 501,750"],
+    ["M5", "Phase 4 UAT sign-off (Multilingual + Advanced Analytics)",         "15 %", "AED 301,050"],
+    ["",   "TOTAL DEVELOPMENT CAPEX (AED)",                                   "100 %","AED 2,007,000"],
+]
+
+# ---------------------------------------------------------------------------
+# Cost Summary Dashboard (one-table view for executives)
+# ---------------------------------------------------------------------------
+COST_SUMMARY = [
+    ["Infrastructure CAPEX (Option A — Azure UAE North)", "AED 335,500"],
+    ["Software Licences CAPEX (first year)",              "AED 235,200"],
+    ["Application Development CAPEX (all phases)",        "AED 2,007,000"],
+    ["TOTAL ONE-TIME CAPEX",                              "AED 2,577,700"],
+    ["Annual OPEX (Option A — Azure UAE North)",          "AED 629,200"],
+    ["Annual OPEX (Option B — On-Premises)",              "AED 686,200"],
+    ["Annual OPEX (Option C — Hybrid)",                   "AED 629,200"],
+]

@@ -1,0 +1,114 @@
+@page "/notifications"
+@rendermode InteractiveServer
+@inject NotificationFeedService Feed
+@inject UiStateService Ui
+@implements IDisposable
+
+<PageTitle>IRETP - Notifications</PageTitle>
+
+<ModuleBanner Icon="inbox"
+              Title="Notifications"
+              Subtitle="@($"{Feed.UnreadCount()} unread of {Feed.List().Count} total.")">
+    <ActionsContent>
+        <button class="btn btn-outline-primary btn-sm" @onclick="() => Feed.MarkAllRead()">
+            <i class="bi bi-check2-all"></i> Mark all read
+        </button>
+    </ActionsContent>
+</ModuleBanner>
+
+<div class="btn-group mb-3">
+    <button class="btn btn-sm @(_filter == "all" ? "btn-primary" : "btn-outline-primary")" @onclick='() => _filter = "all"'>All</button>
+    <button class="btn btn-sm @(_filter == "unread" ? "btn-primary" : "btn-outline-primary")" @onclick='() => _filter = "unread"'>Unread</button>
+    <button class="btn btn-sm @(_filter == "Price" ? "btn-primary" : "btn-outline-primary")" @onclick='() => _filter = "Price"'>Price</button>
+    <button class="btn btn-sm @(_filter == "Project" ? "btn-primary" : "btn-outline-primary")" @onclick='() => _filter = "Project"'>Project</button>
+    <button class="btn btn-sm @(_filter == "Watchlist" ? "btn-primary" : "btn-outline-primary")" @onclick='() => _filter = "Watchlist"'>Watchlist</button>
+    <button class="btn btn-sm @(_filter == "Yield" ? "btn-primary" : "btn-outline-primary")" @onclick='() => _filter = "Yield"'>Yield</button>
+    <button class="btn btn-sm @(_filter == "Digest" ? "btn-primary" : "btn-outline-primary")" @onclick='() => _filter = "Digest"'>Digest</button>
+    <button class="btn btn-sm @(_filter == "Regulation" ? "btn-primary" : "btn-outline-primary")" @onclick='() => _filter = "Regulation"'>Regulation</button>
+</div>
+
+<div class="card">
+    <div class="list-group list-group-flush">
+        @foreach (var n in Filtered())
+        {
+            var title = Ui.Language == "ar" ? n.TitleAr : n.Title;
+            var msg   = Ui.Language == "ar" ? n.MessageAr : n.Message;
+            <div class="list-group-item @(n.IsRead ? "" : "bg-light")">
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="notif-icon" style="width:38px;height:38px;border-radius:50%;background:rgba(var(--primary-color-rgb),.1);color:var(--primary-color);display:flex;align-items:center;justify-content:center;">
+                        <i class="bi @CategoryIcon(n.Category) fs-5"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <strong>@title</strong>
+                            <span class="badge bg-light text-dark border">@n.Category</span>
+                            <span class="badge bg-secondary">@n.Channel</span>
+                            @if (!n.IsRead) { <span class="badge bg-primary">new</span> }
+                        </div>
+                        <div class="text-muted">@msg</div>
+                        <div class="small text-muted mt-1">@n.CreatedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        @if (!string.IsNullOrEmpty(n.Link))
+                        {
+                            <a href="@n.Link" class="btn btn-sm btn-outline-primary" @onclick="() => Feed.MarkRead(n.Id)">
+                                Open <i class="bi bi-arrow-up-right"></i>
+                            </a>
+                        }
+                        @if (!n.IsRead)
+                        {
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => Feed.MarkRead(n.Id)">
+                                Mark read
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        @if (!Filtered().Any())
+        {
+            <div class="list-group-item text-center text-muted py-5">No notifications in this view.</div>
+        }
+    </div>
+</div>
+
+@code {
+    private string _filter = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Feed.OnChange += OnChange;
+        Ui.OnChange += OnChange;
+        await Feed.RefreshAsync();
+    }
+
+    public void Dispose()
+    {
+        Feed.OnChange -= OnChange;
+        Ui.OnChange -= OnChange;
+    }
+
+    private void OnChange() => InvokeAsync(StateHasChanged);
+
+    private IEnumerable<NotificationFeedService.Notification> Filtered()
+    {
+        var list = Feed.List();
+        return _filter switch
+        {
+            "all"    => list,
+            "unread" => list.Where(n => !n.IsRead),
+            _        => list.Where(n => string.Equals(n.Category, _filter, StringComparison.OrdinalIgnoreCase))
+        };
+    }
+
+    private static string CategoryIcon(string category) => category switch
+    {
+        "Price"      => "bi-graph-up-arrow",
+        "Project"    => "bi-buildings",
+        "Watchlist"  => "bi-bookmark-star",
+        "Yield"      => "bi-percent",
+        "Digest"     => "bi-newspaper",
+        "Regulation" => "bi-shield-check",
+        _            => "bi-bell"
+    };
+}

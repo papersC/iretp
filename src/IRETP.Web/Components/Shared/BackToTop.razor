@@ -1,0 +1,50 @@
+@*
+    Back-to-top floating button — appears after the user scrolls past
+    a threshold and scrolls smoothly back to the page top on click.
+    Stacks ABOVE the FloatingAiLauncher (which sits at bottom:24px).
+
+    Renders site-wide via MainLayout. Visibility is driven by a small
+    scroll listener registered in OnAfterRenderAsync.
+*@
+
+@inject IJSRuntime JS
+
+<button type="button"
+        id="iretp-back-to-top"
+        class="esems-back-to-top"
+        style="bottom: 96px;"
+        aria-label="Back to top"
+        @onclick="ScrollToTop">
+    <i class="bi bi-arrow-up" aria-hidden="true"></i>
+</button>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            await JS.InvokeVoidAsync("eval", @"
+                (function () {
+                    var btn = document.getElementById('iretp-back-to-top');
+                    if (!btn || btn.dataset.wired === '1') return;
+                    btn.dataset.wired = '1';
+                    var threshold = 320;
+                    var update = function () {
+                        if (window.scrollY > threshold) btn.classList.add('visible');
+                        else btn.classList.remove('visible');
+                    };
+                    window.addEventListener('scroll', update, { passive: true });
+                    update();
+                })();
+            ");
+        }
+        catch { /* ignore — may not be in interactive mode yet */ }
+    }
+
+    private async Task ScrollToTop()
+    {
+        try { await JS.InvokeVoidAsync("eval", "window.scrollTo({ top: 0, behavior: 'smooth' });"); }
+        catch { /* ignore */ }
+    }
+}

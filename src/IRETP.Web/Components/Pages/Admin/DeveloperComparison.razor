@@ -1,0 +1,280 @@
+@page "/admin/developers/compare"
+@rendermode InteractiveServer
+@inject AdminApiClient AdminApi
+@inject WebApiClient Api
+@inject AdminFixtureService Fixture
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP — Developer comparison</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="bar-chart-steps"
+                  Title="Developer comparison"
+                  Subtitle="Side-by-side scoring across all six criteria for up to 4 developers (RFP 9.1.2). Scores come from the latest quarter's Developer Rating run.">
+        <ActionsContent>
+            <a class="btn btn-outline-secondary btn-sm" href="/admin/developers">
+                <i class="bi bi-arrow-left"></i> Back to leaderboard
+            </a>
+        </ActionsContent>
+    </ModuleBanner>
+
+    <!-- Picker -->
+    <div class="admin-card mb-3">
+        <div class="admin-card-body">
+            <div class="row g-3 align-items-end">
+                @for (var i = 0; i < 4; i++)
+                {
+                    var idx = i;
+                    <div class="col-md-3">
+                        <label for="developer-@idx" class="form-label small text-muted">Developer #@(idx + 1)</label>
+                        <select id="developer-@idx" class="form-select form-select-sm" value="@_pickedIds[idx]"
+                                @onchange="e => OnPickChanged(idx, e.Value?.ToString() ?? string.Empty)">
+                            <option value="">— choose —</option>
+                            @foreach (var d in _catalog)
+                            {
+                                <option value="@d.Id">@d.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-primary btn-sm" @onclick="Compare" disabled="@(_loading || SelectedCount < 2)">
+                    <i class="bi bi-bar-chart-steps"></i> Compare (@SelectedCount)
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" @onclick="ResetPicks" disabled="@_loading">
+                    Reset
+                </button>
+                @if (_loading) { <div class="spinner-border spinner-border-sm align-self-center text-primary"></div> }
+            </div>
+            @if (SelectedCount < 2 && _result is null)
+            {
+                <div class="small text-muted mt-2">Pick at least two developers to generate a comparison.</div>
+            }
+        </div>
+    </div>
+
+    @if (_apiUnavailable && _result is null)
+    {
+        <NetworkError Service="Developer comparison" Detail="Make sure the Admin API is running and you are signed in." />
+    }
+
+    @if (_result is { Developers.Count: > 0 })
+    {
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="admin-card">
+                    <div class="admin-card-head"><h2 class="admin-card-title"><i class="bi bi-pentagon"></i> Criterion overlay</h2></div>
+                    <div class="admin-card-body" style="height: 420px; position: relative;">
+                        <canvas id="devCompareRadar"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="admin-card">
+                    <div class="admin-card-head"><h2 class="admin-card-title"><i class="bi bi-table"></i> Score breakdown</h2></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Criterion</th>
+                                    @foreach (var d in _result.Developers)
+                                    {
+                                        <th class="text-end">@d.Name</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="fw-semibold">
+                                    <td>Composite</td>
+                                    @foreach (var d in _result.Developers)
+                                    {
+                                        <td class="text-end">
+                                            @d.CompositeScore.ToString("F1")
+                                            <span class="badge bg-@RiskColor(d.RiskBadge) ms-1">@d.RiskBadge</span>
+                                        </td>
+                                    }
+                                </tr>
+                                @foreach (var kv in Criteria)
+                                {
+                                    <tr>
+                                        <td>@kv.Label</td>
+                                        @foreach (var d in _result.Developers)
+                                        {
+                                            <td class="text-end">@kv.Selector(d).ToString("F1")</td>
+                                        }
+                                    </tr>
+                                }
+                                <tr class="table-light">
+                                    <td class="fw-semibold">Projects (completed / total)</td>
+                                    @foreach (var d in _result.Developers)
+                                    {
+                                        <td class="text-end">@d.CompletedProjects / @d.TotalProjects</td>
+                                    }
+                                </tr>
+                                <tr class="table-light">
+                                    <td class="fw-semibold">Units delivered</td>
+                                    @foreach (var d in _result.Developers)
+                                    {
+                                        <td class="text-end">@d.TotalUnitsDelivered.ToString("N0")</td>
+                                    }
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private record CatalogEntry(Guid Id, string Name);
+    private record Criterion(string Label, Func<DeveloperComparisonItem, decimal> Selector);
+
+    private static readonly Criterion[] Criteria =
+    {
+        new("On-time delivery", d => d.OnTimeDeliveryScore),
+        new("Unit sales completion", d => d.UnitSalesCompletionScore),
+        new("Escrow health", d => d.EscrowHealthScore),
+        new("Regulatory compliance", d => d.RegulatoryComplianceScore),
+        new("Financial soundness", d => d.FinancialSoundnessScore),
+        new("Historical success", d => d.HistoricalSuccessScore),
+    };
+
+    private readonly string[] _pickedIds = new string[4] { "", "", "", "" };
+    private readonly List<CatalogEntry> _catalog = new();
+
+    private DeveloperComparisonDto? _result;
+    private bool _loading;
+    private bool _apiUnavailable;
+
+    private int SelectedCount => _pickedIds.Count(p => !string.IsNullOrEmpty(p));
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var login = await Api.LoginAsync("admin@dld.gov.ae", "Admin@DLD2026!");
+            if (login != null) AdminApi.SetToken(login.AccessToken);
+        }
+        catch { /* ignore */ }
+
+        // Build picker catalog from the fixture leaderboard — we don't have a
+        // "list developers with guids" endpoint yet, and the fixture mirrors
+        // the real developer list. Real GUIDs are stored on the fixture rows.
+        var rows = Fixture.DeveloperLeaderboard();
+        foreach (var r in rows)
+        {
+            _catalog.Add(new CatalogEntry(r.Id, r.Name));
+        }
+    }
+
+    private void OnPickChanged(int index, string value)
+    {
+        _pickedIds[index] = value;
+    }
+
+    private void ResetPicks()
+    {
+        for (var i = 0; i < _pickedIds.Length; i++) _pickedIds[i] = "";
+        _result = null;
+    }
+
+    private async Task Compare()
+    {
+        if (SelectedCount < 2) return;
+
+        var ids = _pickedIds
+            .Where(p => !string.IsNullOrEmpty(p))
+            .Select(p => Guid.TryParse(p, out var g) ? g : Guid.Empty)
+            .Where(g => g != Guid.Empty)
+            .Distinct()
+            .Take(4)
+            .ToList();
+
+        _loading = true;
+        _apiUnavailable = false;
+        try
+        {
+            _result = await AdminApi.CompareDevelopersAsync(ids);
+            if (_result is null || _result.Developers.Count == 0)
+            {
+                _apiUnavailable = true;
+            }
+            else
+            {
+                await RenderRadar();
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task RenderRadar()
+    {
+        if (_result is null || _result.Developers.Count == 0) return;
+
+        var palette = new[] { "#066735", "#1B4F72", "#F1B44C", "#C0392B" };
+
+        var datasets = _result.Developers.Select((d, i) => new
+        {
+            label = d.Name,
+            data = new[]
+            {
+                (double)d.OnTimeDeliveryScore,
+                (double)d.UnitSalesCompletionScore,
+                (double)d.EscrowHealthScore,
+                (double)d.RegulatoryComplianceScore,
+                (double)d.FinancialSoundnessScore,
+                (double)d.HistoricalSuccessScore,
+            },
+            borderColor = palette[i % palette.Length],
+            backgroundColor = HexToRgba(palette[i % palette.Length], 0.15),
+            pointBackgroundColor = palette[i % palette.Length]
+        }).ToArray<object>();
+
+        var config = new
+        {
+            type = "radar",
+            data = new
+            {
+                labels = Criteria.Select(c => c.Label).ToArray(),
+                datasets
+            },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                scales = new { r = new { suggestedMin = 0, suggestedMax = 100 } },
+                plugins = new { legend = new { position = "bottom" } }
+            }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "devCompareRadar", config); } catch { }
+    }
+
+    private static string RiskColor(string band) => band switch
+    {
+        "Low Risk" => "success",
+        "Moderate Risk" => "warning",
+        "Elevated Risk" => "warning",
+        _ => "danger"
+    };
+
+    private static string HexToRgba(string hex, double alpha)
+    {
+        if (hex.StartsWith("#")) hex = hex[1..];
+        var r = Convert.ToInt32(hex[..2], 16);
+        var g = Convert.ToInt32(hex[2..4], 16);
+        var b = Convert.ToInt32(hex[4..6], 16);
+        return $"rgba({r},{g},{b},{alpha.ToString(System.Globalization.CultureInfo.InvariantCulture)})";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "devCompareRadar"); } catch { }
+    }
+}

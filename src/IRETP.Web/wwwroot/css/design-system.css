@@ -1,0 +1,1032 @@
+html {
+  font-size: 16px;
+  position: relative;
+  min-height: 100%;
+}
+
+/* ============================================================
+   Live "Still need: X" checklist — wired by SP_LIVE_CHECKLIST in site.js.
+   Any element with [data-required-checklist] gets the same look as the
+   Improvements wizard's inline checklist.
+   ============================================================ */
+.wiz-checklist {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  margin-bottom: .85rem;
+  border-radius: 6px;
+  font-size: var(--fs-sm, .875rem);
+  line-height: 1.35;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+.wiz-checklist[data-state="missing"] {
+  background: #fefce8;
+  border: 1px solid #fde047;
+  color: #854d0e;
+}
+.wiz-checklist[data-state="ok"] {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+.wiz-checklist svg { flex-shrink: 0; }
+
+/* ========================================
+   Design X — design tokens (PM-inspired)
+   Brand colors, card/button transitions, fadeInUp animations
+   ======================================== */
+:root {
+    --esems-primary: #005B99;
+    --esems-primary-hover: #003d6b;
+    --esems-success: #15803D;
+    --esems-warning: #B45309;
+    --esems-danger: #B91C1C;
+    --esems-info: #005B99;
+
+    /* Override Bootstrap's default primary (#556ee6 indigo from Velzon) so
+       .btn-primary, .text-primary, .bg-primary, focus rings, links, etc.
+       all snap to MBRHE corporate blue. */
+    --bs-primary: #005B99;
+    --bs-primary-rgb: 0, 91, 153;
+    --bs-link-color: #005B99;
+    --bs-link-hover-color: #003d6b;
+
+    /* Type scale — Major Third 1.25, anchored at 16px */
+    --fs-xs:  0.75rem;   /* 12px — captions, helper text */
+    --fs-sm:  0.875rem;  /* 14px — secondary, dense controls */
+    --fs-base: 1rem;     /* 16px — body */
+    --fs-lg:  1.25rem;   /* 20px — H4, KPI value */
+    --fs-xl:  1.5625rem; /* 25px — H2, page section */
+    --fs-2xl: 2rem;      /* 32px — H1, hero */
+
+    /* 8-pt spacing tokens */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 24px;
+    --sp-6: 32px;
+    --sp-7: 48px;
+    --sp-8: 64px;
+}
+
+/* Bilingual typography — Arabic glyphs come from a real Arabic typeface,
+   Latin from Poppins. Browsers pick per-character based on the cascade.
+   IBM Plex Sans Arabic is designed for x-height parity with Latin at the
+   same nominal size, so no per-language size bump is needed. */
+body {
+    font-family: 'IBM Plex Sans Arabic', 'Frutiger LT Arabic',
+                 'Noto Sans Arabic', 'Poppins', system-ui,
+                 -apple-system, 'Segoe UI', Arial, sans-serif !important;
+}
+[dir="rtl"] body {
+    /* Slightly looser line-height for Arabic only — diacritics need air. */
+    line-height: 1.55;
+}
+
+/* Skeleton placeholder for chart/data loading — replace spinners */
+.skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+    background-size: 400% 100%;
+    border-radius: 6px;
+    animation: skeleton-shimmer 1.4s ease infinite;
+}
+@keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
+/* ==========================================================================
+   Type system — 6-step Major Third 1.25 scale (Material Design 3 inspired)
+   --------------------------------------------------------------------------
+   Locks every page in the app to one of 6 sizes. Headings, body text,
+   utility classes (Bootstrap .fs-1..6, Tailwind .text-xs..2xl) all map
+   here. Override individual rules by setting font-size on a parent class —
+   do NOT introduce new fractional values without updating the scale.
+   ========================================================================== */
+
+/* Headings — line-heights tightened for display sizes per Material 3. */
+h1, .h1 { font-size: var(--fs-2xl); line-height: 1.15; font-weight: 700; }
+h2, .h2 { font-size: var(--fs-xl);  line-height: 1.2;  font-weight: 700; }
+h3, .h3 { font-size: var(--fs-lg);  line-height: 1.25; font-weight: 600; }
+h4, .h4 { font-size: var(--fs-base);line-height: 1.4;  font-weight: 600; }
+h5, .h5 { font-size: var(--fs-sm);  line-height: 1.4;  font-weight: 600; }
+h6, .h6 { font-size: var(--fs-sm);  line-height: 1.4;  font-weight: 600; }
+
+/* Body + form controls — 16px is the WCAG-recommended minimum for body. */
+p, body, button, input, select, textarea, label, td, th { font-size: var(--fs-base); }
+small, .small { font-size: var(--fs-sm); }
+
+/* Tailwind text utility classes — clamp to scale. */
+.text-xs   { font-size: var(--fs-xs)   !important; }
+.text-sm   { font-size: var(--fs-sm)   !important; }
+.text-base { font-size: var(--fs-base) !important; }
+.text-lg   { font-size: var(--fs-lg)   !important; }
+.text-xl   { font-size: var(--fs-xl)   !important; }
+.text-2xl  { font-size: var(--fs-2xl)  !important; }
+.text-3xl  { font-size: var(--fs-2xl)  !important; }
+
+/* Bootstrap font-size utilities — clamp to same scale. */
+.fs-1 { font-size: var(--fs-2xl) !important; }
+.fs-2 { font-size: var(--fs-xl)  !important; }
+.fs-3 { font-size: var(--fs-lg)  !important; }
+.fs-4 { font-size: var(--fs-base)!important; }
+.fs-5 { font-size: var(--fs-sm)  !important; }
+.fs-6 { font-size: var(--fs-xs)  !important; }
+
+/* Skote/Velzon legacy size classes — clamp to scale. */
+.font-size-10, .font-size-11, .font-size-12 { font-size: var(--fs-xs) !important; }
+.font-size-13, .font-size-14               { font-size: var(--fs-sm) !important; }
+.font-size-15, .font-size-16               { font-size: var(--fs-base) !important; }
+.font-size-17, .font-size-18, .font-size-20 { font-size: var(--fs-lg) !important; }
+.font-size-22, .font-size-24               { font-size: var(--fs-xl) !important; }
+.font-size-28, .font-size-32               { font-size: var(--fs-2xl) !important; }
+
+/* Bootstrap badge keeps its original size (badges should be tight) but lock
+   to the smallest scale step rather than a random fractional rem. */
+.badge { font-size: var(--fs-xs); font-weight: 600; }
+
+/* Form labels — match scale and add a touch of weight for hierarchy. */
+.form-label, .col-form-label { font-size: var(--fs-sm); font-weight: 500; }
+
+/* Card headers — keep them quietly differentiated from body. */
+.card-title  { font-size: var(--fs-lg);  font-weight: 600; line-height: 1.3; }
+.card-header { font-size: var(--fs-base); }
+
+/* Tables — dense by default; user can override per page. */
+.table { font-size: var(--fs-sm); }
+.table thead th { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .03em; font-weight: 600; }
+
+/* Buttons — Bootstrap defaults `.btn-sm` to 0.7109375rem (11.375px) which is
+   off-scale. Snap all three button sizes to the type scale. */
+.btn      { font-size: var(--fs-sm); }
+.btn-sm   { font-size: var(--fs-xs); }
+.btn-lg   { font-size: var(--fs-base); }
+
+/* Skote/Velzon overrides body to 14px in app.min.css — snap back to base 16px
+   so the WCAG body-text minimum holds and the cascade stays predictable. */
+body, .navbar-brand, .skip-to-content { font-size: var(--fs-base); }
+
+/* Dropdown items + nav-links — keep them slightly smaller than body but
+   on-scale (Bootstrap defaults to 0.875 / 0.9 / 1rem mix). */
+.dropdown-item, .nav-link, .breadcrumb { font-size: var(--fs-sm); }
+
+/* Touch-target safety — keep visual icon at 24px but pad hit area to 44×44.
+   Apple HIG / Fitts's Law on small icon-only buttons (hamburger, etc.). */
+.btn-touch-44 {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Card polish — borderless with soft shadow, lift on hover */
+.esems-card {
+    border: none;
+    border-radius: .75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    transition: all .2s ease;
+}
+.esems-card:hover {
+    box-shadow: 0 8px 25px -5px rgba(0,91,153,.15), 0 4px 6px -2px rgba(0,0,0,.05);
+    transform: translateY(-2px);
+}
+
+/* Button polish — subtle lift on hover */
+.esems-btn-primary {
+    background: linear-gradient(135deg, #005B99 0%, #003d6b 100%);
+    color: #fff;
+    border: none;
+    border-radius: .375rem;
+    padding: .5rem 1rem;
+    transition: all .15s ease;
+}
+.esems-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,91,153,.25);
+    color: #fff;
+}
+.esems-btn-primary:focus-visible {
+    outline: 2px solid #005B99;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(0,91,153,.25);
+}
+
+/* Form-input focus ring — brand blue instead of browser default */
+.form-control:focus,
+.form-select:focus {
+    border-color: #005B99;
+    box-shadow: 0 0 0 3px rgba(0,91,153,.1);
+}
+
+/* Pill badges — fully rounded with subtle variant */
+.esems-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    border-radius: 9999px;
+    padding: .35rem .75rem;
+    font-weight: 500;
+    font-size: .75rem;
+}
+
+/* Entrance animations — fade up with staggered delays */
+@keyframes esems-fade-in-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes esems-slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes esems-scale-in {
+    from { opacity: 0; transform: scale(.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.esems-animate-in { animation: esems-fade-in-up .4s ease backwards; }
+.esems-animate-in-delay-1 { animation-delay: .05s; }
+.esems-animate-in-delay-2 { animation-delay: .10s; }
+.esems-animate-in-delay-3 { animation-delay: .15s; }
+.esems-animate-in-delay-4 { animation-delay: .20s; }
+.esems-animate-in-delay-5 { animation-delay: .25s; }
+
+/* Modal backdrop blur — cleaner overlay */
+.modal-backdrop.show {
+    backdrop-filter: blur(4px);
+}
+
+/* Loading skeleton shimmer */
+@keyframes esems-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+.esems-skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: esems-shimmer 1.5s ease-in-out infinite;
+    border-radius: .25rem;
+}
+
+/* ========================================
+   Scrollbar styling
+   Hide the up/down arrow buttons on the native scrollbar
+   (Windows default) so the scroll track shows only the thumb.
+   Firefox uses scrollbar-width; WebKit uses the ::-webkit-* pseudos.
+   ======================================== */
+* {
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  --bs-body-font-size: 0.9375rem;
+  font-size: 0.9375rem;
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+/* Skip to content link (screen-reader friendly) */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  background: var(--primary-color, #005B99);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  z-index: 9999;
+  font-weight: 600;
+  border-radius: 0 0 0.5rem 0;
+  transition: top 0.2s ease;
+}
+.skip-to-content:focus {
+  top: 0;
+  outline: 3px solid #F1B44C;
+}
+html[dir="rtl"] .skip-to-content {
+  left: auto;
+  right: 0;
+  border-radius: 0 0 0 0.5rem;
+}
+
+/* Enhanced keyboard focus */
+.btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible,
+.form-check-input:focus-visible, a:focus-visible {
+  outline: 2px solid var(--primary-color, #005B99);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 91, 153, 0.15);
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--primary-color, #005B99);
+}
+
+/* Focus indicators for table action buttons */
+table a:focus-visible,
+table button:focus-visible {
+  outline: 2px solid #005B99;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ========================================
+   ESEMS CUSTOM THEME
+   Using CSS Variables from material-design-3.css
+   Primary: #005B99
+   Success: #34C38F
+   Warning: #F1B44C
+   Danger: #F46A6A
+   Info: #50A5F1
+   ======================================== */
+
+/* Legacy class support - mapped to theme colors */
+.nav-link.active {
+  background: rgba(0, 91, 153, 0.15) !important;
+  color: var(--primary-color, #005B99) !important;
+  border-left: 3px solid var(--primary-color, #005B99);
+}
+
+.nav-link:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+}
+
+.badge-mbrhe-gold {
+  background-color: rgba(197, 165, 114, 0.2);
+  color: #8B6914;
+}
+
+/* Card styles (consolidated) */
+.card {
+  border: none;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+.card-header {
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.card-body { padding: 1.5rem; }
+
+/* Table styles (consolidated) */
+.table {
+  background: white;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table thead th {
+  background-color: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  padding: 1rem;
+}
+/* Blue-gradient table header – use class "table-blue-header" on <thead>,
+   or just put the gradient inline on <thead> – the rule below catches both. */
+.table-blue-header {
+  background: linear-gradient(135deg, #005B99 0%, #003d6b 100%) !important;
+}
+.table-blue-header th,
+.table-blue-header td,
+thead[style*="005B99"] th,
+thead[style*="005B99"] td {
+  background: transparent !important;
+  color: #fff !important;
+  border-bottom-color: rgba(255,255,255,.2) !important;
+  padding: 0.35rem 0.5rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  white-space: nowrap !important;
+}
+
+.table tbody tr { transition: background-color 0.15s ease; }
+.table tbody tr:hover { background-color: #f8f9fa; }
+.table tbody td { padding: 1rem; vertical-align: middle; }
+
+/* Badge styles (consolidated) */
+.badge {
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+}
+
+/* Button styles (consolidated) */
+.btn {
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-warning:hover,
+.btn-outline-secondary:hover {
+  transform: translateY(-1px);
+}
+.btn-primary {
+  background-color: #0078D4;
+  border-color: #0078D4;
+}
+.btn-primary:hover {
+  background-color: #106EBE;
+  border-color: #106EBE;
+}
+
+/* Form controls (consolidated) */
+.form-control, .form-select {
+  border-radius: 0.375rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #d1d5db;
+  transition: all 0.15s ease;
+}
+.form-control:focus, .form-select:focus {
+  border-color: #0078D4;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+}
+
+/* Kanban board styles */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.kanban-column {
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-height: 500px;
+}
+
+.kanban-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.kanban-column-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kanban-column-count {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+}
+
+.kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.kanban-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+}
+
+.kanban-card-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.kanban-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  align-items: center;
+}
+
+.kanban-card-meta .badge {
+  font-size: 0.7rem;
+  padding: 0.125rem 0.5rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #9ca3af;
+}
+
+.empty-state-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  opacity: 0.5;
+}
+
+.empty-state-description {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Filter bar */
+.filter-bar {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filter-bar label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+/* Sortable ghost */
+.sortable-ghost {
+  opacity: 0.4;
+  background: #e5e7eb;
+}
+
+/* DataTables customization */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+  margin-bottom: 1rem;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+  margin-top: 1rem;
+}
+
+/* Progress bar */
+.progress {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: #e5e7eb;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+/* ========================================
+   TOAST NOTIFICATIONS
+   ======================================== */
+.esems-toast {
+  position: relative;
+  overflow: hidden;
+  animation: esems-toast-in 0.4s ease-out;
+}
+
+.esems-toast-hiding {
+  animation: esems-toast-out 0.4s ease-in forwards;
+}
+
+.esems-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  animation: esems-toast-countdown 5s linear forwards;
+}
+.esems-toast-progress-success { background: #34C38F; }
+.esems-toast-progress-error { background: #F46A6A; }
+
+@keyframes esems-toast-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes esems-toast-out {
+  from { opacity: 1; transform: translateY(0); max-height: 100px; }
+  to { opacity: 0; transform: translateY(-12px); max-height: 0; margin: 0; padding: 0; }
+}
+@keyframes esems-toast-countdown {
+  from { width: 100%; }
+  to { width: 0; }
+}
+
+/* ========================================
+   BACK TO TOP BUTTON
+   ======================================== */
+.esems-back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 900;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary-color, #005B99);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease, background 0.2s ease;
+  pointer-events: none;
+}
+html[dir="rtl"] .esems-back-to-top { right: auto; left: 2rem; }
+.esems-back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.esems-back-to-top:hover {
+  background: var(--hover-color, #004a7c);
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   LOADING SKELETON
+   ======================================== */
+.esems-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: esems-skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.25rem;
+}
+.esems-skeleton-line {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+.esems-skeleton-line:last-child {
+  width: 60%;
+}
+@keyframes esems-skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ========================================
+   RTL SEARCH INPUT FIX
+   ======================================== */
+html[dir="rtl"] .relative .absolute.left-3 {
+  left: auto;
+  right: 0.75rem;
+}
+html[dir="rtl"] .relative input.pl-10 {
+  padding-left: 1rem;
+  padding-right: 2.5rem;
+}
+
+/* Risk title wrapping - allow long titles to wrap to 2 lines */
+.risk-title {
+  max-width: 350px;
+  white-space: normal !important;
+  word-wrap: break-word;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Override table-nowrap for title columns */
+.table td.title-cell,
+.table th.title-cell {
+  white-space: normal !important;
+  max-width: 350px;
+}
+
+/* Ensure table cells can wrap text */
+.table-wrap-text td {
+  white-space: normal !important;
+}
+
+/* Fix Tailwind .collapse conflicting with Bootstrap accordion .collapse */
+.accordion-collapse.collapse:not(.show) {
+  display: none;
+}
+.accordion-collapse.collapse.show,
+.accordion-collapse.collapse.show * {
+  visibility: visible !important;
+}
+
+/* ========================================
+   BPMN MODELER PAGE
+   ======================================== */
+.bjs-powered-by { display: none !important; }
+
+#bpmnCanvas {
+  height: calc(100vh - 320px);
+  min-height: 450px;
+  background: #fafafa;
+  background-image: linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Draggable palette */
+#bpmnCanvas .djs-palette {
+  cursor: default;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  transition: box-shadow .15s;
+}
+#bpmnCanvas .djs-palette.dragging {
+  box-shadow: 0 6px 20px rgba(0,0,0,.22);
+  opacity: .92;
+}
+#bpmnCanvas .palette-drag-handle {
+  display: flex; align-items: center; justify-content: center;
+  height: 18px; cursor: grab; background: linear-gradient(to bottom, #e2e8f0, #cbd5e1);
+  border-radius: 7px 7px 0 0; border-bottom: 1px solid #94a3b8;
+  user-select: none; -webkit-user-select: none;
+}
+#bpmnCanvas .palette-drag-handle:active { cursor: grabbing; }
+#bpmnCanvas .palette-drag-handle .grip {
+  width: 20px; height: 4px;
+  background: repeating-linear-gradient(to right, #94a3b8 0px, #94a3b8 3px, transparent 3px, transparent 5px);
+  border-radius: 2px;
+}
+
+.loading-overlay {
+  position: absolute; inset: 0; background: rgba(255,255,255,0.9);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+.spinner { width: 40px; height: 40px; border: 4px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Focus / maximize mode */
+#bpmnPage.focus-mode .side-panel { display: none !important; }
+#bpmnPage.focus-mode .col-lg-9 { flex: 0 0 100%; max-width: 100%; }
+#bpmnPage.focus-mode #bpmnCanvas { height: calc(100vh - 160px); }
+
+/* Color picker */
+.color-swatch {
+  width: 22px; height: 22px; border-radius: 4px; border: 2px solid #dee2e6;
+  cursor: pointer; transition: transform .1s, box-shadow .1s; padding: 0;
+}
+.color-swatch:hover { transform: scale(1.15); box-shadow: 0 0 0 2px rgba(59,130,246,.45); }
+.color-dropdown .dropdown-menu { min-width: auto; padding: 8px; }
+.color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+
+/* Searchable dropdown */
+.search-dropdown { position: relative; }
+.search-dropdown .search-results {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 1050;
+  max-height: 220px; overflow-y: auto; background: #fff;
+  border: 1px solid #dee2e6; border-top: 0; border-radius: 0 0 .375rem .375rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12); display: none;
+}
+.search-dropdown .search-results.show { display: block; }
+.search-dropdown .search-item {
+  padding: 6px 10px; cursor: pointer; font-size: .875rem;
+  border-bottom: 1px solid #f1f5f9; transition: background .1s;
+}
+.search-dropdown .search-item:hover, .search-dropdown .search-item.active { background: #eff6ff; }
+.search-dropdown .search-item .code { font-weight: 600; color: #3b82f6; }
+.search-dropdown .search-item .name { color: #475569; }
+.search-dropdown .search-empty { padding: 10px; text-align: center; color: #94a3b8; font-size: .875rem; }
+
+.linked-process-badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+  background: #dbeafe; color: #1e40af; border-radius: 6px; font-size: .8rem; font-weight: 500;
+}
+.linked-process-badge .unlink-btn { cursor: pointer; opacity: .6; transition: opacity .15s; }
+.linked-process-badge .unlink-btn:hover { opacity: 1; }
+
+/* BPMN Page Layout */
+#bpmnPage {
+  margin-left: 0;
+  margin-right: 0;
+}
+#bpmnPage > .side-panel {
+  padding-left: 0;
+}
+#bpmnPage > .col-lg-9 {
+  padding-right: 0;
+}
+
+/* BPMN Side Panel Accordion */
+#bpmnSideAccordion .accordion-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem !important;
+  background: white;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+#bpmnSideAccordion .accordion-button {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.65rem 0.875rem;
+  background: #f8fafc;
+  border-radius: 0 !important;
+  box-shadow: none;
+  color: #334155;
+  gap: 0;
+  transition: background .15s, color .15s;
+}
+#bpmnSideAccordion .accordion-button:not(.collapsed) {
+  background: #f0f7ff;
+  color: var(--primary-color, #005B99);
+  box-shadow: none;
+  border-bottom: 1px solid #e0ecf7;
+}
+#bpmnSideAccordion .accordion-button.collapsed {
+  border-bottom: none;
+}
+#bpmnSideAccordion .accordion-button:focus {
+  box-shadow: none;
+  outline: 2px solid var(--primary-color, #005B99);
+  outline-offset: -2px;
+}
+#bpmnSideAccordion .accordion-button::after {
+  width: 0.875rem;
+  height: 0.875rem;
+  background-size: 0.875rem;
+}
+#bpmnSideAccordion .accordion-body {
+  padding: 0.875rem;
+  background: white;
+}
+#bpmnSideAccordion .form-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 0.25rem;
+}
+#bpmnSideAccordion .form-control-sm,
+#bpmnSideAccordion .form-select-sm {
+  font-size: 0.825rem;
+  padding: 0.4rem 0.65rem;
+}
+#bpmnSideAccordion .btn-sm {
+  font-size: 0.8rem;
+  padding: 0.375rem 0.75rem;
+}
+
+/* BPMN Toolbar */
+#bpmnPage .card-header.bg-light {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.4rem 0.75rem !important;
+}
+#bpmnPage .card-header .btn-group-sm .btn,
+#bpmnPage .card-header .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.78rem;
+}
+#bpmnPage .card-header .btn-outline-secondary {
+  border-color: #d1d5db;
+  color: #4b5563;
+}
+#bpmnPage .card-header .btn-outline-secondary:hover {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #1f2937;
+}
+#bpmnPage .card-header .btn-success {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.625rem;
+}
+
+/* BPMN Status bar */
+#bpmnPage .border-bottom.small {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.75rem !important;
+  background: #fefce8 !important;
+  color: #92400e !important;
+  border-bottom-color: #fde68a !important;
+}
+
+/* ========================================
+   Field fill-state coloring
+   --------------------------------------------------------------
+   Visual cue that a field has a value. Toggled by the JS in
+   wwwroot/js/site.js (input/change/blur listeners + initial pass
+   on DOMContentLoaded). Works for text, textarea, select, date,
+   number, file, checkbox, radio. RTL- and dark-mode-safe.
+   ======================================== */
+
+/* Default text-like inputs when filled */
+input.is-filled:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="reset"]):not([type="button"]),
+textarea.is-filled,
+select.is-filled {
+    background-color: #f0f7ff;
+    border-color: #b3d7f5;
+}
+
+/* File input "filled" — has a chosen file */
+input[type="file"].is-filled {
+    background-color: #f0f7ff;
+    border-color: #b3d7f5;
+}
+
+/* Checkbox / radio: highlight the surrounding label or the box itself when checked */
+input[type="checkbox"].is-filled,
+input[type="radio"].is-filled {
+    box-shadow: 0 0 0 2px rgba(0, 91, 153, 0.18);
+}
+
+/* Bootstrap form-floating compatibility — keep the "filled" tint without
+   stomping the floating-label transform. */
+.form-floating > .form-control.is-filled,
+.form-floating > .form-select.is-filled {
+    background-color: #f0f7ff;
+}
+
+/* Dark mode: switch to a low-luminance brand tint instead of light blue. */
+@media (prefers-color-scheme: dark) {
+    input.is-filled:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="reset"]):not([type="button"]),
+    textarea.is-filled,
+    select.is-filled,
+    input[type="file"].is-filled,
+    .form-floating > .form-control.is-filled,
+    .form-floating > .form-select.is-filled {
+        background-color: rgba(0, 91, 153, 0.12);
+        border-color: rgba(80, 165, 241, 0.45);
+    }
+}
+
+/* Validation errors take priority over fill-state — don't tint a red field blue. */
+input.is-filled.is-invalid,
+textarea.is-filled.is-invalid,
+select.is-filled.is-invalid,
+input.is-filled[aria-invalid="true"],
+textarea.is-filled[aria-invalid="true"],
+select.is-filled[aria-invalid="true"] {
+    background-color: #fff5f5;
+    border-color: #f46a6a;
+}

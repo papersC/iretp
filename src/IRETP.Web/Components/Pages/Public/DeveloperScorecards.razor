@@ -1,0 +1,112 @@
+@page "/developers/scorecards"
+@rendermode InteractiveServer
+@using IRETP.Application.DTOs
+@inject WebApiClient Api
+
+<PageTitle>IRETP – Public Developer Scorecards</PageTitle>
+
+<ModuleBanner Icon="award"
+              Title="Public Developer Scorecards"
+              Subtitle="Independent transparency view per RFP Section 9 — completed projects, on-time delivery, RERA compliance and units delivered. Sourced from DLD official records; developers cannot self-edit.">
+    <ActionsContent>
+        <input class="form-control form-control-sm" style="max-width: 280px;"
+               placeholder="Filter by name…" @bind="_filter" @bind:event="oninput" aria-label="Filter by name" />
+    </ActionsContent>
+</ModuleBanner>
+
+@if (_scorecards is null)
+{
+    <SkeletonTable Rows="8" Columns="6" WithCard="true" />
+}
+else if (_scorecards.Count == 0)
+{
+    <div class="alert alert-warning">No scorecards available yet.</div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Developer</th>
+                        <th class="text-end">Completed projects</th>
+                        <th class="text-end">On-time delivery</th>
+                        <th class="text-end">Units delivered</th>
+                        <th>RERA compliance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Filtered())
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@s.Name</div>
+                                @if (!string.IsNullOrEmpty(s.NameAr))
+                                {
+                                    <div class="small text-muted" dir="rtl">@s.NameAr</div>
+                                }
+                            </td>
+                            <td class="text-end">@s.CompletedProjects.ToString("N0")</td>
+                            <td class="text-end">
+                                <span class="@OnTimeClass(s.OnTimeDeliveryPercentage)">
+                                    @s.OnTimeDeliveryPercentage.ToString("F1")%
+                                </span>
+                            </td>
+                            <td class="text-end">@s.TotalUnitsDelivered.ToString("N0")</td>
+                            <td>@ComplianceBadge(s.ReraComplianceRating)</td>
+                        </tr>
+                    }
+                    @if (!Filtered().Any())
+                    {
+                        <tr><td colspan="5" class="text-center text-muted py-4">No developers match that filter.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-muted small">
+            Source: Dubai Land Department · RERA registry. Refreshed daily.
+        </div>
+    </div>
+}
+
+@code {
+    private List<PublicDeveloperScorecardDto>? _scorecards;
+    private string _filter = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _scorecards = await Api.GetDeveloperScorecardsAsync() ?? new(); }
+        catch { _scorecards = new(); }
+    }
+
+    private IEnumerable<PublicDeveloperScorecardDto> Filtered() =>
+        string.IsNullOrWhiteSpace(_filter)
+            ? _scorecards!
+            : _scorecards!.Where(s =>
+                s.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase)
+                || (s.NameAr?.Contains(_filter, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private static string OnTimeClass(decimal pct) => pct switch
+    {
+        >= 90 => "text-success fw-semibold",
+        >= 70 => "text-warning fw-semibold",
+        _     => "text-danger fw-semibold"
+    };
+
+    private static RenderFragment ComplianceBadge(string rating) => __b =>
+    {
+        var cls = rating switch
+        {
+            "Excellent" => "bg-success",
+            "Good"      => "bg-primary",
+            "Fair"      => "bg-warning text-dark",
+            "Poor"      => "bg-danger",
+            _           => "bg-secondary"
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", $"badge {cls}");
+        __b.AddContent(2, rating);
+        __b.CloseElement();
+    };
+}

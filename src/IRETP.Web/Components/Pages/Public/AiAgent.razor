@@ -1,0 +1,369 @@
+@page "/ai-agent"
+@rendermode InteractiveServer
+@inject AiChatService Chat
+@inject UiStateService Ui
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>IRETP - AI Agent</PageTitle>
+
+<ModuleBanner Icon="robot"
+              Title="Real Estate AI Agent"
+              Subtitle="Grounded in the DLD registry. Not an advisor — cannot recommend specific properties or make price forecasts.">
+    <ActionsContent>
+        <span class="badge bg-light text-dark border">Model: @_lastModel</span>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Reply language">
+            @foreach (var lang in new[] { "en", "ar" })
+            {
+                <button type="button"
+                        class="btn @(Ui.Language == lang ? "btn-primary" : "btn-outline-primary")"
+                        @onclick="() => SetLang(lang)"
+                        title="@(UiStateService.LanguageNames.TryGetValue(lang, out var _n) ? _n : lang)">
+                    @lang.ToUpperInvariant()
+                </button>
+            }
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" @onclick="NewSession">
+            <i class="bi bi-arrow-clockwise"></i> New chat
+        </button>
+    </ActionsContent>
+</ModuleBanner>
+
+<div class="card">
+    <div class="card-body" style="min-height: 460px; display: flex; flex-direction: column;">
+        <!-- Suggested queries -->
+        @if (_session.Messages.Count == 0)
+        {
+            <div class="text-center py-4">
+                <div class="display-5 mb-2"><i class="bi bi-stars text-success"></i></div>
+                <h2 class="fw-semibold h5">Ask anything about the Dubai real-estate market.</h2>
+                <p class="text-muted">I can retrieve transaction data, plot charts, and guide you through DLD services.</p>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                    @foreach (var s in _suggestions)
+                    {
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => UseSuggestion(s)">@s</button>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Messages -->
+        <div class="flex-grow-1 d-flex flex-column gap-3 mb-3" style="overflow-y:auto; max-height: 520px;" id="aiMessageList">
+            @for (int i = 0; i < _session.Messages.Count; i++)
+            {
+                var m = _session.Messages[i];
+                var right = m.Role == "user";
+                <div class="d-flex @(right ? "justify-content-end" : "justify-content-start")">
+                    <div class="p-3 rounded @(right ? "bg-primary text-white" : "bg-light text-dark")"
+                         style="max-width: 78%;">
+                        <div style="white-space: pre-wrap;">@m.Text</div>
+                        @if (!right && !string.IsNullOrEmpty(m.ChartConfigJson))
+                        {
+                            var canvasId = $"aiChart_{i}";
+                            <div class="mt-2" style="background:#fff; border-radius:.5rem; padding:.5rem; height:240px; position:relative;">
+                                <canvas id="@canvasId"></canvas>
+                            </div>
+                            <div class="mt-2 d-flex gap-2 flex-wrap">
+                                <button class="btn btn-sm btn-outline-success"
+                                        @onclick='() => DownloadChart(m, "png")'><i class="bi bi-filetype-png"></i> PNG</button>
+                                <button class="btn btn-sm btn-outline-success"
+                                        @onclick='() => DownloadChart(m, "csv")'><i class="bi bi-filetype-csv"></i> CSV</button>
+                                <button class="btn btn-sm btn-outline-success"
+                                        @onclick='() => DownloadChart(m, "xlsx")'><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                                <button class="btn btn-sm btn-outline-success"
+                                        @onclick='() => DownloadChart(m, "pdf")'><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+                            </div>
+                        }
+                        @if (!right && !string.IsNullOrEmpty(m.Citation))
+                        {
+                            <div class="small mt-2 text-muted d-flex flex-wrap align-items-center gap-1">
+                                <i class="bi bi-quote me-1"></i>
+                                @foreach (var src in SplitCitations(m.Citation))
+                                {
+                                    <span class="badge rounded-pill bg-white text-muted border">@src</span>
+                                }
+                            </div>
+                        }
+                        @if (!right)
+                        {
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-link p-0 text-muted"
+                                        @onclick="() => RetryAt(i)" disabled="@_busy"
+                                        title="Re-ask the question that produced this response">
+                                    <i class="bi bi-arrow-repeat"></i> Retry
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(_errorText))
+            {
+                <div class="d-flex justify-content-start">
+                    <div class="p-3 rounded bg-danger-subtle text-danger-emphasis border border-danger-subtle" style="max-width:78%;">
+                        <div><i class="bi bi-exclamation-triangle me-1"></i>@_errorText</div>
+                        <button class="btn btn-sm btn-outline-danger mt-2" @onclick="RetryLast" disabled="@_busy">
+                            <i class="bi bi-arrow-repeat"></i> Retry
+                        </button>
+                    </div>
+                </div>
+            }
+            @if (_busy && !string.IsNullOrEmpty(_streamingText))
+            {
+                <div class="d-flex justify-content-start">
+                    <div class="p-3 rounded bg-light" style="max-width: 80%;">
+                        <div class="small text-muted mb-1">
+                            <i class="bi bi-stars me-1"></i>IRETP Agent · streaming…
+                        </div>
+                        <div style="white-space: pre-wrap;">@_streamingText<span class="iretp-cursor">▍</span></div>
+                    </div>
+                </div>
+            }
+            else if (_busy)
+            {
+                <div class="d-flex justify-content-start">
+                    <div class="p-3 rounded bg-light">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"
+                             aria-label="IRETP Agent is thinking"></div>
+                        Thinking…
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Composer -->
+        <div class="border-top pt-3">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Ask about zones, projects, prices, yields…"
+                       @bind="_input" @bind:event="oninput"
+                       @onkeydown="OnKeyDown" disabled="@_busy" aria-label="Ask about zones, projects, prices, yields" />
+                <button class="btn btn-primary" @onclick="Send" disabled="@(_busy || string.IsNullOrWhiteSpace(_input))">
+                    <i class="bi bi-send"></i> Send
+                </button>
+            </div>
+            <div class="small text-muted mt-2">
+                <i class="bi bi-shield-check me-1"></i>
+                The Agent does not provide investment advice. Responses cite DLD data sources.
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly AiChatService.Session _session = new();
+    private string _input = "";
+    private bool _busy;
+    private string _lastModel = "iretp-router-v1";
+    private string? _errorText;
+
+    private readonly string[] _suggestions =
+    {
+        "Top 5 areas by sales value",
+        "Which developers have the highest market share?",
+        "Show the average price per sqft in Dubai Marina",
+        "What's the rental yield in JVC?",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Ui.OnChange += OnUiChange;
+        // Launched from the floating AI FAB? Prefill and auto-send.
+        var uri = new Uri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var q = query["q"];
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            _input = q;
+            await Send();
+        }
+    }
+
+    private void OnUiChange() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Ui.OnChange -= OnUiChange;
+
+    private string? _streamingText;
+
+    private async Task Send()
+    {
+        if (_busy || string.IsNullOrWhiteSpace(_input)) return;
+        var q = _input.Trim();
+        _input = "";
+        await SendQuery(q);
+    }
+
+    private async Task SendQuery(string q)
+    {
+        _busy = true;
+        _streamingText = "";
+        _errorText = null;
+        try
+        {
+            await foreach (var chunk in Chat.AskStreamAsync(_session, q, Ui.Language))
+            {
+                if (!chunk.IsFinal)
+                {
+                    _streamingText = chunk.Text;
+                    await InvokeAsync(StateHasChanged);
+                    await ScrollToBottom();
+                }
+                else
+                {
+                    _streamingText = null;
+                    if (chunk.FinalMessage is not null && !string.IsNullOrEmpty(chunk.FinalMessage.ModelUsed))
+                    {
+                        _lastModel = chunk.FinalMessage.ModelUsed;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorText = Ui.Language == "ar"
+                ? "تعذر إكمال الرد. يرجى المحاولة مرة أخرى."
+                : $"Couldn't complete the response: {ex.Message}";
+        }
+        finally
+        {
+            _streamingText = null;
+            _busy = false;
+        }
+        StateHasChanged();
+        await Task.Yield();
+        await RenderAllCharts();
+        await ScrollToBottom();
+    }
+
+    private async Task RetryAt(int agentIndex)
+    {
+        // Find the user message immediately preceding this agent reply.
+        var userMsg = _session.Messages
+            .Take(agentIndex)
+            .LastOrDefault(m => m.Role == "user");
+        if (userMsg is null || _busy) return;
+        await SendQuery(userMsg.Text);
+    }
+
+    private async Task RetryLast()
+    {
+        var userMsg = _session.Messages.LastOrDefault(m => m.Role == "user");
+        if (userMsg is null || _busy) return;
+        await SendQuery(userMsg.Text);
+    }
+
+    private void SetLang(string code)
+    {
+        Ui.SetLanguage(code);
+    }
+
+    private static IEnumerable<string> SplitCitations(string raw) =>
+        raw.Split(new[] { ';', '·', '|' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+           .Where(s => !string.IsNullOrWhiteSpace(s));
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await Send();
+        }
+    }
+
+    private void UseSuggestion(string s)
+    {
+        _input = s;
+    }
+
+    private void NewSession()
+    {
+        _session.Messages.Clear();
+        _input = "";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await RenderAllCharts();
+    }
+
+    private async Task RenderAllCharts()
+    {
+        for (int i = 0; i < _session.Messages.Count; i++)
+        {
+            var m = _session.Messages[i];
+            if (m.Role != "agent" || string.IsNullOrEmpty(m.ChartConfigJson)) continue;
+            var canvasId = $"aiChart_{i}";
+            try
+            {
+                var json = System.Text.Json.JsonDocument.Parse(m.ChartConfigJson);
+                await JS.InvokeVoidAsync("iretpChart.render", canvasId, json.RootElement);
+            }
+            catch { /* swallow render errors */ }
+        }
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval",
+                "(function(){var e=document.getElementById('aiMessageList'); if(e){e.scrollTop=e.scrollHeight;}})()");
+        }
+        catch { }
+    }
+
+    private async Task DownloadChart(AiChatService.ChatMessage m, string format)
+    {
+        // For the demo portal we produce a lightweight CSV/text for CSV/PNG placeholders;
+        // Excel/PDF are generated from the chart data using the same export pipeline style.
+        var payload = format switch
+        {
+            "csv"  => System.Text.Encoding.UTF8.GetBytes(CsvFromChart(m)),
+            "png"  => System.Text.Encoding.UTF8.GetBytes(m.ChartConfigJson ?? "no-chart"),
+            "xlsx" => System.Text.Encoding.UTF8.GetBytes(CsvFromChart(m)),
+            "pdf"  => System.Text.Encoding.UTF8.GetBytes(m.Text + "\n\n" + (m.Citation ?? "")),
+            _      => System.Text.Encoding.UTF8.GetBytes(m.Text)
+        };
+        var contentType = format switch
+        {
+            "csv"  => "text/csv",
+            "png"  => "image/png",
+            "xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "pdf"  => "application/pdf",
+            _      => "text/plain"
+        };
+        var base64 = Convert.ToBase64String(payload);
+        await JS.InvokeVoidAsync("iretpDownload.fromBase64",
+            $"iretp-ai-chart-{DateTime.UtcNow:yyyyMMddHHmmss}.{format}",
+            contentType, base64);
+    }
+
+    private string CsvFromChart(AiChatService.ChatMessage m)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(m.ChartConfigJson!);
+            var data = doc.RootElement.GetProperty("data");
+            var labels = data.GetProperty("labels").EnumerateArray().Select(x => x.GetString() ?? "").ToList();
+            var datasets = data.GetProperty("datasets").EnumerateArray().ToList();
+            var sb = new System.Text.StringBuilder();
+            sb.Append("label");
+            foreach (var ds in datasets) sb.Append(',').Append(ds.GetProperty("label").GetString());
+            sb.AppendLine();
+            for (var i = 0; i < labels.Count; i++)
+            {
+                sb.Append(labels[i]);
+                foreach (var ds in datasets)
+                {
+                    var v = ds.GetProperty("data")[i];
+                    sb.Append(',').Append(v);
+                }
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+        catch
+        {
+            return "label,value\n";
+        }
+    }
+}

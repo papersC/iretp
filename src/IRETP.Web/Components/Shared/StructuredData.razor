@@ -1,0 +1,32 @@
+@* Renders a schema.org JSON-LD block in the current page. Emitted inline
+   so crawlers (Google, Bing) can pick it up without JavaScript execution.
+   Used on project detail, developer scorecard, and GRETI pages to expose
+   structured real-estate metadata to investment-research bots. *@
+@using System.Text.Json
+
+@if (!string.IsNullOrEmpty(Json))
+{
+    <script type="application/ld+json">@((MarkupString)Json)</script>
+}
+
+@code {
+    [Parameter] public string Type { get; set; } = "Organization";
+    [Parameter] public Dictionary<string, object>? Data { get; set; }
+
+    private string? Json
+    {
+        get
+        {
+            if (Data is null) return null;
+            var payload = new Dictionary<string, object>(Data)
+            {
+                ["@context"] = "https://schema.org",
+                ["@type"] = Type
+            };
+            return JsonSerializer.Serialize(payload, new JsonSerializerOptions
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
+        }
+    }
+}

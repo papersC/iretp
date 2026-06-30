@@ -1,0 +1,2574 @@
+--- PAGE 1 ---
+ 
+DUBAI LAND DEPARTMENT 
+ 
+REQUEST FOR PROPOSAL 
+RFP No.: DLD-IRETP-2026-001 
+ 
+ 
+Integrated Real Estate Transparency Platform 
+(IRETP) 
+ 
+Issuing 
+Authority: 
+Dubai Land Department (DLD) 
+RFP Version: 1.0 
+Issue Date: April 2026 
+Classification: CONFIDENTIAL 
+Project 
+Duration: 
+4 calendar months from contract signing (four phased deliveries). Go-live only 
+after successful completion of all mandatory testing. 
+Post-Go-Live: 12-month warranty & technical support following final go-live sign-off 
+Evaluation 
+Weights: 
+Technical Requirements: 70%  |  Budget & Cost: 30% 
+  
+--- PAGE 2 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Table of Contents 
+1.   Executive Summary 
+2.   Project Overview & Strategic Context 
+3.   Functional Requirements — External Public Portal 
+4.   Interactive Analytics Engine (Slice & Dice) 
+5.   Real Estate AI Agent 
+6.   Investor Notification & Alert System 
+7.   Multilingual Requirements 
+8.   Internal Platform — Early Warning Risk System (EWRS) 
+9.   Internal Platform — Developer Performance & Rating 
+10. Non-Functional Requirements 
+11. Technology & Hosting Architecture — Vendor Proposal 
+12. DLD Data Understanding & Analytics Assessment 
+13. Phased Delivery Plan 
+14. Cost Structure 
+15. Warranty & Technical Support — 12 Months Post Go-Live 
+16. Vendor Qualifications 
+17. Acceptance Criteria 
+18. Proposal Evaluation Criteria 
+19. Data Governance, Privacy & Ownership 
+20. Additional Recommended Features 
+21. Glossary of Terms 
+  
+--- PAGE 3 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+1.   Executive Summary 
+The Dubai Land Department (DLD) hereby issues this Request for Proposal (RFP) for the design, 
+development, deployment, maintenance, and post-go-live support of the Integrated Real Estate 
+Transparency Platform (IRETP). The primary strategic objective is to advance Dubai's standing in the 
+JLL Global Real Estate Transparency Index (GRETI) and to reinforce investor confidence among 
+international financial institutions, sovereign wealth funds, and global investors. 
+ 
+The platform directly supports the Dubai Economic Agenda D33 and the Smart Dubai Strategy by 
+providing open, accurate, real-time, and interactive real estate data to the public while equipping DLD 
+leadership with powerful internal risk management and developer oversight tools. 
+ 
+The IRETP comprises two integrated pillars: 
+• External Public Portal — A world-class, multilingual data portal for international investors, 
+financial institutions, property developers, and the general public, offering interactive 
+dashboards, a GIS map, an AI-powered data agent, self-service analytics, and open-data 
+export capabilities. 
+• Internal Management Platform — A secure, role-based platform for DLD staff and 
+leadership, encompassing a developer performance rating engine, Escrow account 
+monitoring, an Early Warning Risk System (EWRS), and multi-level leadership alert 
+workflows. 
+ 
+This RFP does not prescribe specific technology brands, frameworks, programming languages, or 
+hosting providers. Vendors are expected to propose the solution architecture, technology stack, and 
+hosting model that best meets the requirements described herein. Proposals are evaluated on 70% 
+technical merit and 30% budget and total cost of ownership. 
+ 
+Delivery is structured across four phases, all of which must be completed within 3 calendar months 
+from the date of contract signing. Go-live of any phase is conditional on the successful completion of 
+all mandatory testing and acceptance criteria for that phase — no phase may go live before its tests 
+are fully passed. Following the go-live of the final phase, the vendor must provide a 12-month 
+warranty and technical support period as part of this contract. 
+ 
+1.1   Platform Objectives 
+Objective Description 
+GRETI Score Improvement Directly address the six JLL GRETI sub-indices through open data, AI 
+integration, and market transparency measures. 
+Investor Confidence Provide institutionally credible, machine-readable, and auditable real 
+estate data for international markets. 
+Data Accuracy Ensure all published data undergoes rigorous analytics assessment against 
+DLD source systems before and after go-live. 
+--- PAGE 4 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Objective Description 
+Developer Governance Establish a transparent, data-driven developer accountability framework 
+accessible to DLD leadership. 
+Market Risk Management Equip DLD with proactive risk detection tools identifying project and 
+market stress indicators before escalation. 
+Sustained Operations Ensure platform stability, security, and timely defect resolution through a 
+mandatory 12-month warranty and technical support period following go-
+live. 
+ 
+  
+--- PAGE 5 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+2.   Project Overview & Strategic Context 
+2.1   Background 
+The JLL Global Real Estate Transparency Index (GRETI), published biennially, is the primary 
+reference used by institutional investors, lenders, and multinational corporations to evaluate real 
+estate market quality globally. The 2024 edition assessed 256 individual indicators across 89 
+countries and 151 cities. Markets in the 'Highly Transparent' tier attract over 80% of global direct 
+commercial real estate investment. Dubai has demonstrated consistent improvement, and this 
+platform is designed to accelerate that progress. 
+ 
+2.2   GRETI Sub-Index Gap Analysis 
+GRETI Sub-Index Identified Gap How IRETP Addresses It 
+Investment Performance 
+Measurement 
+Limited public price indices and 
+rental yield data 
+Real-time price-per-sqft index, rental yield 
+heatmaps, and historical transaction charts 
+by zone 
+Market Fundamentals & 
+Data Availability 
+Fragmented, non-machine-
+readable data 
+Open Data API, Excel/CSV/PDF exports, 
+structured data by property type, zone, and 
+period 
+Transaction Process 
+Transparency 
+Partial visibility into off-plan and 
+gifting transactions 
+Full transaction registry: sales, gifts, 
+mortgages, auctions — publicly 
+searchable and exportable 
+Technology & AI Integration No conversational AI or self-
+service analytics 
+AI Agent with RAG architecture, Slice & 
+Dice analytics engine, and in-chat 
+dashboard generation 
+Sustainability / ESG No publicly accessible green-
+building data layer 
+ESG module displaying LEED/Estidama 
+certification data (Phase 4) 
+Governance of Listed 
+Vehicles 
+Developer risk data not publicly 
+accessible 
+Public Developer Scorecard and internal 
+Developer Rating Platform (Phase 3) 
+ 
+2.3   Project Scope Summary 
+1. External Public Real Estate Data Portal — investor-facing, bilingual (Phase 1). 
+2. Real Estate AI Agent — deployed on both External and Internal platforms (Phase 1 onwards). 
+3. Interactive Analytics & Slice-and-Dice Engine (Phase 1). 
+4. Internal Platform — Early Warning Risk System (EWRS) with multi-level leadership alerts 
+(Phase 2). 
+5. Internal Platform — Developer Performance & Rating with Escrow Monitoring (Phase 3). 
+6. External Portal — Extended Languages (6 additional languages, Phase 4). 
+7. Headless Content Management System (CMS) for non-technical content updates (Phase 1). 
+8. Open Data API & Developer Portal (Phase 1). 
+--- PAGE 6 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+9. DLD Data Understanding, Integration, and Analytics Assessment — mandatory pre-
+publication data validation (Phase 1, ongoing). 
+10. Infrastructure, Security Architecture, and DESC Compliance Framework (all phases). 
+11. 12-Month Warranty & Technical Support following final phase go-live. 
+ 
+  
+--- PAGE 7 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+3.   Functional Requirements — External Public Portal 
+3.1   Content Management System (CMS) 
+The platform must allow DLD non-technical staff to update, add, or remove page content — text, 
+images, data annotations, banners, and calls-to-action — through a visual administration interface, 
+without any developer involvement or re-deployment. 
+ 
+Req. 
+ID Requirement Specification Acceptance Criterion 
+FR-
+001 
+Headless CMS — Non-
+Technical Editing 
+API-first headless CMS proposed by the 
+vendor. Full RBAC within CMS. Supports 
+content types: rich text, images, structured 
+data tables, embedded charts, map 
+annotations, hyperlinks, and banners. Must 
+support Arabic (RTL) and English from a 
+single content model. 
+Any main portal page 
+fully updated by a non-
+developer DLD staff 
+member in under 10 
+minutes. Content 
+changes live within 30 
+seconds of publish. 
+FR-
+002 
+Staging & Publication 
+Workflow 
+Must support staging → preview → 
+production workflow. Preview link 
+shareable with DLD senior management for 
+approval before publishing. Version history 
+retained for at least 12 months with 
+rollback capability. 
+Rollback to any prior 
+version within 2 clicks. 
+Management can 
+preview changes on 
+staging URL before 
+approval. 
+ 
+3.2   Homepage — Market Overview Dashboard 
+Req. 
+ID Feature Specification Acceptance Criterion 
+FR-
+003 
+Real-Time KPI Cards Display live KPIs: (a) Total transactions 
+this month (count and AED value), (b) 
+Average price per sqft — Dubai-wide, (c) 
+Total completed units YTD, (d) Active off-
+plan projects count, (e) Average residential 
+rental yield %. Each card shows a trend 
+arrow vs. prior period (MoM and YoY). 
+Cards must be CMS-configurable. 
+KPIs refresh every 15 
+minutes. Data lag from 
+DLD source systems 
+must not exceed 15 
+minutes. 
+FR-
+004 
+Interactive Market Charts Minimum four interactive charts: (1) 
+Monthly transaction volume — line chart, 
+24-month history. (2) Transaction type 
+breakdown — donut chart. (3) Top 5 most-
+active zones — bar chart. (4) Price-per-sqft 
+trend — dual-axis line chart. All charts 
+support hover tooltips, zoom, and pan. 
+Period filters: Last 6M / 12M / 36M / 
+Custom. 
+Charts render within 2 
+seconds after filter 
+change. All chart data 
+traceable to DLD 
+records. 
+--- PAGE 8 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Req. 
+ID Feature Specification Acceptance Criterion 
+FR-
+005 
+Language & Currency 
+Switcher 
+Language switcher in global header on all 
+pages. Currency switcher (AED / USD / 
+EUR / GBP / CNY / RUB) applying daily 
+exchange rates from UAE Central Bank 
+API or equivalent. User preference stored 
+in browser and in account. 
+Language switch takes 
+effect within 1 second 
+with no page reload. 
+ 
+3.3   Transactions Page 
+Req. 
+ID Feature Specification Acceptance Criterion 
+FR-
+006 
+Full Transaction Registry Searchable, filterable table of all recorded 
+transactions. Each row: Transaction Date, 
+Zone/Community, Project Name, Property 
+Type (Apartment / Villa / Townhouse / Plot 
+/ Commercial), Transaction Type (Sale / 
+Gift / Mortgage / Auction / Inheritance), 
+Total Area (sqft and sqm), Transaction 
+Value (AED), Price Per Sqft, Financing 
+Method. Minimum 5 full calendar years of 
+historical data. 
+5-year data accessible. 
+Table loads within 3 
+seconds for up to 10,000 
+rows. 
+FR-
+007 
+Multi-Dimensional Filters Filters operating simultaneously with real-
+time update: Date Range, Zone/Community 
+(multi-select), Property Type (multi-select), 
+Transaction Type, Price Range (dual-
+handle slider), Area Range (sqft), 
+Financing Method. Active filter summary 
+bar shown at all times. 
+Any filter combination 
+updates results within 2 
+seconds. Filter state 
+persists on page refresh 
+via URL parameters. 
+FR-
+008 
+Transaction Data Export Export full filtered dataset in: (a) Excel 
+(.xlsx) with DLD header, timestamp, and 
+applied filters in a metadata sheet, (b) CSV 
+— raw data, (c) PDF — formatted report 
+with DLD branding and summary statistics. 
+Maximum 50,000 rows per export. 
+Export and download 
+begins within 10 seconds 
+for datasets up to 50,000 
+rows. 
+ 
+3.4   Interactive GIS Map — Zones & Projects 
+Req. 
+ID Feature Specification Acceptance Criterion 
+FR-
+009 
+GIS Zone Heatmap Full-screen interactive GIS map of Dubai 
+with zone-level data overlays. Three 
+switchable heatmap layers: (1) Transaction 
+Activity — intensity reflects monthly 
+Map initialises within 5 
+seconds on a 10 Mbps 
+connection. All three 
+--- PAGE 9 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Req. 
+ID Feature Specification Acceptance Criterion 
+volume, (2) Average Price Per Sqft — 
+colour ramp from low to high, (3) Rental 
+Yield — gross yield % per zone. Zone 
+boundaries from official Dubai 
+Municipality GIS data. 
+layers switch without 
+page reload. 
+FR-
+010 
+Zone Detail Panel Clicking any zone opens a panel 
+displaying: Zone Name, Total Transactions 
+(last 12 months), Average Sale Price Per 
+Sqft, Average Annual Rental by unit type, 
+Average Gross Rental Yield (%), Price 
+Trend Indicator (up/stable/down with % 
+change), Top 3 active developers, Active 
+off-plan projects count, Completed projects 
+count. A 'View Projects in This Zone' 
+button navigates to the filtered Projects 
+page. 
+Panel opens within 1 
+second of zone click. All 
+fields populated from 
+live DLD data. 
+FR-
+011 
+Project Pins & Clustering All active projects as interactive map pins, 
+colour-coded by status: Completed, Under 
+Construction, Future/Announced, Stalled. 
+Pins cluster at low zoom levels. Clicking a 
+cluster zooms to expand. Map filter 
+controls update pin visibility in real time. 
+All project pins render 
+within 3 seconds. 
+Clustering correct at all 
+zoom levels. 
+FR-
+012 
+Project Detail Panel Clicking a project pin opens a panel with: 
+Project Name, Developer Name and 
+Licence Number (linked to developer 
+profile), Status badge, Completion 
+Percentage (progress bar), 
+Total/Sold/Available Units, Unit Types 
+with average prices, Expected Delivery 
+Date, Location mini-map, Link to official 
+DLD Project Registration Record. 
+All data populated from 
+DLD official records. 
+Developer cannot self-
+edit any displayed field. 
+ 
+3.5   Price Index & Rental Index Pages 
+Req. 
+ID Feature Specification Acceptance Criterion 
+FR-
+013 
+Price Per Sqft Index Interactive index showing average 
+transaction price per sqft across Dubai. 
+Dimensions: property type, transaction 
+status (Off-Plan / Ready), time range 
+(zoomable 10-year trend). Zone 
+comparison — user selects up to 5 zones 
+for an overlaid chart. Quarterly and annual 
+change indicators. 
+Index data derived 
+exclusively from actual 
+DLD transactions. 
+Updated weekly. 
+FR-
+014 
+Rental Index & Yield 
+Calculator 
+Residential and commercial rental index 
+per zone: average annual rent by unit type, 
+Rental data sourced from 
+registered Ejari records 
+--- PAGE 10 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Req. 
+ID Feature Specification Acceptance Criterion 
+5-year historical trend, Gross Rental Yield 
+= (Annual Rent / Transaction Price) × 100 
+per zone and unit type, yield heatmap 
+linked to the GIS map. Segment filters: 
+Residential / Commercial, Short-Term / 
+Long-Term. 
+or DLD-endorsed data. 
+Updated quarterly at 
+minimum. 
+ 
+  
+--- PAGE 11 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+4.   Interactive Analytics Engine — Slice & Dice 
+The platform must provide a self-service analytics engine enabling any user — without technical 
+expertise — to construct, explore, and export custom data analyses through a visual guided interface. 
+ 
+Req. 
+ID Capability Specification Acceptance Criterion 
+AN-
+001 
+Dimension & Metric 
+Selection 
+Users select dimensions (Zone, Developer, 
+Property Type, Transaction Type, Time 
+Period, Construction Status) and metrics 
+(Transaction Count, Total Value AED, 
+Average Price/Sqft, Rental Yield %, Units 
+Count, Completion %). Any combination 
+of up to 4 dimensions and 3 metrics 
+simultaneously. 
+Any valid combination 
+renders a correct chart 
+within 3 seconds. 
+AN-
+002 
+Visualization Types Results in user-selectable types: Bar, 
+Stacked Bar, Line, Area, Scatter, Donut, 
+Treemap, Data Table, KPI Summary Cards. 
+System recommends the most appropriate 
+type. 
+All 9 chart types render 
+correctly for all valid 
+data combinations. 
+AN-
+003 
+Saved Views & Personal 
+Dashboards 
+Users can save any configured analysis 
+view. Registered users can build a personal 
+dashboard from up to 12 saved views in a 
+drag-and-drop grid. Dashboards can be 
+shared via a secure, read-only link. 
+Saved view restores all 
+filter states, chart type, 
+and dimensions 
+accurately. 
+AN-
+004 
+Full-Dataset Export Export the complete filtered dataset in: 
+Excel (.xlsx) with summary statistics sheet, 
+CSV (raw data), PDF (formatted report 
+with DLD letterhead and embedded chart), 
+JSON (for API users). Exports include: 
+date generated, filters applied, data source 
+reference, and disclaimer note. 
+Export of 50,000-row 
+dataset completes within 
+15 seconds. 
+AN-
+005 
+Zone Comparison Module Dedicated comparison view: up to 5 zones 
+compared across any metrics over a 
+selected time period, displayed as side-by-
+side bar charts, overlaid line charts, and a 
+sortable comparison table. 
+Comparison of 5 zones 
+with 3 metrics renders 
+within 4 seconds. 
+AN-
+006 
+Shareable Analysis Links Every analysis configuration generates a 
+unique shareable URL encoding all 
+selected dimensions, metrics, filters, chart 
+type, and time period. Links valid for a 
+minimum of 12 months. 
+Shared link restores 
+analysis state with 100% 
+fidelity. 
+ 
+  
+--- PAGE 12 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+5.   Real Estate AI Agent Requirements 
+5.1   Scope & Critical Constraint 
+CRITICAL CONSTRAINT — NO INVESTMENT ADVISORY  The AI Agent is strictly prohibited 
+from providing personalised investment advice, recommending specific properties or developers for 
+purchase, making price forecasts presented as facts, or any other form of financial or legal advisory. The 
+Agent's role is exclusively to retrieve, present, and analyse data from the DLD database and to guide users 
+to official DLD services. This constraint must be enforced at the system-prompt level and validated during 
+UAT. 
+ 
+5.2   Core Agent Capabilities 
+Req. 
+ID Capability Specification Constraints & Standards 
+AI-
+001 
+Natural Language Data 
+Queries 
+The agent must accurately respond to any 
+natural-language question about DLD 
+database data in both English and Arabic. 
+All answers must cite the source data and 
+time period. The agent must acknowledge 
+when data is unavailable rather than 
+fabricating an answer. 
+Accuracy benchmark: 
+greater than 90% correct 
+answers on a standardised 
+100-question DLD data 
+test set. Source citation 
+mandatory for every data 
+point. 
+AI-
+002 
+In-Chat Dashboard 
+Generation 
+Upon user request, the agent must generate 
+fully interactive charts and dashboard 
+widgets directly within the chat window. 
+Generated charts must support hover 
+tooltips, zoom, and axis labels, accompanied 
+by a brief textual data summary. 
+Charts generated from 
+actual DLD data only. 
+Maximum 30-second 
+generation time. 
+AI-
+003 
+In-Chat Download After generating any chart, table, or analysis, 
+the agent must display a download button 
+offering: PDF (chart + data table + DLD 
+branding), Excel (.xlsx), PNG (chart image 
+only), CSV (raw data). Files include: DLD 
+logo, timestamp, query parameters, and data 
+source statement. 
+Download button appears 
+within 2 seconds of chart 
+generation. All four 
+formats function correctly. 
+AI-
+004 
+Deep Data Analysis Support complex analytical queries: 
+correlation analysis, anomaly detection in 
+transaction volumes, multi-year trend 
+analysis, developer performance 
+comparison. The agent must explain its 
+methodology in plain language. 
+Complex queries 
+answered within 15 
+seconds. Trend analysis 
+clearly labelled as 
+historical, not predictive. 
+AI-
+005 
+DLD Service Navigation Guide users to official DLD services with 
+step-by-step instructions: Property 
+Registration, RERA NOC, Developer 
+licence verification, Ejari registration, 
+Service information 
+reviewed and approved by 
+DLD operations team 
+before go-live. 
+--- PAGE 13 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Req. 
+ID Capability Specification Constraints & Standards 
+Valuation services — with links to official 
+DLD service pages. 
+AI-
+006 
+Session Context Memory Agent maintains complete context within a 
+session. For authenticated users: optional 
+cross-session memory of zone preferences 
+and frequent query topics. Memory opt-
+in/opt-out user-controlled from account 
+settings. 
+Agent resolves context 
+correctly in more than 
+95% of multi-turn 
+conversations in the UAT 
+test set. 
+AI-
+007 
+Multilingual Support Phase 1: Full conversational capability in 
+English and Arabic. Phase 4: Basic query 
+handling in Chinese (Simplified), Russian, 
+Urdu, French, Hindi, and German with 
+graceful English fallback. 
+Arabic NLP accuracy 
+within 5% of English 
+accuracy on the same 
+standardised test set. 
+ 
+5.3   AI Model Architecture — Multi-Model Approach 
+DLD does not prescribe a specific AI model, vendor, or provider. The platform must support a multi-
+model AI architecture that gives DLD the flexibility to use more than one AI model — either 
+simultaneously for different tasks, or switchable by the platform administrator without requiring 
+redevelopment. The vendor must propose and justify their multi-model architecture in the proposal. 
+ 
+The following requirements apply to the AI architecture: 
+ 
+AI Architecture 
+Requirement Specification 
+Multi-Model Support The platform must support the use of more than one AI language model. The 
+vendor must design an orchestration layer (e.g., an AI routing or gateway 
+component) that sits between the AI Agent and the underlying models, enabling 
+DLD to: (a) use different models for different task types (e.g., one model for data 
+queries, another for service navigation), (b) switch the active model from the 
+administration interface without code changes or redeployment, and (c) add a 
+new AI model provider in the future by configuration, not by rebuilding the AI 
+layer. 
+Acceptable Model Options The AI orchestration layer must be compatible with, and the proposal must 
+demonstrate how it will support, a range of model types including but not limited 
+to: managed AI API services (such as OpenAI API, Anthropic API, Google 
+Gemini API, or equivalent), self-hosted open-source LLMs (such as Llama, 
+Mistral, or equivalent models hosted within the UAE), and custom fine-tuned 
+models trained on DLD domain data. The vendor may propose any combination 
+of these. DLD does not mandate a specific model or provider. 
+Mandatory RAG Layer A Retrieval-Augmented Generation (RAG) layer is mandatory regardless of 
+which AI model is used. The RAG layer must index the DLD transaction 
+database, project registry, developer profiles, RERA regulations, and DLD 
+service procedures, and must ground every AI Agent response in retrieved data 
+--- PAGE 14 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+AI Architecture 
+Requirement Specification 
+before generation. The RAG layer must be model-agnostic — it must function 
+correctly regardless of which underlying LLM is active. 
+Model Fallback & 
+Redundancy 
+If the primary AI model is unavailable (API outage, service degradation), the 
+system must automatically fall back to a secondary model without user -visible 
+disruption. The vendor must describe the fallback model and the expected impact 
+on response quality during fallback. The AI Agent must never display a raw API 
+error to the end user. 
+UAE Data Residency All AI inference and data processing must occur within the United Arab 
+Emirates, regardless of which AI model is active. If using a managed AI API 
+service, the vendor must confirm that the provider offers a UAE or Gulf-region 
+inference endpoint and that data does not transit outside the UAE. If no UAE 
+endpoint is available for a proposed model, the vendor must propose a compliant 
+alternative. 
+Custom Fine-Tuning Option The vendor must indicate whether they propose custom fine-tuning of one or 
+more models on DLD domain data (real estate terminology, RERA procedures, 
+zone nomenclature, transaction classification). If fine-tuning is proposed, the 
+vendor must describe the training data approach, the fine-tuning schedule, and 
+how model accuracy will be validated post-fine-tuning. Fine-tuning is not 
+mandatory but will be evaluated as a differentiator. 
+Model Performance 
+Transparency 
+The administration interface must display, for each configured model: the model 
+name and version, the current active/inactive status, the average response latency 
+over the last 7 days, and any active fallback conditions. DLD administrators 
+must be able to view this information without vendor assistance. 
+ 
+  
+--- PAGE 15 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+6.   Investor Notification & Alert System 
+6.1   External Investor Alert Types 
+Alert Type Trigger Condition (User-Configurable) Delivery Channels 
+Price Movement Alert Average price per sqft in a selected zone 
+changes by more than X% (user sets threshold 
+1%–25%) within a selected period. 
+Email (HTML) + In-Platform 
+Notification 
+New Project Launch A new project is registered in DLD in a zone or 
+by a developer selected as a preference. 
+Email + SMS (optional) + Push 
+notification 
+Watchlist Project Status 
+Change 
+Any project in the investor's Watchlist changes 
+construction status, completion percentage, or 
+delivery date. 
+Email + In-Platform + SMS 
+(optional) 
+Rental Yield Threshold Average gross rental yield in a selected zone 
+exceeds or falls below a user-defined 
+percentage. 
+Email + In-Platform 
+Notification 
+Periodic Market Digest Weekly or monthly summary of market 
+movements in the investor's zones of interest. 
+Email (HTML with embedded 
+charts) 
+Regulation / Policy 
+Update 
+A DLD regulation change or RERA directive 
+relating to selected property types or zones. 
+Email + In-Platform 
+Notification 
+ 
+6.2   Notification Delivery Standards 
+• Email: professional HTML template with DLD branding, embedded chart for price/yield 
+alerts, clear call-to-action link, and unsubscribe link. 
+• SMS: plain-text under 160 characters, including the critical metric value and a shortened link. 
+• In-Platform Notification Centre: persistent bell icon in header, unread count badge, 
+notification list with read/unread states, mark-all-as-read function. 
+• Delivery SLA: email within 5 minutes of trigger; SMS within 3 minutes; in-platform 
+notification instantaneous. 
+ 
+  
+--- PAGE 16 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+7.   Multilingual Requirements 
+Platform Languages Required Coverage Scope Delivery Phase 
+Internal Platform English, Arabic Full UI, all content, AI Agent, 
+alert messages 
+Phase 1 
+External Portal — 
+Core 
+English, Arabic Full UI, all content, AI Agent 
+(full NLP), export labels 
+Phase 1 
+External Portal — 
+Extended 
+Simplified Chinese, 
+Russian, Urdu, French, 
+Hindi, German 
+Full UI translation + static content 
++ AI Agent basic query handling 
+Phase 4 
+ 
+7.1   Technical Localisation Standards 
+• RTL (Right-to-Left) layout must be fully applied for Arabic and Urdu — including layout 
+mirroring of navigation, icon placement, chart axis alignment, and table column order. 
+• All text stored in Unicode/UTF-8. No hardcoded strings in the codebase — all translatable 
+strings managed through i18n resource files or CMS locale fields. 
+• Chart labels, axis titles, data tooltips, export headers, and PDF reports must all respect the 
+active language. 
+• Arabic translation of official zone names, project names, and developer names must be 
+validated by DLD's official records before go-live. 
+• Language preference stored per user account and in browser storage. Language can be 
+changed without losing current page state. 
+ 
+  
+--- PAGE 17 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+8.   Internal Platform — Early Warning Risk System (EWRS) 
+8.1   Risk Indicators & Thresholds 
+Risk Indicator Default Trigger Threshold Risk Level Escalation Path 
+Project Delivery Delay — 
+Warning 
+Declared delivery date 
+exceeded by more than 6 
+months with less than 80% 
+completion 
+Warning Level 1 to Level 2 
+Project Delivery Delay — 
+Critical 
+Declared delivery date 
+exceeded by more than 12 
+months with less than 90% 
+completion 
+High Risk Levels 1, 2, and 3 
+Escrow Shortfall — Warning Escrow balance below 80% 
+of required minimum 
+Warning Level 1 to Level 2 
+Escrow Shortfall — Critical Escrow balance below 60% 
+of required minimum 
+High Risk Levels 1, 2, 3, and 4 
+Construction Activity 
+Suspension 
+No construction progress 
+update registered for more 
+than 30 consecutive days 
+Warning (30+ 
+days) / High 
+Risk (60+ 
+days) 
+Level 2 at 30 days; Level 3 
+at 60 days 
+Sharp Transaction Volume 
+Decline 
+Monthly transactions in a 
+zone drop more than 40% vs. 
+the 12-month rolling average 
+Medium Level 2 (Zone Risk Report) 
+Developer Score Deterioration Developer composite score 
+drops more than 15 points in 
+a single quarter 
+Medium to 
+High Risk if 
+score falls 
+below 40 
+Level 2 + Developer Review 
+Flag 
+High-Risk Project 
+Concentration 
+Portfolio share of High Risk 
+projects exceeds 30% of all 
+active projects 
+High Risk Level 3 + Executive 
+Summary Report 
+Price Decline — Zone Level Average sale price per sqft in 
+any zone declines more than 
+15% within a single quarter 
+Medium Level 2 (Market Risk 
+Report) 
+Severe Regulatory Violation Developer receives a 
+Critical-category RERA 
+violation 
+High Risk Level 3 + Automatic Audit 
+Flag 
+ 
+Note: All threshold values are defaults. Authorised DLD administrators must be able to adjust every 
+threshold from the EWRS configuration panel. All changes must be logged with timestamp and 
+approver identity. 
+ 
+8.2   Multi-Level Alert Escalation Framework 
+--- PAGE 18 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Alert Level Recipients Delivery Channels Response SLA 
+Level 1 — 
+Operational 
+Assigned DLD project officer Internal platform 
+notification + email 
+Acknowledge within 4 
+business hours; action 
+plan within 2 business 
+days 
+Level 2 — 
+Managerial 
+Section Manager + Division 
+Director 
+Email + SMS + platform 
+notification with priority 
+badge 
+Acknowledge within 2 
+business hours; escalation 
+decision within 1 business 
+day 
+Level 3 — Senior 
+Leadership 
+Director General + Deputy 
+Directors General 
+Encrypted email + SMS + 
+auto-generated Executive 
+Summary PDF 
+Acknowledge within 1 
+hour (business hours); 
+within 4 hours (after 
+hours) 
+Level 4 — 
+Strategic 
+Director General + Relevant 
+Regulatory Authority 
+Formal encrypted email + 
+SMS + automated briefing 
+document + optional 
+robocall trigger 
+Immediate — no standard 
+SLA: notification is 
+regulatory or crisis level 
+ 
+8.3   EWRS Dashboard Interface Requirements 
+• Main Risk Overview Dashboard: Dubai-wide risk heatmap on the GIS map (project pins 
+colour-coded by risk level). Summary KPI bar: total High Risk projects, total Warning 
+projects, projects with Escrow shortfall, projects with construction halt. 
+• Alert Inbox: chronological log of all generated alerts with status (New / Acknowledged / 
+Resolved / Escalated), assigned owner, timestamps, and action notes. 
+• Playbook Integration: each alert type links to a pre-defined response SOP with a checklist 
+DLD staff can mark off, creating an audit trail. 
+• Threshold Configuration Panel: authorised administrators can adjust any threshold value. 
+Changes logged with timestamp and approver identity. 
+ 
+8.4   Escrow Account Monitoring 
+Req. 
+ID Feature Specification Alert Behaviour 
+ESC-
+001 
+Real-Time Escrow 
+Dashboard 
+Per-project display of: Current Escrow 
+balance (AED), Required minimum 
+balance (calculated from construction 
+completion % × total project cost), Balance 
+adequacy ratio, Total funds received from 
+buyers, Total authorised withdrawals, 
+Remaining construction cost estimate. 
+Status badges: Adequate (≥ 100%), 
+Warning (80–99%), Critical (below 80%). 
+Automatic alert 
+generated when any 
+project drops to Warning. 
+Immediate escalation to 
+Level 2 when any project 
+drops to Critical. 
+--- PAGE 19 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Req. 
+ID Feature Specification Alert Behaviour 
+ESC-
+002 
+Escrow Transaction Audit 
+Log 
+Complete, chronological, immutable audit 
+trail of all Escrow account transactions. 
+Log is read-only. Exportable as PDF for 
+official use. 
+Any unauthorised 
+balance discrepancy 
+triggers a Level 3 alert 
+immediately. 
+ESC-
+003 
+Monthly Escrow Health 
+Report 
+Auto-generated monthly PDF per project: 
+balance trend chart, compliance status, 
+construction progress vs. Escrow adequacy, 
+red-flag summary, and recommended 
+actions (informational only). Automatically 
+emailed to the assigned DLD project 
+officer. 
+Report generated and 
+delivered within 24 hours 
+of month-end. Zero 
+missed reports. 
+ 
+  
+--- PAGE 20 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+9.   Internal Platform — Developer Performance & Rating 
+9.1   Developer Scoring Engine 
+The Internal Platform must provide DLD staff with a comprehensive, data-driven developer rating 
+system. The scoring model must be transparent, auditable, and configurable by authorised users. All 
+scoring parameters and their weights must be adjustable from the platform's administration interface. 
+ 
+9.1.1   Scoring Criteria 
+Scoring Criterion Data Source Default Weight Calculation Method 
+On-Time Project Delivery 
+Rate 
+DLD project records + 
+RERA delivery 
+certificates 
+25% (Projects delivered on or before 
+declared date ÷ Total completed 
+projects) × 100. Weighted by project 
+scale (unit count). 
+Unit Sales Completion 
+Rate 
+DLD transaction 
+registry 
+20% (Total units sold ÷ Total units 
+registered across all projects) × 100. 
+Escrow Account Health 
+Score 
+RERA-certified Escrow 
+Bank data feeds 
+20% (Current Escrow balance ÷ 
+Minimum required balance based on 
+construction completion %) × 100. 
+Regulatory Compliance 
+Record 
+RERA violations 
+register + DLD audit 
+records 
+15% Score starts at 100. Deductions: 
+Minor violation = –2, Major = –10, 
+Critical = –25. Rolling 5-year 
+window. 
+Financial Soundness 
+Indicator 
+Bank financial reports + 
+credit assessments 
+submitted to RERA 
+10% Composite of liquidity ratios and 
+debt-to-equity from most recent 
+audited annual financial statements. 
+Normalised 0–100 scale. 
+Historical Project Success 
+Rate 
+DLD project 
+completion records — 
+10-year history 
+10% (Successfully completed projects ÷ 
+Total projects initiated in past 10 
+years) × 100. 
+ 
+9.1.2   Developer Rating Interface Requirements 
+• Main Developer Leaderboard: sortable ranked list with composite score, individual criterion 
+scores (mini radar chart per row), risk badge (High / Medium / Low), and trend arrow (score 
+change vs. prior quarter). 
+• Developer Comparison: select up to 4 developers for side-by-side comparison — full radar 
+chart overlay and criterion-by-criterion score table. 
+• Developer Profile Page: company overview, all current projects with individual risk ratings, 
+Escrow balance per project, historical score trend chart, violation log, and total units 
+delivered. 
+• Weight Configuration Panel: authorised administrator users can adjust the weight percentage 
+assigned to each criterion. The system enforces that total weights always sum to 100%. All 
+weight changes logged with timestamp and user identity. 
+--- PAGE 21 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+• Public Developer Scorecard (External Portal): a simplified public-facing version showing 
+completed projects count, on-time delivery percentage, RERA compliance rating, and total 
+units delivered — supporting GRETI Governance sub-index improvement. 
+ 
+  
+--- PAGE 22 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+10.   Non-Functional Requirements 
+10.1   Performance Standards 
+Metric Mandatory Target Measurement Method 
+Homepage Initial Load Time Less than 3 seconds (P95, 10 Mbps 
+connection) 
+Industry-standard performance 
+audit tool (vendor to specify in 
+proposal) 
+API Response Time Less than 500 ms (P95) for all non-
+AI endpoints 
+Application Performance 
+Monitoring tool (vendor to 
+specify) 
+Interactive Map Filter Update Less than 2 seconds for any zone 
+heatmap filter change 
+Automated UI performance tests 
+AI Agent — Text Response Less than 8 seconds (P90) for 
+factual data queries 
+End-to-end latency monitoring 
+with alerting 
+AI Agent — Chart Generation Less than 15 seconds (P90) for in-
+chat dashboard generation 
+End-to-end latency monitoring 
+with alerting 
+Concurrent User Capacity 5,000 concurrent external users + 
+500 internal users without 
+performance degradation 
+Load testing tools (vendor to 
+specify) 
+Platform Uptime (Availability) 99.9% per calendar month 
+(maximum 8.7 hours downtime per 
+year) 
+Uptime monitoring at 1-minute 
+intervals + monthly SLA report 
+Data Freshness — Dashboard KPIs Refresh every 15 minutes Data pipeline health monitoring + 
+timestamp displayed on all KPIs 
+Data Freshness — Transactions Lag from DLD source systems must 
+not exceed 24 hours 
+Automated pipeline monitoring 
+with breach alerts 
+ 
+10.2   Security & DESC Compliance 
+10.2.1   ISR v3 Compliance Requirements 
+The platform must fully comply with the Dubai Electronic Security Center (DESC) Information 
+Security Regulation (ISR) Version 3. The vendor must conduct a formal ISR applicability assessment 
+and document compliance against all applicable control domains: 
+• Information Security Governance: defined information security policy, RACI matrix for 
+security responsibilities, and annual security risk assessment. 
+• Asset Management: complete asset register, data classification per Dubai Government 
+taxonomy, and asset owner assignment. 
+• Cryptography: industry-standard encryption for all data in transit and at rest. Secrets 
+management solution proposed and implemented by the vendor. 
+--- PAGE 23 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+• Access Control: RBAC enforced at the API layer. Principle of Least Privilege. MFA 
+mandatory for all internal platform users. Session timeout: 30 minutes of inactivity for 
+internal users. 
+• Incident Management: documented Security Incident Response Plan (SIRP). Notification to 
+DLD CISO within 2 hours of detection. Notification to DESC within 24 hours for critical 
+incidents. 
+• Third-Party Risk: all sub-contractors and third-party API providers must demonstrate security 
+compliance with ISO 27001 or equivalent. 
+ 
+10.2.2   Security Testing Requirements 
+The following security testing activities are mandatory for the platform. The vendor must describe in 
+their proposal how each activity will be executed, scheduled, and reported to DLD: 
+ 
+Security Test Type Mandatory Requirements 
+Vulnerability Assessment Must be conducted using DESC-approved scanning tools before go-live of each 
+phase, and thereafter on a regular basis as agreed with DLD and in compliance with 
+DESC ISR v3 requirements. All Critical and High findings must be remediated 
+within 30 days of discovery. Medium findings within 90 -120 days. Results must be 
+made available to DLD on request. 
+Penetration Testing 
+(VAPT) 
+A full penetration test must be completed by a DESC-approved independent third-
+party security assessor before the final platform go-live (Phase 3). Zero High or 
+Critical findings may remain open at go-live. The VAPT report must be submitted 
+to the DLD CISO. Thereafter, VAPT must be conducted in accordance with DESC 
+ISR v3 requirements during the warranty and support period. 
+SOC / SIEM Monitoring The platform must be connected to a DESC-certified Security Operations Centre 
+(SOC) providing continuous, real-time threat detection and incident alerting. The 
+vendor must name the proposed SOC provider in their proposal and confirm their 
+DESC certification status. Security incidents must be escalated to DLD in 
+accordance with the incident classification in Section 15.2. 
+OWASP Top 10 
+Compliance 
+An automated OWASP Top 10 security scan must be integrated into the CI/CD 
+deployment pipeline and executed with each deployment. Zero open Critical 
+findings for any OWASP Top 10 category are permitted at go-live. Scan results 
+must be available to DLD on request. 
+ 
+10.3   Role-Based Access Control (RBAC) Matrix 
+Role Permissions Authentication Requirements 
+Public Visitor View all External Portal public data. No 
+registration required for read-only access. Export 
+requires CAPTCHA verification. 
+None / CAPTCHA for exports 
+Registered Investor All External Portal features + Watchlist + 
+Personalised Alerts + Saved Analytics Views + 
+Full Data Export. 
+Email + Password + MFA 
+--- PAGE 24 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Role Permissions Authentication Requirements 
+DLD Staff — Viewer Read-only access to Internal Platform. Cannot 
+modify anything. 
+Centralised identity provider 
+(vendor to propose) + MFA 
+DLD Staff — 
+Operator 
+All Viewer permissions + CMS content 
+management + Alert acknowledgement + Report 
+generation. 
+Centralised identity provider + 
+MFA + Compliant device 
+DLD Supervisor All Operator permissions + User account 
+management within division + EWRS threshold 
+adjustment + Audit log review. 
+Centralised identity provider + 
+MFA + Privileged Access 
+approval 
+System 
+Administrator 
+Full system access. AI model configuration. 
+RBAC management. Scoring weight configuration. 
+Infrastructure configuration via IaC only. 
+Centralised identity provider + 
+MFA + Privileged Identity 
+Management with Just-in-Time 
+access and approval workflow 
+ 
+  
+--- PAGE 25 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+11.   Technology & Hosting Architecture — Vendor Proposal 
+11.1   Technology Stack — Vendor Proposal 
+DLD does not mandate any specific technology brand, framework, programming language, or cloud 
+provider for application-layer components. Vendors are free to propose the technology stack they consider 
+most appropriate to meet the functional, performance, security, and operational requirements described in 
+this RFP. The chosen stack must be justified in the proposal on the grounds of fitness for purpose, security 
+compliance, long-term maintainability, and total cost of ownership. DLD reserves the right to evaluate 
+and challenge the proposed stack during the technical review stage. RECOMMENDED DATA 
+ARCHITECTURE APPROACH: DLD has an existing data architecture based on the Microsoft Fabric 
+ecosystem and strongly encourages vendors to align with and extend this environment. See Section 11.4 
+for DLD’s data architecture preferences and guidance. Proposals demonstrating strong alignment with 
+DLD’s existing infrastructure will be evaluated more favourably. 
+ 
+The vendor's technology proposal must address all of the following architectural layers, specifying 
+the proposed technology for each: 
+ 
+Architectural Layer What the Vendor Must Specify & Justify Mandatory Standards 
+Frontend / Presentation Proposed JavaScript framework or rendering 
+approach. Justification for the choice. Approach to 
+RTL/LTR bilingual layout. Component library and 
+design system methodology. 
+Lighthouse Performance 
+Score greater than 85 
+(Desktop) and 75 
+(Mobile). WCAG 2.1 
+Level AA compliance. 
+Full RTL support. 
+Backend API Layer Proposed programming language, framework, and 
+API style (REST, GraphQL, or hybrid). API Gateway 
+solution. API documentation standard. 
+P95 API response time 
+under 500 ms. Rate 
+limiting and DDoS 
+protection on all public 
+endpoints. OpenAPI 3.0 
+documentation mandatory. 
+AI / ML Services Multi-model AI orchestration layer design. Proposed 
+primary and secondary AI models (any combination 
+of managed API services, self-hosted open-source 
+LLMs, or custom fine-tuned models). RAG 
+architecture and retrieval engine. Model switching 
+mechanism. Fallback design. UAE data residency 
+confirmation for all active models. 
+AI processing within UAE 
+jurisdiction. RAG 
+grounding mandatory. 
+Hallucination rate below 
+5% on DLD data test set. 
+Database & Data Layer DLD strongly recommends that vendors build upon 
+and integrate with its existing Microsoft Fabric 
+ecosystem, including OneLake (Silver and Gold 
+layers), Data Factory pipelines, existing semantic 
+models, and the reporting layer, as this maximises 
+DLD’s existing investments and reduces 
+implementation risk. Vendors proposing a different 
+approach must provide a clear justification and 
+demonstrate equivalent or superior capability. See 
+All data must flow 
+through OneLake Silver 
+and Gold layers. OLTP 
+source data: under 10 ms 
+read for single-row 
+queries. OneLake/Fabric 
+OLAP: under 2 seconds 
+for 100M row 
+aggregations. No parallel 
+--- PAGE 26 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Architectural Layer What the Vendor Must Specify & Justify Mandatory Standards 
+Section 11.4 for the full data architecture guidance. 
+For the External Public Portal visualisation layer, see 
+Section 11.4.2. 
+or duplicate data stores 
+permitted outside the 
+Fabric ecosystem without 
+written DLD approval. 
+GIS / Mapping Proposed mapping library and GIS data source. How 
+official Dubai Municipality zone boundaries will be 
+used and kept current. 
+Map loads within 5 
+seconds. Heatmap layer 
+switches within 2 seconds. 
+Content Management 
+System (CMS) 
+Proposed CMS product and whether self-hosted or 
+SaaS. DESC-CSP compliance approach if SaaS. API-
+first architecture confirmation. 
+Content changes live 
+within 30 seconds of 
+publish. Admin interface 
+usable by non-technical 
+staff. 
+Authentication & Identity Proposed identity provider and authentication 
+protocol. Integration approach with DLD's existing 
+identity management. MFA mechanism. 
+OAuth 2.0 + OIDC 
+standard. MFA mandatory 
+for all internal users. All 
+authentication events in 
+immutable audit log. 
+Infrastructure & DevOps Proposed containerisation and orchestration 
+approach. CI/CD pipeline tools. Infrastructure as 
+Code (IaC) methodology. Monitoring, logging, and 
+alerting stack. 
+IaC mandatory — 100% 
+of infrastructure defined 
+as code. Zero-downtime 
+deployments. CI/CD 
+includes automated 
+security scanning. 
+ 
+11.2   Hosting Model — Vendor Options 
+DLD does not specify a hosting provider or model. The vendor must propose a hosting solution meeting 
+the security, data residency, performance, and regulatory requirements of this RFP. Vendors may propose 
+one or more of the following hosting models, each with a separately itemised cost structure. 
+ 
+Hosting Model Description Mandatory Requirements for This 
+Option 
+Public Cloud (UAE 
+Region) 
+Deployment on a public cloud platform in a 
+UAE data centre region. Vendor must name 
+the specific provider and confirm DESC-
+CSP certification status. 
+DESC-CSP certification confirmed. 
+All data resides in the UAE. Multi-
+availability-zone deployment. RTO 
+less than 4 hours, RPO less than 1 
+hour. 
+Private Cloud / 
+Colocation (UAE) 
+Deployment in a private cloud or 
+colocation data centre within the UAE. 
+Vendor must name the data centre, confirm 
+its tier rating (minimum Tier III), and 
+describe the hardware management model. 
+Data centre physically in the UAE. 
+ISO 27001 certified facility. Disaster 
+recovery site in a separate UAE data 
+centre. 
+--- PAGE 27 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Hosting Model Description Mandatory Requirements for This 
+Option 
+On-Premises / DLD 
+Data Centre 
+Deployment on infrastructure hosted within 
+DLD's own data centre or UAE 
+government data centre. Vendor supplies 
+hardware specifications. 
+Vendor must supply a detailed 
+Hardware Bill of Materials (BOM) 
+with procurement costs priced 
+separately from implementation. 
+Hybrid Model A combination of the above — e.g., public 
+cloud for the External Portal and on-
+premises for the Internal Platform. Vendor 
+must clearly describe the data partitioning, 
+connectivity, and security boundary. 
+All inter-system data transfers 
+encrypted. Latency between hybrid 
+components must not breach 
+performance SLAs. Full DESC 
+compliance for all components. 
+ 
+11.3   Mandatory Hosting Requirements (All Models) 
+• Data Residency: all data — production, backup, and disaster recovery — must remain within 
+the geographic boundaries of the United Arab Emirates at all times. 
+• DESC-CSP Compliance: the hosting infrastructure must be provided by, or hosted within a 
+facility certified by, DESC as a Cloud Service Provider (CSP), or must achieve DESC 
+compliance through an alternative pathway approved in writing by DESC. 
+• High Availability: no single point of failure for any critical component. Target availability: 
+99.9% per calendar month. 
+• Disaster Recovery: a documented Disaster Recovery Plan (DRP) must be provided. RTO: 
+less than 4 hours. RPO: less than 1 hour. 
+• Encrypted Backups: daily automated encrypted backups with a minimum 30-day retention. 
+Backup restoration tested quarterly with results reported to DLD. 
+• Infrastructure as Code: all infrastructure defined and deployable as code. DLD must be 
+provided with all IaC scripts upon project completion. 
+ 
+11.4   Mandatory DLD Data Architecture & Infrastructure Requirements 
+STRONGLY RECOMMENDED: Utilisation of DLD’s Existing Data Architecture & Infrastructure 
+DLD strongly recommends that vendors fully leverage and build upon the existing data architecture and 
+infrastructure currently implemented by the Dubai Land Department (DLD). Proposals that align with 
+DLD’s existing ecosystem will be evaluated more favourably, as they maximise the value of current 
+investments, reduce integration risk, and accelerate delivery. Vendors proposing an alternative approach 
+are not excluded, but must provide a detailed technical justification demonstrating why the existing 
+ecosystem cannot meet the requirement and how their proposed alternative delivers equivalent or superior 
+outcomes. The recommended components are as follows: 
+• On-Premises Environment: It is recommended that the solution be designed to operate 
+within and integrate with DLD’s current on-premises infrastructure where applicable. 
+Vendors are encouraged to leverage existing on-premises components rather than introduce 
+external hosting for data layer components. Where a vendor proposes a different hosting 
+arrangement for specific data components, a clear justification and description of how this 
+aligns with DESC compliance and DLD data governance standards should be provided. 
+--- PAGE 28 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+• Microsoft Fabric Ecosystem — OneLake (Lakehouse Architecture): It is strongly 
+recommended that vendors utilise DLD’s existing OneLake environment, structured with 
+established Silver and Gold data layers. Aligning data ingestion, transformation, and serving 
+with this Lakehouse architecture avoids duplication and preserves data governance 
+consistency. Vendors proposing an alternative data storage approach must justify why 
+OneLake cannot fulfil the requirement. 
+• Microsoft Fabric — Data Factory Pipelines: Vendors are strongly encouraged to build 
+upon DLD’s existing Data Factory pipeline infrastructure within the Microsoft Fabric 
+ecosystem for all data ingestion and transformation work. This approach preserves 
+operational continuity and avoids introducing a separate ETL or orchestration layer. Where a 
+vendor believes an additional or alternative pipeline component is technically necessary, this 
+must be clearly identified and justified in the proposal. 
+• Semantic Models & Reporting Layer: Vendors are encouraged to integrate with and extend 
+DLD’s existing semantic models and reporting layer within the Fabric ecosystem. Where 
+additional semantic models or computed measures are required, building these as extensions 
+to the current model structure is preferred, maintaining consistency with existing data 
+definitions, naming conventions, and governance standards. Vendors proposing a different 
+semantic modelling approach should explain how data consistency and governance will be 
+maintained. 
+• Existing Data Exchange & Integration Mechanisms: Vendors are encouraged to leverage 
+DLD’s current data exchange and integration mechanisms for connecting to source systems, 
+avoiding unnecessary duplication of integration infrastructure. Where a vendor identifies a 
+gap in the existing integration layer that cannot be addressed within the current mechanisms, 
+this should be clearly documented in the proposal with a proposed approach for DLD’s 
+review. 
+General Architecture Guidance: DLD’s preference is for all proposed solutions to integrate 
+seamlessly within the current platform, ensuring consistency with existing data models, governance 
+standards, security controls, and operational processes, while maximising the value of current 
+investments and avoiding fragmentation or redundancy across systems. Proposals that align with this 
+preference will be scored more favourably in the technical evaluation. Vendors who believe a specific 
+component is better served by an alternative approach are welcome to propose it, provided they 
+include a clear technical rationale and demonstrate how data consistency, security, and governance 
+will be preserved. 
+11.4.1   Recommended Vendor Deliverables — Data Architecture Alignment 
+• An Architecture Integration Map — recommended to be submitted as part of the proposal — 
+showing how each proposed component connects to and leverages the existing Microsoft 
+Fabric environment (OneLake layers, Data Factory pipelines, semantic models, and 
+integration mechanisms). Where the vendor proposes components outside the Fabric 
+ecosystem, these should be clearly identified and justified. 
+• Where a vendor identifies requirements they consider better addressed outside the existing 
+ecosystem, a brief justification register is recommended, identifying each component with a 
+technical rationale and a proposed compliant alternative. This transparency is welcomed and 
+will be evaluated constructively. 
+• A Data Architecture Familiarisation Plan describing how the vendor proposes to assess and 
+document DLD’s current Microsoft Fabric configuration, OneLake schema, pipeline 
+topology, and semantic model structure during the discovery phase in Section 12.1, prior to 
+development commencing. This ensures proposals are grounded in DLD’s actual 
+environment rather than assumptions. 
+--- PAGE 29 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+11.4.2   Visualisation Layer — External Public Portal 
+While DLD’s internal reporting layer within the Microsoft Fabric ecosystem may utilise Power BI for 
+internal dashboards and management reporting, Power BI is recognised as potentially unsuitable as 
+the primary visualisation engine for the External Public Portal due to the following considerations: 
+anonymous public access and licensing model constraints, cost scalability under high concurrent 
+external user volumes, embedding complexity for fully custom investor-facing interfaces, and public 
+portal UX/UI customisation limitations. 
+Accordingly, for the External Public Portal (investor-facing and public-access components), vendors 
+are explicitly permitted and encouraged to propose an alternative, purpose-built visualisation and 
+analytics layer in place of or supplementary to Power BI, subject to the following conditions: 
+• The proposed external visualisation solution is strongly encouraged to consume data directly 
+from DLD’s OneLake Gold layer or from API endpoints served from the existing Fabric 
+semantic models, maintaining the Gold layer as the preferred single source of truth and 
+avoiding unnecessary data duplication. 
+• The vendor must provide a comparative analysis in their proposal evaluating Power BI 
+embedding against their proposed alternative, addressing: total licensing cost at projected 
+public user volumes, anonymous access capability, UI/UX customisation depth, performance 
+at scale (concurrent users), and long-term maintainability. 
+• Acceptable alternative visualisation technologies include but are not limited to: custom-built 
+web charting libraries (such as Apache ECharts, D3.js, Highcharts, or Recharts), embedded 
+analytics platforms designed for public portals (such as Metabase, Redash, Grafana, or 
+equivalent), or a fully custom-developed analytics front-end consuming the Fabric-served 
+data APIs. 
+• If the vendor proposes Power BI for any element of the External Public Portal, they must 
+include a full licensing cost model in Section 14, demonstrating cost-effectiveness at a 
+minimum of 10,000 concurrent anonymous external users, together with a confirmed 
+description of how anonymous public access will be technically achieved within the Power 
+BI licensing framework. 
+• Power BI or Fabric-native reporting tools remain fully applicable and preferred for all 
+Internal Platform components (EWRS dashboards, Developer Performance dashboards, and 
+internal management reporting), where the licensing model is appropriate for named internal 
+users. 
+ 
+  
+--- PAGE 30 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+12.   DLD Data Understanding & Analytics Assessment 
+The accuracy and credibility of all data published on the IRETP platform is the primary determinant 
+of the platform’s value to international investors and its impact on GRETI rankings. The vendor must 
+treat data accuracy as a first-class deliverable throughout both development and the post-go-live 
+support period. In line with DLD’s strong preference for vendors to leverage the existing Microsoft 
+Fabric ecosystem (Section 11.4), the vendor’s data familiarisation activities should include an 
+assessment of the current OneLake Lakehouse architecture (Silver and Gold layers), Data Factory 
+pipeline configurations, semantic model definitions, and existing data exchange and integration 
+mechanisms. This will enable the vendor to propose the most effective integration approach and 
+identify any gaps or areas where alternative solutions may be required. 
+ 
+12.1   DLD Data Familiarisation — Mandatory Discovery 
+Before any data pipeline development begins, the vendor must complete a formal DLD Data 
+Familiarisation exercise. DLD will assign a dedicated data liaison officer and a Microsoft Fabric data 
+engineer to support this exercise. In addition to the source system inventory activities below, the 
+vendor must conduct a full assessment of DLD’s existing Microsoft Fabric environment, including 
+the OneLake Lakehouse schema (Silver and Gold layer structure), active Data Factory pipeline 
+configurations, published semantic model definitions, and all current data exchange and integration 
+mechanisms. The following outputs are mandatory: 
+ 
+Familiarisation Area Required Activities Output Document 
+Source System Inventory Catalogue all DLD source systems feeding 
+the IRETP platform: transaction registry, 
+project database, Ejari rental system, 
+RERA regulatory records, Escrow bank 
+feeds. Document for each: system name, 
+data format, update frequency, API or 
+extract availability, and responsible DLD 
+department. 
+DLD Data Source Inventory — 
+to be approved by DLD Data 
+Liaison Officer 
+Data Schema & Field Mapping Review and document the data schema of 
+each source system: field names, data 
+types, allowable values, null/empty 
+conventions, and any coding or 
+classification schemes used by DLD 
+(transaction type codes, property category 
+codes, zone identifiers, developer licence 
+number formats). 
+Detailed Field Mapping 
+Document — to be approved 
+by DLD IT 
+Data Quality Baseline 
+Assessment 
+Profile the data in each source system to 
+establish a quality baseline covering: 
+completeness rate per field, uniqueness 
+(duplicate record identification), 
+consistency (cross-system alignment), and 
+known data quality issues. Document all 
+discovered quality issues and agree on the 
+handling approach with DLD. 
+Data Quality Baseline Report 
+— to be submitted to DLD for 
+approval 
+--- PAGE 31 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Familiarisation Area Required Activities Output Document 
+Business Logic & Calculation 
+Rules 
+Validate with DLD the business logic used 
+to calculate all derived metrics published 
+on the platform: price per sqft formula, 
+rental yield, Escrow adequacy ratio, 
+developer score, and risk indicator trigger 
+logic. Any ambiguity must be resolved 
+before development begins. 
+Calculation Rules Validation 
+Document — to be approved 
+by DLD Analytics team 
+Historical Data Assessment Assess the completeness and consistency of 
+DLD's historical transaction data for the 5-
+year period that will be published. 
+Document all gaps, anomalies, and quality 
+issues. Agree a data remediation plan with 
+DLD before the historical data is loaded. 
+Historical Data Assessment 
+Report — to be submitted to 
+DLD for approval 
+ 
+12.2   Pre-Publication Analytics Assessment 
+Before any data is made live on the External Portal, the vendor must complete a Pre-Publication 
+Analytics Assessment. This assessment is a mandatory gate — no public data publication is permitted 
+until the assessment is completed and signed off by the DLD data liaison officer. The assessment 
+must validate: 
+• End-to-End Data Reconciliation: platform figures match the authoritative DLD source system 
+records for a minimum sample of 500 transactions drawn randomly across all property types, 
+zones, and transaction types. Accuracy rate must be 99.5% or above. 
+• Derived Metric Validation: every derived metric (price per sqft averages, rental yield %, 
+zone-level aggregates, YoY change figures, Escrow adequacy ratios, developer scores) must 
+be independently validated from raw data. Any discrepancy must be resolved before go-live. 
+• Edge Case & Outlier Review: all statistical outliers must be identified, flagged to DLD, and 
+handled (included, excluded, or annotated) by agreement before go-live. 
+• Zone Boundary Verification: zone-level data aggregations use the correct official zone 
+boundary definitions. No transactions double-counted or misassigned. 
+• Trend Direction Validation: all trend indicators (up/stable/down arrows, YoY % changes) 
+verified against raw data for correct direction and magnitude. 
+ 
+12.3   Data Accuracy Obligations During Warranty & Support Period 
+After go-live, ongoing data monitoring, reconciliation, and periodic reporting are the responsibility of 
+DLD. The vendor's data accuracy obligations during the 12-month warranty and technical support 
+period are limited to the following: 
+• Data Error Investigation & Correction: if DLD or any platform user reports a suspected data 
+inaccuracy, the vendor must investigate and provide a written response within 2 business 
+hours, with a correction deployed within 24 hours if the error is confirmed to be a defect in 
+the platform's data pipeline or transformation logic. 
+• Post-DLD-Update Validation: whenever DLD modifies any source system data structure 
+(new fields, changed formats, updated zone classifications, new transaction type codes) and 
+--- PAGE 32 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+notifies the vendor, the vendor must update the platform's data pipeline, field mappings, and 
+analytics calculations accordingly, and confirm accuracy of the updated data before it is 
+published, within 10 business days of receiving DLD's change specification. 
+• Pipeline Failure Resolution: if the vendor's monitoring detects a data pipeline failure causing 
+data to go stale beyond the freshness thresholds in Section 10.1, the vendor must resolve the 
+failure and restore data freshness within the P1/P2 SLA timelines in Section 15.2. 
+ 
+  
+--- PAGE 33 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+13.   Phased Delivery Plan 
+MANDATORY TIMELINE CONSTRAINT: The total project duration — covering all four delivery 
+phases — must not exceed 3 calendar months (120 days) from the date of contract signing. Vendors must 
+demonstrate in their proposal how they will deliver all four phases within this constraint. Proposals that 
+cannot credibly justify delivery within 120 days will be evaluated accordingly.  GO-LIVE GATE: No 
+phase may go live or be made publicly accessible until all mandatory testing and acceptance criteria for 
+that phase have been fully passed and signed off by the DLD Project Sponsor. The completion of testing 
+is a prerequisite for go-live, not a parallel activity. The vendor bears full responsibility for scheduling 
+testing with sufficient time to resolve all defects before the 120-day deadline. 
+ 
+Each phase has defined deliverables that constitute the sole acceptance gate for that phase. Within the 
+120-day constraint, vendors must allocate time in their proposed Gantt chart for: development, 
+integration, testing (functional, performance, security, accessibility, and data accuracy), defect 
+resolution, and DLD sign-off. Vendors are not required to itemise cost per individual task within a 
+phase — cost is presented per phase as described in Section 14. 
+ 
+Phase 1 — External Public Portal 
+Phase 1 delivers the complete, publicly accessible External Portal in English and Arabic on 
+production infrastructure. This is the highest-priority phase and must be completed and go-live ready 
+— with all testing passed — within the vendor's proposed Phase 1 timeline, which must fall within 
+the overall 120-day constraint. No data may be published publicly until the Pre-Publication Analytics 
+Assessment has been completed and signed off by DLD. 
+ 
+Phase 1 must include the following deliverables: 
+12. DLD Data Familiarisation — all five output documents completed and approved by DLD 
+(source inventory, field mapping, data quality baseline, calculation rules validation, historical 
+data assessment). 
+13. Pre-Publication Analytics Assessment completed and signed off by DLD data liaison officer 
+prior to go-live. 
+14. External Portal UI in English and Arabic with full RTL support, responsive design (desktop, 
+tablet, mobile), and WCAG 2.1 Level AA compliance. 
+15. Interactive GIS Map with three switchable zone heatmap layers (transaction activity, average 
+price per sqft, rental yield) and project pins with detail panels. 
+16. Transactions Page with full 5-year historical data, multi-dimensional filters, and export in 
+Excel, CSV, and PDF formats. 
+17. Price Index Page with 10-year trend chart and up to 5-zone comparison. 
+18. Projects Database Page with all project statuses, filtering, and zone-linked map. 
+19. Rental Index Page with yield calculator and zone comparison. 
+20. AI Agent (External) with RAG layer — full conversational capability in English and Arabic, 
+in-chat chart generation, and download in all four formats. 
+21. Interactive Analytics Engine (Slice & Dice) — all 9 visualisation types, saved views, 
+personal dashboards, and shareable links. 
+--- PAGE 34 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+22. Headless CMS deployed and DLD non-technical staff trained. 
+23. Investor registration, Watchlist, and full alert system (all 6 alert types) with email and SMS 
+delivery. 
+24. Open Data API with developer portal, API key management, and OpenAPI 3.0 
+documentation — 5 standard endpoints operational. 
+25. Production infrastructure live on the vendor's proposed hosting solution, fully DESC-
+compliant. 
+26. Load test demonstrating acceptable performance under the concurrent user loads specified in 
+Section 10.1. 
+ 
+Phase 2 — Early Warning Risk System (EWRS) 
+Phase 2 delivers the Internal Platform's Early Warning Risk System and Escrow Monitoring 
+capabilities to DLD staff and leadership. 
+ 
+Phase 2 must include the following deliverables: 
+27. EWRS Dashboard with Dubai-wide risk heatmap on GIS map, risk KPI summary bar, alert 
+inbox, and risk trend charts. 
+28. All 10 risk indicators operational with configurable thresholds adjustable from the 
+administration panel. 
+29. Multi-level alert routing delivering alerts to all 4 leadership levels through correct channels 
+(email, SMS, encrypted email, auto-generated PDF briefing). 
+30. Playbook integration linking each alert type to a pre-defined SOP checklist. 
+31. Escrow Account Monitoring Dashboard (per-project) with live balance data, adequacy ratio, 
+immutable transaction audit log, and automated monthly PDF report. 
+32. Full RBAC for all 6 internal user roles with identity provider integration and MFA 
+enforcement. 
+33. Internal AI Agent with full conversational data capability and in-chat dashboard generation 
+with download functionality. 
+34. Phase 2 load test and UAT sign-off. 
+ 
+Phase 3 — Developer Performance & Rating 
+Phase 3 delivers the Internal Developer Performance and Rating platform, including the public-facing 
+Developer Scorecard. 
+ 
+Phase 3 must include the following deliverables: 
+35. Developer Rating Engine operational with all 6 scoring criteria connected to live DLD and 
+RERA data feeds. 
+36. Developer Leaderboard with composite scores, radar chart per developer, risk badges, and 
+trend arrows. 
+37. Developer Comparison view supporting up to 4 developers side-by-side. 
+--- PAGE 35 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+38. Developer Profile Page with full project portfolio, Escrow balance per project, historical 
+score trend, and violation log. 
+39. Weight Configuration Panel allowing authorised administrators to adjust scoring weights, 
+with changes logged with timestamp and user identity. 
+40. Geographic map view of all developer projects, colour-coded by risk rating. 
+41. Public Developer Scorecard on the External Portal showing simplified metrics for 
+international investors. 
+42. DESC-authorised Penetration Test (VAPT) completed, all High and Critical findings 
+remediated, and VAPT report signed by DESC-approved assessor. 
+43. ISO 27001 gap assessment completed and certification roadmap presented and approved by 
+DLD. 
+44. Phase 3 UAT sign-off. 
+ 
+Phase 4 — Extended Languages for the External Portal 
+Phase 4 delivers full multilingual support for the External Portal beyond English and Arabic, 
+expanding accessibility for global investors. 
+ 
+Phase 4 must include the following deliverables: 
+45. Full UI translation and static content localisation for all six extended languages: Simplified 
+Chinese, Russian, Urdu, French, Hindi, and German. 
+46. RTL layout correctly applied for Urdu across all portal pages and components. No 
+untranslated strings visible in any language. 
+47. AI Agent basic query handling in all six extended languages with graceful English fallback 
+for complex queries. 
+48. Arabic translation of official zone names, project names, and developer names validated by 
+DLD official records (also applies to new language additions). 
+49. All six language versions tested for completeness, layout correctness, and data label accuracy. 
+50. ESG / Sustainability Module: LEED and Estidama Pearl certification data displayed for 
+applicable projects on the External Portal and on the GIS map as an additional heatmap layer. 
+51. International Market Benchmarking module: Dubai key metrics compared against 5 global 
+peer cities (London, Singapore, New York, Paris, Hong Kong), updated quarterly. 
+52. PDF Investment Profile Generator: zone-level and project-level PDF generation with DLD 
+branding, charts, KPIs, and embedded maps, generated within 10 seconds. 
+53. Complete technical documentation package: system architecture documentation, API 
+reference (all endpoints), operational runbooks, disaster recovery playbook, and data 
+dictionary. 
+54. DLD staff training programme — 8 structured sessions covering all platform roles, CMS 
+management, EWRS operation, and AI Agent best practices. 
+55. Full final UAT across all four phases. DLD Project Sponsor signs final UAT acceptance 
+form. 
+ 
+  
+--- PAGE 36 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+14.   Cost Structure 
+The cost structure is separated into four distinct categories to provide DLD with full visibility over 
+the financial commitment associated with this project. Vendors must complete all four cost tables. 
+Bundling of items across categories is not permitted. All prices must be stated in UAE Dirhams 
+(AED), exclusive of VAT. 
+ 
+14.1   Infrastructure & Hosting Setup Costs (One-Time CAPEX) 
+This table covers the cost of procuring, provisioning, configuring, and certifying the infrastructure 
+required to host and operate the platform. These are one-time capital costs and are separate from the 
+application development costs in Section 14.2. Where the vendor proposes multiple hosting options, a 
+separate column must be completed for each option. 
+ 
+# Infrastructure Setup Item Option A (AED) Option B (AED) 
+I.1 Compute infrastructure setup (servers, virtual machines, 
+containers, orchestration cluster) — production environment. 
+Vendor to specify configuration. 
+___________ ___________ 
+I.2 Compute infrastructure setup — staging and development 
+environments. 
+___________ ___________ 
+I.3 Database infrastructure setup: OLTP database server(s), 
+OLAP/analytics data warehouse, caching layer. Vendor to 
+specify configuration. 
+___________ ___________ 
+I.4 Storage infrastructure: object/file storage, backup storage. 
+Vendor to specify capacity. 
+___________ ___________ 
+I.5 Networking infrastructure: load balancers, firewalls, Web 
+Application Firewall (WAF), DDoS protection, VPN, API 
+Gateway hardware or configuration. 
+___________ ___________ 
+I.6 Content Delivery Network (CDN) setup and configuration. ___________ ___________ 
+I.7 SSL/TLS certificates — initial procurement and installation. ___________ ___________ 
+I.8 Disaster Recovery site setup (secondary environment in a 
+separate UAE data centre or zone). 
+___________ ___________ 
+I.9 Security infrastructure: SIEM/SOC integration setup, 
+vulnerability scanning tool deployment, secrets management 
+system, encryption key management system. 
+___________ ___________ 
+I.10 Identity and access management (IAM) infrastructure setup 
+and integration with DLD's identity systems. 
+___________ ___________ 
+I.11 GIS/Mapping service setup and initial configuration. ___________ ___________ 
+I.12 AI/LLM inference infrastructure setup (if self-hosted or 
+private cloud model — GPU servers, model serving 
+infrastructure, etc.). 
+___________ ___________ 
+--- PAGE 37 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+# Infrastructure Setup Item Option A (AED) Option B (AED) 
+I.13 DESC-CSP certification process costs (certification fees, 
+assessor fees, documentation). 
+___________ ___________ 
+I.14 Initial security penetration test / VAPT (pre-go-live) — 
+assessor fees. 
+___________ ___________ 
+I.15 Hardware procurement (on-premises option only): servers, 
+storage, networking hardware. Itemised Bill of Materials to 
+be attached as an appendix. 
+___________ N/A 
+TOTAL INFRASTRUCTURE SETUP COST (One-Time CAPEX) 
+ TOTAL: ___________ ___________ 
+ 
+14.2   Software Licences & Subscriptions — Setup / First Year (CAPEX / Upfront) 
+This table covers the cost of software licences, SaaS platform subscriptions, and API service 
+enrolments required to build and operate the platform. Where a licence has a recurring annual 
+component, the first-year cost should be stated here; the recurring component must also appear in 
+Section 14.4. Where multiple hosting options are proposed, provide a separate column. 
+ 
+# Licence / Subscription Item Option A (AED) Option B (AED) 
+L.1 CMS platform licence or subscription (first year) — vendor 
+to specify the proposed CMS product. 
+___________ ___________ 
+L.2 AI / LLM service licence or API subscription (first year) — 
+vendor to specify the proposed service and pricing model 
+(per token, per request, fixed tier, etc.). 
+___________ ___________ 
+L.3 GIS / Mapping API licence or subscription (first year) — 
+vendor to specify the proposed service. 
+___________ ___________ 
+L.4 Email delivery service licence or subscription (first year) — 
+vendor to specify the proposed service. 
+___________ ___________ 
+L.5 SMS gateway service licence or subscription (first year) — 
+vendor to specify the proposed service. 
+___________ ___________ 
+L.6 External Public Portal visualisation layer licence or 
+subscription (first year) — vendor to specify the proposed 
+technology (e.g. Power BI Embedded with full licensing cost 
+model at 10,000+ concurrent users, or alternative 
+charting/analytics platform as per Section 11.4.2). If Power 
+BI is not proposed for the External Portal, vendor must 
+specify the alternative and confirm it is zero-licence-cost or 
+provide the licence cost. If no additional licence is required 
+(open-source or custom-built solution), enter AED 0 and 
+state “No external licence required”. 
+___________ ___________ 
+L.6 Monitoring, logging, and observability platform licence (first 
+year) — vendor to specify. 
+___________ ___________ 
+--- PAGE 38 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+# Licence / Subscription Item Option A (AED) Option B (AED) 
+L.7 Security scanning / vulnerability management tool licence 
+(first year) — vendor to specify (must be DESC-approved). 
+___________ ___________ 
+L.8 Identity / SSO platform licence (first year) — if using a 
+commercial identity provider. 
+___________ ___________ 
+L.9 Third-party data feed subscriptions (currency rates, ESG 
+certification data, international benchmarking data) — first 
+year. 
+___________ ___________ 
+L.10 Any other software licences or subscriptions required — 
+vendor to itemise. 
+___________ ___________ 
+TOTAL LICENCE & SUBSCRIPTION COST (First Year) 
+ TOTAL: ___________ ___________ 
+ 
+14.3   Application Development & Implementation Costs (CAPEX) — By Phase 
+This table covers the cost of designing, developing, integrating, testing, and delivering the platform 
+across four phases. Infrastructure and licence costs must not be included here — they are captured in 
+Sections 14.1 and 14.2. The vendor must provide a total price per phase and a total project 
+implementation price. 
+ 
+Phase / Deliverable Implementation Cost (AED) 
+PHASE 1 — External Public Portal 
+DLD Data Familiarisation & Pre-Publication Analytics Assessment 
+(all outputs) 
+___________ 
+UX/UI Design and Design System ___________ 
+External Portal Frontend Development (all pages, English + Arabic, 
+RTL) 
+___________ 
+Backend APIs, Data Integration, and Data Pipeline Development ___________ 
+AI Agent v1 — External Platform (LLM integration, RAG, in-chat 
+charts, downloads) 
+___________ 
+Interactive Analytics Engine (Slice & Dice) — all features ___________ 
+CMS Setup and DLD Staff Training ___________ 
+Investor Registration, Watchlist, and Alert Engine ___________ 
+Data Export Engine (Excel, CSV, PDF) ___________ 
+Open Data API and Developer Portal ___________ 
+QA, Testing, Data Accuracy Verification, and Phase 1 UAT ___________ 
+PHASE 1 TOTAL 
+--- PAGE 39 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Phase / Deliverable Implementation Cost (AED) 
+ ___________ 
+PHASE 2 — Early Warning Risk System (EWRS) 
+EWRS Dashboard and all 10 risk indicators with configurable 
+thresholds 
+___________ 
+Multi-level alert routing (all 4 levels and all delivery channels) ___________ 
+Playbook integration and alert audit trail ___________ 
+Escrow Monitoring Dashboard, audit log, and monthly automated 
+report 
+___________ 
+Full RBAC for all 6 internal roles and identity provider integration 
+with MFA 
+___________ 
+Internal AI Agent with in-chat dashboard generation and download ___________ 
+QA, Testing, and Phase 2 UAT ___________ 
+PHASE 2 TOTAL 
+ ___________ 
+PHASE 3 — Developer Performance & Rating 
+Developer Rating Engine with all 6 scoring criteria connected to live 
+data feeds 
+___________ 
+Developer Leaderboard, Comparison view, and Profile pages ___________ 
+Weight Configuration Panel and geographic map view ___________ 
+Public Developer Scorecard on External Portal ___________ 
+DESC-authorised VAPT and remediation of all High/Critical 
+findings 
+___________ 
+ISO 27001 Gap Assessment and certification roadmap ___________ 
+QA, Testing, and Phase 3 UAT ___________ 
+PHASE 3 TOTAL 
+ ___________ 
+PHASE 4 — Extended Languages & Supplementary Features 
+Full UI translation and static content localisation — 6 extended 
+languages 
+___________ 
+AI Agent basic query handling — 6 extended languages ___________ 
+ESG / Sustainability Module (LEED/Estidama data layer and 
+heatmap) 
+___________ 
+International Market Benchmarking module — Dubai vs. 5 global 
+cities 
+___________ 
+PDF Investment Profile Generator (zone and project level) ___________ 
+--- PAGE 40 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Phase / Deliverable Implementation Cost (AED) 
+Complete Technical Documentation Package ___________ 
+DLD Staff Training Programme — 8 structured sessions ___________ 
+Final UAT across all four phases and go-live support (hypercare) ___________ 
+PHASE 4 TOTAL 
+ ___________ 
+TOTAL APPLICATION DEVELOPMENT & IMPLEMENTATION COST (All Phases)  
+ ___________ 
+ 
+14.4   Annual Recurring Costs (OPEX) — Per Hosting Option 
+This table covers all recurring annual costs for operating and maintaining the platform after go-live. 
+Infrastructure costs, licence renewals, support costs, and monitoring costs must all be included. 
+Vendors must provide a separate column for each hosting option proposed. The 12-month post-go-
+live support cost from Section 15 must also appear here for a complete annual picture. 
+ 
+# Annual Recurring Cost Item Option A 
+(AED/year) 
+Option B 
+(AED/year) 
+Infrastructure & Hosting 
+R.1 Annual hosting / infrastructure costs (compute, storage, 
+networking, CDN, databases) — based on actual projected 
+load. Vendor must provide calculation methodology. 
+___________ ___________ 
+R.2 Disaster recovery site annual operating cost. ___________ ___________ 
+R.3 Hardware maintenance and refresh allowance (on-premises 
+option only). 
+___________ N/A 
+Software Licences & Services 
+R.4 CMS platform annual licence or subscription renewal. ___________ ___________ 
+R.5 AI / LLM service annual cost — based on projected 5,000 
+daily active users and average query volume. Vendor must 
+show the calculation. 
+___________ ___________ 
+R.6 GIS / Mapping API annual costs — based on projected 
+annual map loads and API calls. 
+___________ ___________ 
+R.7 Email delivery and SMS gateway annual costs — based on 
+estimated monthly alert volumes. 
+___________ ___________ 
+R.8 Monitoring, logging, and observability platform annual 
+licence renewal. 
+___________ ___________ 
+R.9 Identity / SSO platform annual licence renewal. ___________ ___________ 
+--- PAGE 41 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+# Annual Recurring Cost Item Option A 
+(AED/year) 
+Option B 
+(AED/year) 
+R.10 Third-party data feed subscriptions annual renewal (currency 
+rates, ESG data, benchmarking data). 
+___________ ___________ 
+R.11 SSL/TLS certificate annual renewal. ___________ ___________ 
+Security & Compliance 
+R.12 Annual Penetration Test + Quarterly Vulnerability 
+Assessment fees (DESC-approved assessor). 
+___________ ___________ 
+R.13 24/7 SOC/SIEM Monitoring Service annual cost (DESC-
+certified SOC provider — vendor to name the proposed 
+provider). 
+___________ ___________ 
+R.14 DESC-CSP Annual Surveillance Audit fees. ___________ ___________ 
+R.15 ISO 27001 Annual Surveillance Audit fees. ___________ ___________ 
+Warranty & Technical Support (from Section 15) 
+R.16 12-month post-go-live support and maintenance annual cost 
+(as detailed in Section 15.4). 
+___________ ___________ 
+TOTAL ANNUAL RECURRING COST (OPEX) 
+ TOTAL: ___________ ___________ 
+ 
+  
+--- PAGE 42 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+15.   Warranty & Technical Support — 12 Months Post Go-Live 
+Following the final UAT sign-off and go-live of all four phases, the vendor is contractually obligated 
+to provide a 12-month warranty and technical support period. This obligation is included within the 
+scope of this RFP and must be fully priced within the vendor's proposal. It is not optional and is not a 
+separate procurement. 
+ 
+The ongoing monitoring of data quality, periodic data reconciliation, and the generation of 
+operational and analytics reports are the responsibility of DLD. The vendor's obligations during the 
+warranty and support period are limited to the categories set out below. 
+ 
+15.1   Warranty & Support Scope 
+Support Category Scope Detail 
+Defect Resolution (Warranty) All defects identified after go-live — whether reported by DLD staff, platform 
+users, or detected by the vendor's monitoring tools — will be investigated and 
+resolved by the vendor at no additional cost. A defect is defined as any 
+behaviour that deviates from the accepted UAT test cases or the specifications 
+in this RFP. Defect resolution is classified and responded to according to the 
+SLA in Section 15.2. 
+Data Pipeline Defect 
+Correction 
+If DLD identifies or reports a data accuracy issue caused by a defect in the 
+vendor's data pipeline, transformation logic, or calculation implementation, the 
+vendor must investigate and respond within 2 business hours and deploy a 
+correction within 24 hours if the error is confirmed. Periodic data 
+reconciliation and ongoing accuracy monitoring are DLD's responsibility. 
+Security Patch Management The vendor must monitor all platform software components, libraries, and 
+infrastructure for published security vulnerabilities and apply patches 
+proactively within: Critical (CVSS 9.0 and above) within 24 hours; High 
+(CVSS 7.0–8.9) within 72 hours; all others within 14 days. Patch activities 
+must be documented and available to DLD on request. 
+Performance Defect Resolution If the vendor's monitoring detects, or DLD reports, a sustained breach of the 
+performance SLAs in Section 10.1 (breach lasting 3 or more consecutive 
+days), the vendor must investigate root cause and implement a fix within 48 
+hours at no additional cost. 
+DLD Data Structure Changes If DLD modifies any source system data structure (new fields, changed 
+formats, updated zone classifications, new transaction type codes) and 
+formally notifies the vendor, the vendor must update the platform's data 
+pipeline, field mappings, and analytics calculations within 10 business days of 
+receiving DLD's written change specification. Accuracy of the updated data 
+must be confirmed before it is published. 
+Minor Changes Pool A pool of 120 person-hours of minor change capacity is included within the 
+warranty and support contract at no additional cost. This covers adjustments to 
+existing functionality (threshold adjustments, dashboard layout changes, new 
+filter options, CMS template updates, alert configuration changes). Each 
+request will be scoped by the vendor within 2 business days. Changes 
+--- PAGE 43 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Support Category Scope Detail 
+requiring more than the remaining pool hours, or new major features, will be 
+quoted separately. 
+CMS & Technical Assistance The vendor must provide technical assistance to DLD staff for platform 
+operation issues that cannot be resolved independently. This includes CMS 
+publishing issues, user access problems, and configuration queries. Up to 4 
+optional refresher training sessions of 1 hour each are available to DLD during 
+the support period. 
+Infrastructure Operations The vendor is responsible for the ongoing operation of the hosting 
+infrastructure, applying infrastructure-level updates, maintaining the backup 
+and disaster recovery systems, and ensuring platform availability meets the 
+99.9% uptime SLA. DESC-certified SOC monitoring must remain active 
+throughout the support period. 
+ 
+15.2   Support Incident SLA 
+Priority Definition Response Time Resolution 
+Time Coverage 
+P1 — Critical Platform completely 
+unavailable, or data displaying 
+materially incorrect 
+information on the External 
+Portal affecting users. 
+Within 1 hour Within 4 hours 24/7/365 
+P2 — High A core functional area is 
+unavailable or severely 
+degraded (AI Agent down, map 
+not loading, exports failing, 
+alert engine not triggering) but 
+the rest of the platform is 
+operational. 
+Within 2 hours Within 24 hours Business 
+hours + on-
+call escalation 
+for P1 
+escalations 
+P3 — Medium Non-critical functionality 
+impaired, cosmetic issues, or 
+minor data display 
+discrepancies not affecting the 
+accuracy of the overall 
+published figures. 
+Within 4 business 
+hours 
+Within 5 
+business days 
+Business 
+hours 
+P4 — Low Minor usability issues, minor 
+change requests, or operational 
+questions that do not affect data 
+accuracy or core functionality. 
+Within 1 business 
+day 
+Within 20 
+business days or 
+next 
+maintenance 
+release 
+Business 
+hours 
+ 
+Business hours are defined as Monday to Friday, 08:00–16:00 UAE Standard Time, excluding UAE 
+public holidays. The vendor must provide a named support contact and an emergency out-of-hours 
+escalation number for P1 incidents. 
+--- PAGE 44 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+ 
+15.3   Incident Reporting 
+• For each P1 or P2 incident, the vendor must provide a written incident report to DLD within 
+3 business days of resolution, covering: incident description, root cause, resolution steps 
+taken, and preventive measures applied. 
+• The vendor must maintain an incident log accessible to DLD that records all incidents raised, 
+their priority, status, response time, resolution time, and resolution summary. DLD may 
+request access to this log at any time. 
+• Any SLA breach must be proactively communicated to DLD with a root cause and corrective 
+action before DLD raises it. 
+ 
+15.4   Warranty & Support Cost Pricing 
+# 12-Month Warranty & Support Cost Item Annual Cost 
+(AED) 
+S.1 Dedicated support team — personnel cost and allocation. Vendor must specify the 
+support team structure, the named primary contact, and their on-call arrangements 
+for P1 incidents. 
+___________ 
+S.2 120 person-hours minor change pool (included in the support contract). Rate for 
+additional hours if the pool is exhausted: AED __________ per person -hour. 
+Included 
+S.3 Security vulnerability monitoring and patch management activities. ___________ 
+S.4 Infrastructure operations — hosting, backups, disaster recovery management, and 
+uptime SLA maintenance (as applicable to the proposed hosting model). 
+___________ 
+S.5 Help desk and incident management tooling. ___________ 
+TOTAL 12-MONTH WARRANTY & SUPPORT COST — Exclusive of VAT 
+ TOTAL: ___________ 
+ 
+  
+--- PAGE 45 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+16.   Vendor Qualifications 
+16.1   General Qualification Requirements 
+DLD does not impose fixed minimum years of experience, specific team sizes, or mandatory 
+certifications beyond those related to security compliance. The following qualifications are required 
+and will be evaluated as part of the 70% technical score. DLD encourages proposals from vendors of 
+all sizes and backgrounds who can demonstrate genuine capability to deliver this platform. 
+ 
+Qualification Area Evidence Required in Proposal 
+Relevant Experience in Digital Platform Delivery Portfolio of completed projects demonstrating 
+experience in at least two of the following areas: 
+government or public sector digital platforms, real 
+estate data platforms, PropTech applications, smart 
+city data portals, or large-scale data visualisation 
+systems. Project profiles must include: client name, 
+project scope, technology stack used, and measurable 
+outcomes. 
+Data Integration & Accuracy Track Record At least one case study specifically describing a data 
+integration and accuracy validation engagement — 
+documenting the methodology used, data quality issues 
+discovered, and accuracy outcomes achieved. This is a 
+mandatory case study given the critical importance of 
+data accuracy in this project. 
+AI/ML Delivery Capability Evidence of having delivered at least one operational 
+AI or LLM-powered application. A live demo link or 
+recorded walkthrough (minimum 10 minutes) of a 
+previously delivered conversational AI system is 
+required. Arabic language capability demonstration is 
+strongly preferred. 
+Security Compliance Capability Active ISO 27001 certification or a DESC ISR 
+compliance certification for the delivering 
+organisation, or equivalent demonstrable information 
+security management maturity. Vendor must describe 
+their approach to DESC ISR v3 compliance and VAPT 
+management. 
+UAE Market Presence The vendor must have either a registered UAE legal 
+entity or a clearly defined UAE-based delivery team 
+assigned to this project. Remote-only delivery without 
+UAE-based team members will be evaluated 
+accordingly. 
+Post-Delivery Support Capability The vendor must demonstrate their ability to provide 
+the P1 support SLA (1-hour response, 24/7/365) for 
+Critical incidents. Evidence may include: existing 
+support agreements with similar clients, on-call team 
+structure, and incident management tooling. 
+ 
+--- PAGE 46 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+16.2   Mandatory Proposal Contents Checklist 
+All of the following must be included in the vendor's submitted proposal. Incomplete proposals may 
+be disqualified. 
+56. Company Profile: corporate overview, legal registration details in the UAE (or details of 
+UAE-based team commitment), and a brief statement of the company's mission and relevant 
+specialisation. 
+57. Portfolio of Relevant Projects: project profiles demonstrating relevant experience as 
+described in Section 16.1. Minimum 2 project profiles; additional profiles are encouraged. 
+58. Data Integration & Accuracy Case Study: minimum 1 dedicated case study as specified in 
+Section 16.1. 
+59. AI System Demonstration: live demo link or recorded walkthrough of an operational AI 
+system previously delivered. 
+60. Proposed Technology Stack: fully detailed technology proposal for all architectural layers in 
+Section 11.1, with justification for each choice and an explanation of how it meets the 
+requirements of this RFP. Vendors are strongly encouraged to include an Architecture 
+Integration Map showing how their proposed solution aligns with DLD’s existing Microsoft 
+Fabric environment (see Section 11.4). Where the vendor proposes components outside the 
+existing ecosystem, these should be identified and justified. For the External Public Portal 
+visualisation layer, vendors should include the comparative analysis described in Section 
+11.4.2. 
+61. Proposed Hosting Model(s): full description of the hosting option(s) proposed. If multiple 
+options are offered, a clear comparison of their cost, performance, and risk profile must be 
+provided. 
+62. Proposed Project Team: overview of the team proposed for this engagement — roles, relevant 
+experience, and proposed allocation. Named individuals are preferred but not mandatory at 
+proposal stage; DLD may request named resources during evaluation. 
+63. Phased Delivery Timeline: the vendor's proposed timeline for each of the four phases, 
+presented as a high-level Gantt chart or equivalent. Individual task-level timelines are not 
+required. 
+64. DLD Data Familiarisation Plan: description of how the vendor will conduct the mandatory 
+data familiarisation activities in Section 12.1, including the resources assigned and the 
+proposed approach. 
+65. System Architecture Diagram: full technical architecture diagram showing all proposed 
+components, data flows, integration points, and security boundaries for the complete 
+platform. 
+66. Security & Compliance Plan: detailed plan for DESC ISR v3 compliance, VAPT schedule, 
+SOC provider selection, and ISO 27001 roadmap. 
+67. Proposed SLA Document: complete SLA covering both development warranty and 12-month 
+post-go-live support — P1–P4 definitions, response and resolution times, escalation contacts, 
+and any penalty or credit provisions for SLA breach. 
+68. Itemised Cost Tables: complete tables as per Sections 14.1 (Infrastructure Setup CAPEX), 
+14.2 (Licence & Subscription costs), 14.3 (Development & Implementation CAPEX by 
+phase), and 14.4 (Annual Recurring OPEX). Plus the 12-month support cost table as per 
+Section 15.4. All prices in AED, exclusive of VAT. 
+69. Risk Register: project risk register identifying the principal delivery, technical, data, security, 
+and operational risks with probability and impact ratings and proposed mitigation actions. 
+--- PAGE 47 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+70. Knowledge Transfer & Exit Plan: description of how DLD will receive full platform 
+ownership — source code repositories, IaC scripts, all documentation, and infrastructure 
+control — at project completion and upon contract expiry. 
+ 
+  
+--- PAGE 48 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+17.   Acceptance Criteria 
+17.1   Phase-Level Acceptance 
+Each phase is accepted independently. Phase acceptance requires the following to be satisfied: 
+• All deliverables listed for that phase in Section 13 are completed and operational in the 
+production environment. 
+• All functional requirements applicable to that phase pass a structured UAT session with DLD 
+stakeholders and end-users. 
+• All performance SLAs in Section 10.1 are met under load. 
+• The data accuracy acceptance criterion is met (Section 17.2). 
+• No open Critical or High-severity defects remain at the time of phase sign-off. 
+• The DLD Project Sponsor signs a phase acceptance form confirming sign-off. 
+ 
+17.2   Data Accuracy Acceptance Criterion 
+For Phase 1 and for any subsequent phase that introduces new data categories, the following data 
+accuracy criterion must be met before phase acceptance: 
+• A random sample of 500 transaction records displayed on the External Portal is verified by 
+the DLD data team against the authoritative DLD source database. 
+• The accuracy rate (percentage of fields matching the source record) must be 99.5% or above. 
+• The Pre-Publication Analytics Assessment report must be signed off by the DLD Data 
+Liaison Officer before the phase goes live with public data. 
+ 
+17.3   Universal UAT Requirements (All Phases) 
+# UAT Test Category Pass Criteria 
+1 Functional Testing 100% of functional requirements applicable to the phase 
+implemented and verified. Zero Critical or High-severity 
+open defects at phase sign-off. 
+2 Performance Testing All P95 response time targets met under the concurrent user 
+loads specified in Section 10.1. 
+3 AI Agent Accuracy (Phase 1 and 2) Agent tested against a standardised 100-question DLD data 
+test set. Accuracy greater than or equal to 90%. Zero 
+instances of fabricated data. Zero instances of investment 
+advice provided. 
+4 Security Testing (Phase 3) DESC-authorised VAPT report with zero open High or 
+Critical findings. OWASP security scan: zero critical issues. 
+5 Accessibility Testing Automated accessibility scan: zero Critical violations. 
+WCAG 2.1 Level AA verified across all pages. 
+--- PAGE 49 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+# UAT Test Category Pass Criteria 
+6 Language & RTL Testing English and Arabic fully correct in Phases 1–3. All 8 
+languages correct in Phase 4. RTL layout verified for Arabic 
+and Urdu. No truncated or overlapping text. 
+7 Data Accuracy Verification DLD data team verifies 500 transaction records against 
+source. Accuracy rate 99.5% or above. 
+8 End-User Usability Testing Structured usability session with a representative group of 
+DLD staff and investor users. System Usability Scale (SUS) 
+score greater than or equal to 75. All critical task completion 
+rates greater than or equal to 90%. 
+9 CMS Non-Technical Edit Test DLD non-technical staff members successfully publish a 
+content change within 10 minutes without vendor assistance. 
+10 Alert Delivery Testing Test alerts triggered across all applicable alert levels and 
+types. All delivered within specified SLA times to correct 
+recipients. 
+ 
+  
+--- PAGE 50 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+18.   Proposal Evaluation Criteria 
+Evaluation Weight: 70% Technical Requirements  |  30% Budget & Total Cost of Ownership  Proposals 
+that do not meet the minimum technical score threshold will not proceed to financial evaluation. The 
+highest-ranked proposal on the combined weighted score will be recommended for contract award, subject 
+to DLD's internal governance approvals. 
+ 
+18.1   Technical Evaluation (70% Total) 
+Technical Evaluation Criterion Weight (of 70%) Evaluation Method 
+Proposed Technical Solution: quality and appropriateness 
+of the proposed technology stack, architecture design, 
+hosting model, AI model approach, scalability strategy, 
+and overall alignment with the functional and non-
+functional requirements of this RFP. This criterion 
+specifically includes evaluation of how well the vendor’s 
+proposed architecture aligns with DLD’s existing 
+Microsoft Fabric ecosystem (Section 11.4) — proposals 
+demonstrating strong alignment and a clear Architecture 
+Integration Map will be scored more favourably. For the 
+External Public Portal, the quality of the visualisation layer 
+comparative analysis (Section 11.4.2) will also be 
+evaluated. 
+25% Technical review panel 
+evaluation + Architecture 
+Q&A session with the 
+vendor's technical team 
+Data Understanding & Accuracy Methodology: credibility, 
+depth, and practicality of the proposed DLD data 
+familiarisation plan, analytics assessment methodology, 
+and ongoing data accuracy monitoring framework. Given 
+the critical importance of data accuracy to this project, this 
+criterion carries significant weight. 
+20% Data methodology review 
+panel + evaluation of the 
+mandatory data integration 
+case study 
+Security & Compliance Approach: completeness and 
+credibility of the security plan including DESC ISR v3 
+compliance roadmap, VAPT scheduling, SOC provider 
+selection, and ISO 27001 certification pathway. 
+10% Security review panel 
+evaluation 
+Relevant Experience & Demonstrated Capability: quality 
+of the project portfolio, relevance of prior work to this 
+RFP's scope, and strength of the AI system demonstration. 
+10% Portfolio review + reference 
+checks (minimum 2 client 
+references contacted by 
+DLD) 
+Warranty & Technical Support Plan: credibility and 
+completeness of the 12-month warranty offer, SLA 
+commitments, support team structure, data accuracy 
+monitoring plan, and AI Agent knowledge update 
+approach. 
+5% Support plan review panel 
+TOTAL TECHNICAL SCORE 
+Minimum threshold to proceed to financial evaluation: 70 
+out of 100 on the combined technical sub-criteria. 
+70%  
+--- PAGE 51 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+ 
+18.2   Financial Evaluation (30% Total) 
+Financial Evaluation Criterion Weight (of 30%) Evaluation Method 
+Total Cost of Ownership (5-Year): the combined total of 
+infrastructure setup CAPEX (Section 14.1), licence and 
+subscription costs (Section 14.2), implementation CAPEX 
+across all four phases (Section 14.3), and five years of 
+annual recurring OPEX (Section 14.4). The proposal 
+offering the best value for money on a 5-year TCO basis 
+will score highest. 
+20% Financial evaluation 
+committee using a standard 
+5-year TCO model applied 
+consistently across all 
+proposals 
+Pricing Transparency & Completeness: the degree to 
+which all cost tables are fully and accurately completed 
+with no missing items, bundling of line items, or 
+ambiguous entries. Proposals with clearly itemised, 
+justified costs will score higher than those with opaque or 
+bundled pricing. 
+10% Financial review of all four 
+cost tables in the proposal 
+TOTAL FINANCIAL SCORE 
+ 30%  
+ 
+18.3   Evaluation Process 
+71. All submitted proposals are reviewed for completeness. Incomplete proposals may be 
+disqualified at this stage. 
+72. The technical evaluation panel scores each proposal against the technical criteria 
+independently. 
+73. Proposals achieving 70 or above out of 100 on the combined technical score proceed to 
+financial evaluation. 
+74. The financial evaluation committee reviews all qualifying proposals against the financial 
+criteria. 
+75. Combined scores (70% technical + 30% financial) are calculated. The highest-combined-
+score proposal is recommended for contract award. 
+76. DLD reserves the right to request clarifications, additional information, or a 
+presentation/demonstration from shortlisted vendors prior to final recommendation. 
+77. DLD reserves the right to not award the contract to the lowest-cost proposal if the technical 
+quality is assessed as insufficient to deliver the project successfully. 
+ 
+  
+--- PAGE 52 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+19.   Data Governance, Privacy & Ownership 
+19.1   Data Ownership 
+• All data processed, stored, or generated within the IRETP platform is the sole and exclusive 
+property of Dubai Land Department. 
+• The vendor has no rights to use any DLD data for any purpose other than delivering the 
+contracted services. 
+• Upon contract expiration, termination, or handover, the vendor must deliver all data in 
+machine-readable, open formats within 30 calendar days and provide written certification of 
+complete data destruction from all vendor-controlled systems within 60 days. 
+ 
+19.2   Personal Data Protection Compliance 
+• The system must fully comply with UAE Federal Decree-Law No. 45 of 2021 on the 
+Protection of Personal Data (PDPL). 
+• No personally identifiable information (PII) — names, Emirates ID, nationality, or contact 
+details — may be displayed in any public-facing interface. 
+• All transaction data displayed publicly must be either aggregated (zone/period level) or 
+anonymised at the individual transaction level. 
+• A Data Processing Agreement (DPA) must be signed between DLD and the vendor before 
+any personal data is accessed. 
+• User consent management for newsletters, alert emails, and cross-session AI memory must 
+comply with PDPL. 
+ 
+19.3   Data Quality Standards 
+Data Quality Dimension Minimum Standard Measurement Frequency 
+Accuracy 99.5% or above of all data values 
+match the DLD source system record 
+DLD data team audit — frequency 
+and sample size determined by DLD 
+Completeness 100% of mandatory fields populated 
+for all transactions in the last 24 
+months 
+DLD data team check — frequency 
+determined by DLD 
+Timeliness Transaction data lag must not exceed 
+24 hours from DLD source. 
+Dashboard KPIs must not exceed 15 
+minutes. 
+Vendor pipeline monitoring with 
+breach alerts to DLD 
+Consistency Data values consistent across all 
+platform modules — no discrepancy 
+between map data and transaction 
+table data 
+DLD data team reconciliation — 
+frequency determined by DLD 
+ 
+  
+--- PAGE 53 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+20.   Additional Recommended Features 
+The following features are recommended for inclusion in the platform to maximise GRETI score 
+improvement. Vendors may propose these as part of Phase 4 or as optional additions, with separate 
+costing where applicable: 
+ 
+• International Market Benchmarking (Phase 4 — included): comparison of Dubai's key 
+metrics against 5 global peer cities (London, Singapore, New York, Paris, Hong Kong), 
+sourced from publicly available official data and updated quarterly. 
+• ESG / Sustainability Module (Phase 4 — included): LEED, Estidama Pearl, and BREEAM 
+certification status for applicable buildings and projects. The Sustainability sub-index showed 
+the strongest improvement in GRETI 2024 and is a high-impact area for UAE ranking 
+advancement. 
+• Open Data API Portal (Phase 1 — included): self-service API key registration for 
+researchers, financial institutions, and PropTech developers. OpenAPI 3.0 documentation 
+with interactive testing console. 
+• Public Developer Scorecard (Phase 3 — included): simplified public-facing version of the 
+developer rating displaying completed projects, on-time delivery percentage, RERA 
+compliance rating, and total units delivered. 
+• Beneficial Ownership Transparency: display of publicly available corporate ownership 
+structures for registered developers. Specifically cited in JLL's 2024 GRETI report as a key 
+area for UAE improvement. 
+• Mortgage & Debt Market Transparency: aggregate data on mortgage financing activity — 
+total values registered, average LTV ratios by zone, and MoM trend. GRETI 2024 identified 
+debt market transparency as a significant gap for UAE. 
+ 
+  
+--- PAGE 54 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+21.   Glossary of Terms 
+Term / Acronym Definition 
+CAPEX Capital Expenditure — one-time investment costs incurred during the project 
+development and delivery phase. 
+DESC Dubai Electronic Security Center — the government authority responsible for 
+cybersecurity regulation and certification in the Emirate of Dubai. 
+DESC-CSP DESC Cloud Service Provider Certification — mandatory certification for any cloud 
+provider or colocation facility serving Dubai Government entities. 
+EWRS Early Warning Risk System — the internal platform module (Phase 2) that monitors 
+risk indicators for real estate projects and developers and triggers automated alerts. 
+GRETI Global Real Estate Transparency Index — published biennially by JLL & LaSalle, 
+covering 89 countries and 151 cities across 256 indicators in 6 sub-indices. 
+GIS Geographic Information System — technology for capturing, storing, managing, and 
+visualising spatially referenced data on digital maps. 
+IaC Infrastructure as Code — the practice of managing and provisioning infrastructure 
+through machine-readable definition files rather than manual processes. 
+IRETP Integrated Real Estate Transparency Platform — the name of the system being 
+procured through this RFP. 
+ISR Information Security Regulation — the mandatory information security framework 
+issued by DESC for all Dubai Government entities (current version: ISR v3). 
+LLM Large Language Model — an AI model trained on large datasets of text capable of 
+generating and understanding natural language. 
+OPEX Operational Expenditure — recurring annual costs for running, maintaining, and 
+supporting the platform after go-live. 
+PDPL UAE Federal Decree-Law No. 45 of 2021 on the Protection of Personal Data — the 
+UAE's primary data privacy law. 
+RAG Retrieval-Augmented Generation — an AI architecture where a language model's 
+outputs are grounded in real-time data retrieval, reducing hallucination. 
+RBAC Role-Based Access Control — a security model where system access permissions are 
+assigned based on defined user roles. 
+RERA Real Estate Regulatory Agency — the regulatory arm of Dubai Land Department 
+responsible for licensing developers and brokers, and managing the Escrow system.  
+RPO Recovery Point Objective — the maximum acceptable amount of data loss measured 
+in time following a system failure. 
+RTO Recovery Time Objective — the maximum acceptable duration within which a 
+system must be restored following a failure. 
+RTL Right-to-Left — the text direction used by Arabic and Urdu, requiring full layout 
+mirroring in user interface components. 
+SLA Service Level Agreement — a contractual commitment defining the minimum 
+performance and availability standards the vendor must maintain. 
+--- PAGE 55 ---
+Dubai Land Department  —  IRETP Request for Proposal  —  RFP No. DLD-IRETP-2026-001 CONFIDENTIAL 
+© 2026 Dubai Land Department. All rights reserved. ● 
+Term / Acronym Definition 
+TCO Total Cost of Ownership — the combined cost of all CAPEX and OPEX over the 
+evaluation period (5 years for this RFP's financial evaluation). 
+VAPT Vulnerability Assessment and Penetration Testing — a security testing process that 
+identifies and validates exploitable security vulnerabilities in a system. 
+WCAG 2.1 AA Web Content Accessibility Guidelines 2.1, Level AA — the internationally 
+recognised standard for digital accessibility. 
+Microsoft Fabric Microsoft’s unified analytics platform that integrates data engineering, data 
+integration, data warehousing, data science, real-time analytics, and business 
+intelligence. DLD’s implementation includes OneLake, Data Factory pipelines, 
+semantic models, and the reporting layer, all of which are mandatory components for 
+the IRETP vendor to leverage. 
+OneLake The single, unified data lake storage layer within Microsoft Fabric. DLD’s OneLake 
+is structured using a Lakehouse architecture with Silver (cleansed and conformed 
+data) and Gold (curated, analytics-ready) layers. OneLake is DLD’s preferred and 
+recommended single source of truth for all IRETP data. Vendors are strongly 
+encouraged to serve all platform visualisations and APIs from the Gold layer to 
+maintain data consistency and avoid duplication. 
+Silver / Gold Layers Data processing tiers within DLD’s OneLake Lakehouse architecture. The Silver 
+Layer contains cleansed, validated, and conformed data transformed from raw source 
+system ingestion. The Gold Layer contains aggregated, business-rule-applied, 
+analytics-ready data sets that serve semantic models and all reporting and 
+visualisation outputs. All IRETP platform visualisations and APIs must be served 
+from the Gold Layer. 
+ 
+ 
+END OF DOCUMENT 
+This document is Confidential and Proprietary to Dubai Land Department. 
+Any distribution or disclosure without prior written permission is strictly prohibited. 
+© 2026 Dubai Land Department. All Rights Reserved. 

@@ -1,0 +1,317 @@
+@page "/api-portal"
+@rendermode InteractiveServer
+@inject ApiKeyService Keys
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>IRETP - Open Data Developer Portal</PageTitle>
+
+<ModuleBanner Icon="code-slash"
+              Title="Open Data Developer Portal"
+              Subtitle="Public, machine-readable access to the DLD registry. OpenAPI 3.0 · JSON · rate-limited per tier."
+              ButtonText="Issue new key"
+              ButtonIcon="key"
+              OnButtonClick="@(() => _showIssue = true)" />
+
+<!-- Endpoints -->
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 h5">Available endpoints</h2>
+        <div class="btn-group btn-group-sm">
+            <a href="/api-docs" target="_blank" class="btn btn-outline-primary">
+                Interactive console <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            <a href="/openapi/public.json" target="_blank" class="btn btn-outline-primary">
+                OpenAPI 3.0 spec <i class="bi bi-filetype-json"></i>
+            </a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr><th>Resource</th><th>Method</th><th>Path</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var e in ApiKeyService.Endpoints)
+                {
+                    <tr>
+                        <td class="fw-semibold">@e.Name</td>
+                        <td><span class="badge bg-success">@e.Method</span></td>
+                        <td><code>@e.Path</code></td>
+                        <td class="text-muted">@e.Description</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Code sample -->
+<div class="card mb-3">
+    <div class="card-header"><h2 class="mb-0 h5">Request example</h2></div>
+    <div class="card-body">
+        <ul class="nav nav-tabs mb-2">
+            <li class="nav-item">
+                <button class="nav-link @(_lang == "curl" ? "active" : "")" @onclick='() => _lang = "curl"'>cURL</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_lang == "node" ? "active" : "")" @onclick='() => _lang = "node"'>Node.js</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_lang == "python" ? "active" : "")" @onclick='() => _lang = "python"'>Python</button>
+            </li>
+        </ul>
+        <pre class="bg-dark text-white p-3 rounded" style="overflow-x:auto;"><code>@SampleCode()</code></pre>
+        <button class="btn btn-sm btn-outline-secondary" @onclick="() => Copy(SampleCode())">
+            <i class="bi bi-clipboard"></i> Copy
+        </button>
+    </div>
+</div>
+
+<!-- Keys -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 h5">My API keys</h2>
+        <span class="text-muted small">@Keys.List().Count total</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th><th>Key</th><th>Tier</th>
+                    <th class="text-end">Rate limit</th>
+                    <th class="text-end">Calls (30d)</th>
+                    <th>Created</th>
+                    <th>Last used</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var k in Keys.List())
+                {
+                    <tr>
+                        <td class="fw-semibold">@k.Name</td>
+                        <td>
+                            <code>@MaskKey(k.Key)</code>
+                            <button class="btn btn-sm btn-link" @onclick="() => Copy(k.Key)"
+                                    title="Copy key">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </td>
+                        <td><span class="badge @TierBadge(k.Tier)">@k.Tier</span></td>
+                        <td class="text-end">@k.RateLimitPerMinute / min</td>
+                        <td class="text-end">@k.CallsLast30d.ToString("N0")</td>
+                        <td>@k.CreatedAt.ToString("dd MMM yyyy")</td>
+                        <td class="small @(StaleClass(k))">@FormatLastUsed(k)</td>
+                        <td>
+                            @if (k.RevokedAt.HasValue)
+                            {
+                                <span class="badge bg-danger">Revoked</span>
+                            }
+                            else if (k.RotatedAt.HasValue)
+                            {
+                                <span class="badge bg-warning text-dark" title="Rotated — previous value invalid">
+                                    Rotated
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            @if (!k.RevokedAt.HasValue)
+                            {
+                                <button class="btn btn-sm btn-outline-warning me-1"
+                                        @onclick="() => RotateKey(k.Id)"
+                                        title="Generate a new secret — old value will be invalidated">
+                                    <i class="bi bi-arrow-repeat"></i> Rotate
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Keys.Revoke(k.Id)">
+                                    <i class="bi bi-x-circle"></i> Revoke
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (_showIssue)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.4);" @onclick="() => _showIssue = false">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Issue API Key</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showIssue = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input id="name" type="text" class="form-control" @bind="_draftName" placeholder="e.g. Research Lab" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="owner-email" class="form-label">Owner email</label>
+                        <input id="owner-email" type="email" class="form-control" @bind="_draftEmail" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="tier" class="form-label">Tier</label>
+                        <select id="tier" class="form-select" @bind="_draftTier">
+                            <option>Free</option>
+                            <option>Plus</option>
+                            <option>Partner</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="() => _showIssue = false">Cancel</button>
+                    <button class="btn btn-primary" @onclick="IssueKey"
+                            disabled="@(string.IsNullOrWhiteSpace(_draftName) || string.IsNullOrWhiteSpace(_draftEmail))">
+                        Issue key
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_revealKey is not null)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-warning">
+                <div class="modal-header bg-warning-subtle">
+                    <h5 class="modal-title">
+                        <i class="bi bi-shield-lock me-2"></i>@_revealTitle
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Copy this key now.</strong> For security reasons the full value is shown
+                        only once and cannot be retrieved again. Store it in your secrets manager before closing.
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control font-monospace" readonly value="@_revealKey.Key" />
+                        <button class="btn btn-outline-primary" @onclick="() => Copy(_revealKey!.Key)">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                    <div class="small text-muted">
+                        Key: <strong>@_revealKey.Name</strong> · Tier: @_revealKey.Tier
+                        · Rate limit: @(_revealKey.RateLimitPerMinute) per minute
+                        @if (_revealKey.RotatedAt.HasValue && !string.IsNullOrEmpty(_revealKey.PreviousKeyMasked))
+                        {
+                            <div class="mt-2">
+                                Previous value <code>@_revealKey.PreviousKeyMasked</code> is now invalid.
+                                Update clients within the next rate-limit window to avoid outage.
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="CloseReveal">
+                        I've stored the key securely
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _showIssue;
+    private string _lang = "curl";
+    private string _draftName = "";
+    private string _draftEmail = "";
+    private string _draftTier = "Free";
+
+    // "Shown once" reveal modal for newly-issued or rotated keys.
+    private ApiKeyService.ApiKey? _revealKey;
+    private string _revealTitle = "New API key — copy it now";
+
+    protected override void OnInitialized() => Keys.OnChange += OnChange;
+    public void Dispose() => Keys.OnChange -= OnChange;
+    private void OnChange() => InvokeAsync(StateHasChanged);
+
+    private void IssueKey()
+    {
+        _revealKey = Keys.Issue(_draftName.Trim(), _draftEmail.Trim(), _draftTier);
+        _revealTitle = "New API key — copy it now";
+        _draftName = ""; _draftEmail = ""; _draftTier = "Free";
+        _showIssue = false;
+    }
+
+    private void RotateKey(Guid id)
+    {
+        var rotated = Keys.Rotate(id);
+        if (rotated is null) return;
+        _revealKey = rotated;
+        _revealTitle = $"Key rotated — copy the new value for {rotated.Name}";
+    }
+
+    private void CloseReveal() => _revealKey = null;
+
+    private static string FormatLastUsed(ApiKeyService.ApiKey k)
+    {
+        if (k.RevokedAt.HasValue) return "—";
+        if (!k.LastUsedAt.HasValue) return "Never";
+        var delta = DateTime.UtcNow - k.LastUsedAt.Value;
+        if (delta.TotalHours < 1) return $"{(int)delta.TotalMinutes} min ago";
+        if (delta.TotalHours < 24) return $"{(int)delta.TotalHours} h ago";
+        if (delta.TotalDays < 30) return $"{(int)delta.TotalDays} d ago";
+        return k.LastUsedAt.Value.ToString("dd MMM yyyy");
+    }
+
+    private static string StaleClass(ApiKeyService.ApiKey k)
+    {
+        if (k.RevokedAt.HasValue || !k.LastUsedAt.HasValue) return "text-muted";
+        var daysSince = (DateTime.UtcNow - k.LastUsedAt.Value).TotalDays;
+        return daysSince > 90 ? "text-warning" : "text-muted";
+    }
+
+    private async Task Copy(string text)
+    {
+        try { await JS.InvokeVoidAsync("iretpDownload.copyToClipboard", text); } catch { }
+    }
+
+    private string SampleCode() => _lang switch
+    {
+        "node" =>
+@"// Node.js – fetch IRETP transaction data
+const response = await fetch(
+  'https://api.iretp.dld.gov.ae/api/v1/open-data/transactions?zone=Dubai%20Marina',
+  { headers: { 'X-API-Key': 'YOUR_KEY' } }
+);
+const data = await response.json();
+console.log(data);",
+        "python" =>
+@"# Python – fetch IRETP transaction data
+import requests
+r = requests.get(
+    'https://api.iretp.dld.gov.ae/api/v1/open-data/transactions',
+    params={'zone': 'Dubai Marina'},
+    headers={'X-API-Key': 'YOUR_KEY'},
+)
+r.raise_for_status()
+print(r.json())",
+        _ =>
+@"# cURL – fetch IRETP transaction data
+curl 'https://api.iretp.dld.gov.ae/api/v1/open-data/transactions?zone=Dubai%20Marina' \
+  -H 'X-API-Key: YOUR_KEY' \
+  -H 'Accept: application/json'",
+    };
+
+    private static string MaskKey(string key) =>
+        key.Length <= 10 ? key : key[..14] + new string('•', 8) + key[^4..];
+
+    private static string TierBadge(string tier) => tier switch
+    {
+        "Partner" => "bg-success",
+        "Plus"    => "bg-primary",
+        _         => "bg-secondary"
+    };
+}

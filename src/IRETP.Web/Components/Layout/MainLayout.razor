@@ -1,0 +1,212 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject UiStateService Ui
+@inject LocalizationService T
+@inject CurrencyService Currency
+@inject NotificationFeedService Feed
+@implements IDisposable
+
+<!-- Skip link for keyboard users (WCAG 2.4.1) -->
+<a class="iretp-skip-link" href="#iretp-main">Skip to main content</a>
+
+<!-- ===== LOGO BANNER ===== -->
+<div class="logo-banner">
+    <a href="/" class="d-flex align-items-center text-decoration-none">
+        <img src="images/logos/gov-dubai-logo.png" alt="Government of Dubai" class="gov-logo" style="width:150px;height:auto;" />
+    </a>
+    <a href="/" class="d-flex align-items-center text-decoration-none">
+        <img src="images/logos/dld-logo.png" alt="Dubai Land Department" class="dld-logo" style="height:42px;width:auto;" />
+    </a>
+</div>
+
+<!-- ===== TOP TOOLBAR ===== -->
+<header class="top-toolbar" role="banner">
+    <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-sm btn-light" @onclick="ToggleSidebar"
+                aria-label="Toggle navigation sidebar" aria-controls="app-sidebar">
+            <i class="bi bi-list fs-5" aria-hidden="true"></i>
+        </button>
+        <a href="/" class="app-brand" aria-label="IRETP home">
+            <div class="brand-icon"><i class="bi bi-building" aria-hidden="true"></i></div>
+            <span class="d-none d-md-inline">IRETP</span>
+        </a>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <HeaderWidgets @rendermode="InteractiveServer" />
+    </div>
+</header>
+
+<!-- ===== SIDEBAR OVERLAY (mobile) ===== -->
+<div id="sidebarOverlay" class="sidebar-overlay" @onclick="CloseSidebar"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="app-sidebar" class="sidebar d-flex flex-column">
+    <div class="flex-grow-1 py-3">
+
+        <a href="/" class="sidebar-nav-link @NavActive("/")">
+            <i class="bi bi-speedometer2"></i><span class="nav-label">@T["nav.dashboard"]</span>
+        </a>
+
+        <details class="nav-section" open="@PublicOpen">
+            <summary class="section-title">
+                <span>@T["nav.publicPortal"]</span><i class="bi bi-chevron-right chevron"></i>
+            </summary>
+            <a href="/map" class="sidebar-nav-link @NavActive("/map")">
+                <i class="bi bi-map"></i><span class="nav-label">@T["nav.map"]</span>
+            </a>
+            <a href="/price-index" class="sidebar-nav-link @NavActive("/price-index")">
+                <i class="bi bi-graph-up-arrow"></i><span class="nav-label">@T["nav.priceIndex"]</span>
+            </a>
+            <a href="/rental-index" class="sidebar-nav-link @NavActive("/rental-index")">
+                <i class="bi bi-house"></i><span class="nav-label">@T["nav.rentalIndex"]</span>
+            </a>
+            <a href="/transactions" class="sidebar-nav-link @NavActive("/transactions")">
+                <i class="bi bi-receipt"></i><span class="nav-label">@T["nav.transactions"]</span>
+            </a>
+            <a href="/projects" class="sidebar-nav-link @NavActive("/projects")">
+                <i class="bi bi-buildings"></i><span class="nav-label">@T["nav.projects"]</span>
+            </a>
+            <a href="/developers" class="sidebar-nav-link @NavActive("/developers")">
+                <i class="bi bi-person-badge"></i><span class="nav-label">@T["nav.developers"]</span>
+            </a>
+            <a href="/developers/scorecards" class="sidebar-nav-link @NavActive("/developers/scorecards")">
+                <i class="bi bi-award"></i><span class="nav-label">@T["nav.scorecards"]</span>
+            </a>
+            <a href="/analytics" class="sidebar-nav-link @NavActive("/analytics")">
+                <i class="bi bi-bar-chart-line"></i><span class="nav-label">@T["nav.analytics"]</span>
+            </a>
+            <a href="/analytics/compare" class="sidebar-nav-link @NavActive("/analytics/compare")">
+                <i class="bi bi-bar-chart-steps"></i><span class="nav-label">@T["nav.compare"]</span>
+            </a>
+            <a href="/ai-agent" class="sidebar-nav-link @NavActive("/ai-agent")">
+                <i class="bi bi-robot"></i><span class="nav-label">@T["nav.aiAgent"]</span>
+            </a>
+            <a href="/greti" class="sidebar-nav-link @NavActive("/greti")">
+                <i class="bi bi-trophy-fill"></i><span class="nav-label">@T["nav.greti"]</span>
+            </a>
+        </details>
+
+        <details class="nav-section" open="@InvestorOpen">
+            <summary class="section-title">
+                <span>@T["nav.investor"]</span><i class="bi bi-chevron-right chevron"></i>
+            </summary>
+            <a href="/watchlist" class="sidebar-nav-link @NavActive("/watchlist")">
+                <i class="bi bi-bookmark-star"></i><span class="nav-label">@T["nav.watchlist"]</span>
+            </a>
+            <a href="/alerts" class="sidebar-nav-link @NavActive("/alerts")">
+                <i class="bi bi-bell"></i><span class="nav-label">@T["nav.alerts"]</span>
+            </a>
+            <a href="/notifications" class="sidebar-nav-link @NavActive("/notifications")">
+                <i class="bi bi-inbox"></i><span class="nav-label">@T["nav.notifications"]</span>
+            </a>
+            <a href="/api-portal" class="sidebar-nav-link @NavActive("/api-portal")">
+                <i class="bi bi-code-slash"></i><span class="nav-label">@T["nav.apiPortal"]</span>
+            </a>
+        </details>
+
+        @* Single entry point — the Administrator Hub (/admin) tiles out to every
+           admin surface (EWRS, escrow, developer rating, CMS, AI models, Fabric,
+           audit), so the sidebar carries one link instead of the full list.
+           The section-title is the (non-collapsible) group divider. *@
+        <div class="section-title">@T["nav.admin"]</div>
+        <a href="/admin" class="sidebar-nav-link @NavActive("/admin")">
+            <i class="bi bi-grid-1x2"></i><span class="nav-label">@T["nav.adminHub"]</span>
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div>IRETP v1.0</div>
+        <div>&copy; 2026 Dubai Land Department</div>
+    </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main id="iretp-main" class="main-content" role="main" tabindex="-1">
+    @Body
+</main>
+
+<!-- Organization structured data (GRETI Market Fundamentals sub-index signal) -->
+<IRETP.Web.Components.Shared.StructuredData Type="GovernmentOrganization" Data="@OrganizationSchema" />
+
+<footer class="site-footer" style="margin-left: var(--sidebar-width);">
+    <div class="container-fluid text-center">
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
+            <span>&copy; 2026 Dubai Land Department</span>
+            <span class="d-none d-md-inline">|</span>
+            <span class="d-none d-md-inline">Integrated Real Estate Transparency Platform</span>
+        </div>
+    </div>
+</footer>
+
+<BackToTop @rendermode="InteractiveServer" />
+
+<FloatingAiLauncher @rendermode="InteractiveServer" />
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">&#10005;</span>
+</div>
+
+@code {
+    private string _currentPath = "/";
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        Ui.OnChange += HandleUiChange;
+        _currentPath = new Uri(Nav.Uri).AbsolutePath;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _currentPath = new Uri(e.Location).AbsolutePath;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleUiChange() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+        Ui.OnChange -= HandleUiChange;
+    }
+
+    private string NavActive(string href)
+    {
+        if (href == "/") return _currentPath == "/" ? "active" : "";
+        // "/admin" is now the single admin entry — keep it highlighted across the
+        // whole /admin/* area (the individual links were removed from the sidebar).
+        return _currentPath.StartsWith(href, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    }
+
+    // Accordion sidebar: a collapsible group is expanded only when the current
+    // page lives inside it. Dashboard ("/") and the admin hub belong to no group,
+    // so both collapse there. Manual expand/collapse (closing siblings) is wired
+    // up in JS — see the accordion handler in App.razor.
+    private static readonly string[] PublicRoutes =
+        { "/map", "/price-index", "/rental-index", "/transactions", "/projects",
+          "/developers", "/analytics", "/ai-agent", "/greti" };
+    private static readonly string[] InvestorRoutes =
+        { "/watchlist", "/alerts", "/notifications", "/api-portal" };
+
+    private bool PublicOpen   => PublicRoutes.Any(r => _currentPath.StartsWith(r, StringComparison.OrdinalIgnoreCase));
+    private bool InvestorOpen => InvestorRoutes.Any(r => _currentPath.StartsWith(r, StringComparison.OrdinalIgnoreCase));
+
+    private async Task ToggleSidebar() => await JS.InvokeVoidAsync("sidebarInterop.toggle");
+    private async Task CloseSidebar()  => await JS.InvokeVoidAsync("sidebarInterop.close");
+
+    // Schema.org organization block emitted on every page (RFP Section 20 —
+    // machine-readable access). Investment-research crawlers pick up GRETI
+    // sub-index signal even on anonymous landing.
+    private static readonly Dictionary<string, object> OrganizationSchema = new()
+    {
+        ["name"]       = "Dubai Land Department",
+        ["legalName"]  = "Dubai Land Department",
+        ["url"]        = "https://dubailand.gov.ae",
+        ["logo"]       = "https://iretp.dld.gov.ae/images/logos/dld-logo.png",
+        ["areaServed"] = "Dubai, United Arab Emirates",
+        ["sameAs"]     = new[] { "https://www.linkedin.com/company/dubailanddepartment" }
+    };
+}

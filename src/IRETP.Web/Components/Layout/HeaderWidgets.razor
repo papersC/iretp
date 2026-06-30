@@ -1,0 +1,275 @@
+@* Interactive "island" component hosted inside the static MainLayout.
+   Owns the language/currency/notification popovers — the only genuinely
+   stateful pieces of the header. Declared InteractiveServer by its consumer
+   (MainLayout) so no delegate parameters leak in. *@
+@inject UiStateService Ui
+@inject CurrencyService Currency
+@inject NotificationFeedService Feed
+@inject LocalizationService T
+@inject AuthStateService Auth
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject IConfiguration Config
+@implements IDisposable
+
+<!-- Language switcher -->
+<div class="iretp-header-widget">
+    <button class="iretp-header-btn" @onclick="ToggleLang" @onclick:stopPropagation="true" aria-label="Language">
+        <i class="bi bi-translate"></i>
+        <span class="d-none d-sm-inline">
+            @(UiStateService.LanguageNames.TryGetValue(Ui.Language, out var _langName) ? _langName : "English")
+        </span>
+        <i class="bi bi-chevron-down iretp-caret"></i>
+    </button>
+    @if (_langOpen)
+    {
+        <div class="iretp-header-popover" @onclick:stopPropagation="true">
+            @foreach (var code in UiStateService.SupportedLanguages)
+            {
+                var name = UiStateService.LanguageNames.TryGetValue(code, out var n) ? n : code;
+                <button class="popover-item @(Ui.Language == code ? "active" : "")" @onclick="() => ChooseLang(code)">
+                    <i class="bi bi-check2 @(Ui.Language == code ? "" : "invisible")"></i> @name
+                </button>
+            }
+        </div>
+    }
+</div>
+
+<!-- Currency switcher -->
+<div class="iretp-header-widget">
+    <button class="iretp-header-btn" @onclick="ToggleCurrency" @onclick:stopPropagation="true" aria-label="Currency">
+        <span class="fw-bold">@Currency.Current.Symbol</span>
+        <span class="d-none d-sm-inline">@Currency.Current.Code</span>
+        <i class="bi bi-chevron-down iretp-caret"></i>
+    </button>
+    @if (_currencyOpen)
+    {
+        <div class="iretp-header-popover" @onclick:stopPropagation="true">
+            @foreach (var c in CurrencyService.Supported)
+            {
+                <button class="popover-item @(Currency.Current.Code == c.Code ? "active" : "")"
+                        @onclick='() => ChooseCurrency(c.Code)'>
+                    <span class="fw-bold" style="width: 24px;">@c.Symbol</span>
+                    <span class="flex-grow-1">@c.Code</span>
+                    <span class="text-muted small">@c.Name</span>
+                </button>
+            }
+        </div>
+    }
+</div>
+
+<!-- Auth / user button -->
+<div class="iretp-header-widget">
+    @if (Auth.IsAuthenticated)
+    {
+        <button class="iretp-header-btn" @onclick="ToggleUser" @onclick:stopPropagation="true" aria-label="Account">
+            <i class="bi bi-person-circle"></i>
+            <span class="d-none d-sm-inline">@InitialsOf(Auth.DisplayName ?? Auth.Email ?? "")</span>
+            <i class="bi bi-chevron-down iretp-caret"></i>
+        </button>
+        @if (_userOpen)
+        {
+            <div class="iretp-header-popover" @onclick:stopPropagation="true">
+                <div class="px-3 py-2 border-bottom">
+                    <div class="fw-semibold">@Auth.DisplayName</div>
+                    <div class="small text-muted">@Auth.Email</div>
+                </div>
+                <a href="/watchlist" class="popover-item"><i class="bi bi-bookmark-star"></i> Watchlist</a>
+                <a href="/alerts" class="popover-item"><i class="bi bi-bell"></i> My alerts</a>
+                <a href="/api-portal" class="popover-item"><i class="bi bi-code-slash"></i> API keys</a>
+                <button class="popover-item text-danger" @onclick="Logout">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>
+        }
+    }
+    else
+    {
+        <a href="/auth/login" class="iretp-header-btn" style="text-decoration:none;">
+            <i class="bi bi-person-circle"></i>
+            <span class="d-none d-sm-inline">@T["nav.login"]</span>
+        </a>
+    }
+</div>
+
+<!-- Notification bell -->
+<div class="iretp-header-widget">
+    <button class="iretp-header-btn" @onclick="ToggleBell" @onclick:stopPropagation="true"
+            aria-label="Notifications" style="padding:.35rem .55rem; position:relative;">
+        <i class="bi bi-bell fs-6"></i>
+        @{
+            var unread = Feed.UnreadCount();
+        }
+        @if (unread > 0)
+        {
+            <span class="iretp-bell-dot">@(unread > 9 ? "9+" : unread.ToString())</span>
+        }
+    </button>
+    @if (_bellOpen)
+    {
+        <div class="iretp-header-popover iretp-notif-panel" @onclick:stopPropagation="true">
+            <div class="d-flex justify-content-between align-items-center px-2 py-2 border-bottom">
+                <strong>@T["nav.notifications"]</strong>
+                <button class="btn btn-sm btn-link p-0" @onclick="MarkAllRead">Mark all read</button>
+            </div>
+            @foreach (var n in Feed.List().Take(8))
+            {
+                var title = Ui.Language == "ar" ? n.TitleAr : n.Title;
+                var msg   = Ui.Language == "ar" ? n.MessageAr : n.Message;
+                <a href="@(n.Link ?? "/notifications")" class="iretp-notif-item @(n.IsRead ? "" : "unread")"
+                   @onclick="() => Feed.MarkRead(n.Id)">
+                    <div class="notif-icon">
+                        <i class="bi @CategoryIcon(n.Category)"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">@title</div>
+                        <div class="text-muted small">@msg</div>
+                        <div class="notif-time">@n.CreatedAt.ToString("dd MMM, HH:mm")</div>
+                    </div>
+                </a>
+            }
+            <div class="px-2 py-2 text-center border-top">
+                <a href="/notifications" class="small">View all notifications →</a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _langOpen;
+    private bool _currencyOpen;
+    private bool _bellOpen;
+    private bool _userOpen;
+
+    private DotNetObjectReference<HeaderWidgets>? _pushRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Ui.OnChange   += HandleChange;
+        Feed.OnChange  += HandleChange;
+        Auth.OnChange  += HandleChange;
+
+        // Pull the authenticated user's real notifications from the backend.
+        // Anonymous visitors keep the seeded fixture so the bell/demo still works.
+        if (Auth.IsAuthenticated)
+        {
+            await Feed.RefreshAsync();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Connect to the WebAPI SignalR hub so new notifications appear
+        // immediately without waiting for the polling cycle (RFP 6.2).
+        if (Auth.IsAuthenticated && !string.IsNullOrEmpty(Auth.AccessToken))
+        {
+            _pushRef ??= DotNetObjectReference.Create(this);
+            var hubUrl = $"{WebApiBaseUrl}/hubs/notifications";
+            try
+            {
+                await JS.InvokeVoidAsync("iretpNotifications.start", hubUrl, Auth.AccessToken, _pushRef);
+            }
+            catch
+            {
+                // SignalR library or connection failed — polling remains the fallback.
+            }
+
+            // Internal DLD users are subject to a 30-minute inactivity logout
+            // (RFP 10.2.1 Access Control). The JS watcher shows a warning 5
+            // minutes before cut-off and calls back here to log out.
+            if (Auth.IsInternalUser)
+            {
+                try
+                {
+                    await JS.InvokeVoidAsync("iretpInactivityWatch.start", _pushRef);
+                }
+                catch { /* non-fatal */ }
+            }
+        }
+    }
+
+    /// <summary>Invoked from the SignalR JS client when a new notification arrives.</summary>
+    [JSInvokable]
+    public async Task OnPush(object _payload)
+    {
+        try { await Feed.RefreshAsync(); }
+        catch { /* non-fatal — next poll will catch up */ }
+    }
+
+    /// <summary>Invoked from the inactivity JS watcher when the 30-min ceiling hits.</summary>
+    [JSInvokable]
+    public async Task OnInactivityTimeout()
+    {
+        Auth.Clear();
+        try { await JS.InvokeVoidAsync("iretpUi.clearSessionCookie"); } catch { }
+        Nav.NavigateTo("/auth/login?reason=inactivity", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        Ui.OnChange   -= HandleChange;
+        Feed.OnChange  -= HandleChange;
+        Auth.OnChange  -= HandleChange;
+
+        try { _ = JS.InvokeVoidAsync("iretpNotifications.stop"); } catch { }
+        try { _ = JS.InvokeVoidAsync("iretpInactivityWatch.stop"); } catch { }
+        _pushRef?.Dispose();
+    }
+
+    private string WebApiBaseUrl => Config["ApiSettings:WebApiUrl"] ?? "http://localhost:5000";
+
+    private void HandleChange() => InvokeAsync(StateHasChanged);
+
+    private void ToggleLang()     { _langOpen = !_langOpen;       _currencyOpen = _bellOpen = _userOpen = false; }
+    private void ToggleCurrency() { _currencyOpen = !_currencyOpen; _langOpen = _bellOpen = _userOpen = false; }
+    private void ToggleBell()     { _bellOpen = !_bellOpen;       _langOpen = _currencyOpen = _userOpen = false; }
+    private void ToggleUser()     { _userOpen = !_userOpen;       _langOpen = _currencyOpen = _bellOpen = false; }
+
+    private async Task Logout()
+    {
+        Auth.Clear();
+        _userOpen = false;
+        try { await JS.InvokeVoidAsync("iretpUi.clearSessionCookie"); } catch { }
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+
+    private static string InitialsOf(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "Me";
+        var parts = name.Split(new[] { ' ', '.', '@' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "Me";
+        if (parts.Length == 1) return parts[0].Length <= 6 ? parts[0] : parts[0][..6];
+        return string.Concat(parts[0][0], parts[1][0]).ToUpperInvariant();
+    }
+
+    private async Task ChooseLang(string lang)
+    {
+        Ui.SetLanguage(lang);
+        _langOpen = false;
+        try
+        {
+            await JS.InvokeVoidAsync("iretpUi.applyLanguage", lang, Ui.IsRtl);
+        }
+        catch { }
+    }
+    private async Task ChooseCurrency(string code)
+    {
+        Ui.SetCurrency(code);
+        _currencyOpen = false;
+        try { await JS.InvokeVoidAsync("iretpUi.applyCurrency", code); } catch { }
+    }
+    private void MarkAllRead() => Feed.MarkAllRead();
+
+    private static string CategoryIcon(string category) => category switch
+    {
+        "Price"      => "bi-graph-up-arrow",
+        "Project"    => "bi-buildings",
+        "Watchlist"  => "bi-bookmark-star",
+        "Yield"      => "bi-percent",
+        "Digest"     => "bi-newspaper",
+        "Regulation" => "bi-shield-check",
+        _            => "bi-bell"
+    };
+}

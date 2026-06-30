@@ -1,0 +1,94 @@
+@*
+    Compact module header — ported from the ESEMS / ejraa360 design system.
+    Replaces gradient hero banners with a single sticky row: icon + title +
+    subtitle + actions. Uses Bootstrap Icons (bi bi-*) so it matches the rest
+    of the IRETP UI.
+
+    Three usage shapes:
+
+    1. Title only (or title + subtitle):
+        <ModuleBanner Icon="receipt"
+                      Title="Transactions"
+                      Subtitle="Live ledger from DLD" />
+
+    2. Title + single primary action:
+        <ModuleBanner Icon="bookmark-star"
+                      Title="My Watchlist"
+                      Subtitle="..."
+                      ButtonText="Add"
+                      ButtonIcon="plus-lg"
+                      OnButtonClick="OpenAddWatchlist" />
+
+    3. Title + arbitrary right-side content (status badges, button groups,
+       dropdown menus, search inputs, etc.):
+        <ModuleBanner Icon="bell" Title="EWRS Alert Queue" Subtitle="...">
+            <ActionsContent>
+                <span class="badge bg-danger">@open open</span>
+                <span class="badge bg-success">@resolved resolved</span>
+            </ActionsContent>
+        </ModuleBanner>
+
+    `IconColor` overrides the default brand color (e.g. "text-success" for
+    ESG, "text-warning" for GRETI). Defaults to var(--primary-color).
+*@
+
+@code {
+    [Parameter] public string Icon { get; set; } = "grid";
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Subtitle { get; set; }
+
+    [Parameter] public string? IconColor { get; set; }
+
+    [Parameter] public string? ButtonText { get; set; }
+    [Parameter] public string ButtonIcon { get; set; } = "plus";
+    [Parameter] public string? ButtonHref { get; set; }
+    [Parameter] public EventCallback OnButtonClick { get; set; }
+
+    [Parameter] public RenderFragment? ActionsContent { get; set; }
+
+    private bool ShowButton => string.IsNullOrEmpty(ButtonText) == false
+        && (string.IsNullOrEmpty(ButtonHref) == false || OnButtonClick.HasDelegate);
+
+    private string IconStyle => string.IsNullOrEmpty(IconColor)
+        ? "color: var(--primary-color);"
+        : "";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3 pb-2 flex-wrap gap-2 esems-animate-in"
+     style="border-bottom: 1px solid #e5e7eb;">
+    <div style="min-width:0;">
+        <h1 style="margin:0;font-size: var(--fs-base);font-weight:600;color:#111827;display:flex;align-items:center;gap:.5rem;">
+            <i class="bi bi-@Icon @IconColor" style="@IconStyle" aria-hidden="true"></i>
+            @Title
+        </h1>
+        @if (string.IsNullOrEmpty(Subtitle) == false)
+        {
+            <p style="margin:0;font-size: var(--fs-xs);color:#6b7280;">@Subtitle</p>
+        }
+    </div>
+    @if (ActionsContent is not null)
+    {
+        <div class="d-flex align-items-center gap-2 flex-wrap" style="flex-shrink:0;">
+            @ActionsContent
+        </div>
+    }
+    else if (ShowButton)
+    {
+        @if (string.IsNullOrEmpty(ButtonHref) == false)
+        {
+            <a href="@ButtonHref"
+               style="background: var(--primary-color);color:#fff;border:none;border-radius:.375rem;padding:.42rem .85rem;font-size: var(--fs-xs);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;flex-shrink:0;">
+                <i class="bi bi-@ButtonIcon" aria-hidden="true"></i>
+                @ButtonText
+            </a>
+        }
+        else
+        {
+            <button type="button" @onclick="OnButtonClick"
+                    style="background: var(--primary-color);color:#fff;border:none;border-radius:.375rem;padding:.42rem .85rem;font-size: var(--fs-xs);font-weight:600;display:inline-flex;align-items:center;gap:.4rem;flex-shrink:0;cursor:pointer;">
+                <i class="bi bi-@ButtonIcon" aria-hidden="true"></i>
+                @ButtonText
+            </button>
+        }
+    }
+</div>

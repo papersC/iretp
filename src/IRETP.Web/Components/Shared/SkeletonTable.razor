@@ -1,0 +1,64 @@
+@*
+    Loading-state placeholder for a table. Renders N rows × M cells of
+    shimmering bars to anchor the page while data arrives. Replaces the
+    centered spinner-border pattern.
+
+    By default the component renders WITHOUT a card wrapper — consumer
+    pages that already have a `<div class="card">` shell drop this in
+    where the table would go. Pass WithCard=true if your spinner was
+    standalone (no surrounding card).
+
+    Usage:
+        <SkeletonTable Rows="8" Columns="9" />
+        <SkeletonTable Rows="6" Columns="5" WithCard="true" />
+*@
+
+@code {
+    [Parameter] public int Rows { get; set; } = 5;
+    [Parameter] public int Columns { get; set; } = 5;
+    [Parameter] public bool WithCard { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    private static readonly string[] CellWidths = { "60%", "75%", "50%", "80%", "65%", "55%", "70%", "45%" };
+}
+
+@{
+    RenderFragment innerTable = @<text>
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        @for (int c = 0; c < Columns; c++)
+                        {
+                            <th><Skeleton Width="@(CellWidths[c % CellWidths.Length])" Height=".75rem" /></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int r = 0; r < Rows; r++)
+                    {
+                        <tr>
+                            @for (int c = 0; c < Columns; c++)
+                            {
+                                <td><Skeleton Width="@(CellWidths[(r + c) % CellWidths.Length])" Height=".875rem" /></td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </text>;
+}
+
+@if (WithCard)
+{
+    <div class="card @Class" aria-busy="true" aria-label="Loading">
+        @innerTable
+    </div>
+}
+else
+{
+    <div class="@Class" aria-busy="true" aria-label="Loading">
+        @innerTable
+    </div>
+}

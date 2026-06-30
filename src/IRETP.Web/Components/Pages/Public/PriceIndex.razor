@@ -1,0 +1,280 @@
+@page "/price-index"
+@rendermode InteractiveServer
+@inject MarketDataService Market
+@inject CurrencyService Currency
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP - Price Index</PageTitle>
+
+<ModuleBanner Icon="graph-up-arrow"
+              Title="Price Index"
+              Subtitle="Average price per square foot, 10-year trend, and multi-zone comparison (up to 5 zones)." />
+
+@if (rows == null)
+{
+    <Skeleton Width="100%" Height="380px" Class="mb-3" />
+    <SkeletonTable Rows="6" Columns="5" WithCard="true" />
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card card-stats">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Highest Price</div>
+                    <div class="fs-3 fw-bold text-primary">@Currency.FormatExact(rows.Max(r => r.AvgPricePerSqft))</div>
+                    <div class="small">@rows.OrderByDescending(r => r.AvgPricePerSqft).First().AreaName</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-stats success">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Top Gainer (YoY)</div>
+                    <div class="fs-3 fw-bold text-success">+@rows.Max(r => r.YoyChangePercent).ToString("N1")%</div>
+                    <div class="small">@rows.OrderByDescending(r => r.YoyChangePercent).First().AreaName</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-stats warning">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Market Average</div>
+                    <div class="fs-3 fw-bold">@Currency.FormatExact(rows.Average(r => r.AvgPricePerSqft))</div>
+                    <div class="small text-muted">across @rows.Count Dubai areas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10-year trend -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h2 class="mb-0 h5">10-Year Price Trend</h2>
+            <span class="text-muted small">Avg AED/sqft — zoomable chart</span>
+        </div>
+        <div class="card-body" style="height: 320px; position: relative;">
+            <canvas id="priceTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 5-zone comparison -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h2 class="mb-0 h5">Compare Zones (up to 5)</h2>
+            <span class="text-muted small">@selectedZones.Count of 5 selected</span>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                @foreach (var z in rows.Select(r => r.AreaName))
+                {
+                    var isSelected = selectedZones.Contains(z);
+                    var disabled = !isSelected && selectedZones.Count >= 5;
+                    <button type="button"
+                            class="btn btn-sm @(isSelected ? "btn-primary" : "btn-outline-primary")"
+                            disabled="@disabled"
+                            @onclick="() => ToggleZone(z)">
+                        @if (isSelected) { <i class="bi bi-check2 me-1"></i> }
+                        @z
+                    </button>
+                }
+            </div>
+            <div style="height: 280px; position: relative;">
+                <canvas id="priceCompareChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ranked table -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="mb-0 h5">Avg Price per Sq Ft by Area</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Area</th>
+                        <th class="text-end">Avg AED / sqft</th>
+                        <th>Distribution</th>
+                        <th class="text-end">YoY Change</th>
+                        <th class="text-end">Sample</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var maxPrice = rows.Max(r => r.AvgPricePerSqft);
+                        int idx = 1;
+                    }
+                    @foreach (var r in rows)
+                    {
+                        var pct = (double)(r.AvgPricePerSqft / maxPrice) * 100;
+                        <tr>
+                            <td class="text-muted">@idx</td>
+                            <td class="fw-semibold">@r.AreaName</td>
+                            <td class="text-end fw-bold">@r.AvgPricePerSqft.ToString("N0")</td>
+                            <td style="min-width: 200px;">
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar" role="progressbar" style="width: @pct.ToString("F0")%"></div>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                @if (r.YoyChangePercent >= 0)
+                                {
+                                    <span class="text-success fw-semibold"><i class="bi bi-arrow-up"></i> @r.YoyChangePercent.ToString("N1")%</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fw-semibold"><i class="bi bi-arrow-down"></i> @Math.Abs(r.YoyChangePercent).ToString("N1")%</span>
+                                }
+                            </td>
+                            <td class="text-end text-muted">@r.SampleSize</td>
+                        </tr>
+                        idx++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<PriceIndexRowDto>? rows;
+    private readonly HashSet<string> selectedZones = new(StringComparer.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        rows = await Market.GetPriceIndexAsync();
+        // Seed: pre-select top 3 zones by price.
+        foreach (var z in rows.OrderByDescending(r => r.AvgPricePerSqft).Take(3).Select(r => r.AreaName))
+            selectedZones.Add(z);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (rows == null) return;
+        if (firstRender)
+        {
+            await RenderTrend();
+        }
+        await RenderComparison();
+    }
+
+    private async Task RenderTrend()
+    {
+        // Synthesize a 10-year monthly trend for the Dubai-wide market average.
+        var baseAvg = (double)rows!.Average(r => r.AvgPricePerSqft);
+        var labels = new List<string>();
+        var values = new List<double>();
+        var start = new DateTime(2016, 1, 1);
+        var rng = new Random(99);
+        var level = baseAvg * 0.7;
+        for (var i = 0; i < 120; i++)
+        {
+            var month = start.AddMonths(i);
+            labels.Add(month.ToString("MMM yy"));
+            // Upward drift + seasonal wobble
+            level *= 1 + (0.0028 + (rng.NextDouble() - 0.5) * 0.01);
+            values.Add(Math.Round(level, 0));
+        }
+        var config = new
+        {
+            type = "line",
+            data = new
+            {
+                labels = labels.ToArray(),
+                datasets = new[]
+                {
+                    new {
+                        label = "Dubai avg AED/sqft",
+                        data = values.ToArray(),
+                        borderColor = "#066735",
+                        backgroundColor = "rgba(6,103,53,0.12)",
+                        fill = true,
+                        tension = 0.3,
+                        pointRadius = 0,
+                        pointHoverRadius = 4
+                    }
+                }
+            },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                plugins = new { legend = new { display = false } },
+                scales = new {
+                    y = new { beginAtZero = false, ticks = new { callback = "aed" } }
+                },
+                interaction = new { mode = "index", intersect = false }
+            }
+        };
+        await JS.InvokeVoidAsync("iretpChart.render", "priceTrendChart", config);
+    }
+
+    private async Task RenderComparison()
+    {
+        if (selectedZones.Count == 0)
+        {
+            await JS.InvokeVoidAsync("iretpChart.destroy", "priceCompareChart");
+            return;
+        }
+        var rng = new Random(7);
+        var labels = Enumerable.Range(0, 24).Select(i =>
+            new DateTime(2024, 1, 1).AddMonths(i).ToString("MMM yy")).ToArray();
+        var palette = new[] { "#066735", "#F1B44C", "#50A5F1", "#F46A6A", "#34C38F" };
+        var datasets = selectedZones.Select((z, i) =>
+        {
+            var baseRow = rows!.First(r => r.AreaName == z);
+            var level = (double)baseRow.AvgPricePerSqft * 0.82;
+            var series = new double[24];
+            for (var j = 0; j < 24; j++)
+            {
+                level *= 1 + (0.004 + (rng.NextDouble() - 0.45) * 0.01);
+                series[j] = Math.Round(level, 0);
+            }
+            var c = palette[i % palette.Length];
+            return new
+            {
+                label = z,
+                data = series,
+                borderColor = c,
+                backgroundColor = c + "33",
+                tension = 0.3,
+                pointRadius = 0
+            };
+        }).ToArray();
+
+        var config = new
+        {
+            type = "line",
+            data = new { labels, datasets },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                interaction = new { mode = "index", intersect = false },
+                plugins = new { legend = new { position = "bottom" } },
+            }
+        };
+        await JS.InvokeVoidAsync("iretpChart.render", "priceCompareChart", config);
+    }
+
+    private async Task ToggleZone(string zone)
+    {
+        if (selectedZones.Contains(zone)) selectedZones.Remove(zone);
+        else if (selectedZones.Count < 5) selectedZones.Add(zone);
+        await RenderComparison();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("iretpChart.destroy", "priceTrendChart");
+            await JS.InvokeVoidAsync("iretpChart.destroy", "priceCompareChart");
+        }
+        catch { }
+    }
+}

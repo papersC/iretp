@@ -1,0 +1,93 @@
+/*
+ * Accessibility baseline for IRETP — addresses WCAG 2.1 Level AA acceptance
+ * criterion in RFP Section 11.1 / Section 17.3 #5. Layered on top of
+ * Bootstrap so it overrides only what needs tightening for AA conformance.
+ */
+
+/* 1. Focus visibility — 2.4.7 (AA). Bootstrap ships subtle focus rings that
+      fail contrast in some themes; replace with a high-contrast outline. */
+:focus-visible {
+    outline: 3px solid #066735 !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(6, 103, 53, 0.25) !important;
+}
+
+/* Skip-link target — jumps focus past repetitive nav (2.4.1 Bypass Blocks). */
+.iretp-skip-link {
+    position: absolute;
+    top: -40px;
+    left: 8px;
+    background: #066735;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 4px;
+    z-index: 9999;
+    text-decoration: none;
+    font-weight: 600;
+    transition: top 120ms ease-in-out;
+}
+.iretp-skip-link:focus,
+.iretp-skip-link:focus-visible {
+    top: 8px;
+    outline-color: #fff !important;
+}
+
+/* 2. Minimum contrast — 1.4.3 (AA). The muted body colour in places drops
+      below 4.5:1 on the card-stats tint background. Tighten once for all
+      text classes used on light tints. */
+.card-stats .text-muted,
+.card-body .text-muted { color: #5a6069 !important; }
+
+/* 3. Interactive target size — 2.5.5 Level AAA but a common tester ask.
+      Ensure icon-only header buttons hit at least 32 × 32. */
+.iretp-header-btn {
+    min-width: 36px;
+    min-height: 36px;
+}
+
+/* 4. Live regions shouldn't visually flash on update. */
+[aria-live] {
+    transition: background-color 150ms ease-in-out;
+}
+
+/* 5. Decorative icons inside labeled controls get aria-hidden from markup,
+      but make sure screen readers never see the bare Bootstrap icon glyph. */
+.bi[aria-hidden="true"] {
+    speak: none;
+}
+
+/* 6. Forms — visible required marker (1.3.1 Info & Relationships). */
+label[data-required="true"]::after {
+    content: " *";
+    color: #b52b2b;
+    font-weight: 700;
+}
+
+/* 7. Table alternating rows — improves orientation (1.3.1). */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(6, 103, 53, 0.035);
+}
+
+/* 8. Reduce motion for users who request it (2.3.3 AAA — low cost, adopt). */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* 9. AI Agent streaming cursor — a mild blink during token arrival. */
+.iretp-cursor {
+    display: inline-block;
+    margin-left: 2px;
+    color: #066735;
+    animation: iretpCursorBlink 1s steps(2, start) infinite;
+}
+@keyframes iretpCursorBlink {
+    to { visibility: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .iretp-cursor { animation: none; }
+}

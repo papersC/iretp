@@ -1,0 +1,378 @@
+@page "/transactions"
+@rendermode InteractiveServer
+@inject MarketDataService Market
+@inject TransactionExportService Exporter
+@inject CurrencyService Currency
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<PageTitle>IRETP - Transactions</PageTitle>
+
+<ModuleBanner Icon="receipt"
+              Title="Transactions"
+              Subtitle="Live ledger from Dubai Land Department" />
+
+<div class="d-flex justify-content-end mb-3 esems-animate-in esems-animate-in-delay-1">
+    <ul class="nav nav-pills">
+        <li class="nav-item">
+            <button type="button" class="nav-link @(mode == "sales" ? "active" : "")" @onclick='() => SwitchMode("sales")'>
+                <i class="bi bi-cash-coin me-1"></i> Sales
+            </button>
+        </li>
+        <li class="nav-item">
+            <button type="button" class="nav-link @(mode == "mortgage" ? "active" : "")" @onclick='() => SwitchMode("mortgage")'>
+                <i class="bi bi-bank me-1"></i> Mortgage
+            </button>
+        </li>
+    </ul>
+</div>
+
+<div class="filter-bar esems-animate-in esems-animate-in-delay-2">
+    <div class="row g-3 align-items-end">
+        <div class="col-sm-6 col-md-3">
+            <label for="txnDateFrom">From</label>
+            <input id="txnDateFrom" type="date" class="form-control" @bind="dateFrom" />
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <label for="txnDateTo">To</label>
+            <input id="txnDateTo" type="date" class="form-control" @bind="dateTo" />
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <label for="txnPropertyType">Property Type</label>
+            <select id="txnPropertyType" class="form-select" @bind="propertyType">
+                <option value="">All Types</option>
+                <option>Apartment</option><option>Villa</option><option>Townhouse</option>
+                <option>Land</option><option>Office</option><option>Retail</option>
+            </select>
+        </div>
+        @if (mode == "sales")
+        {
+            <div class="col-sm-6 col-md-2">
+                <label for="txnStatus">Status</label>
+                <select id="txnStatus" class="form-select" @bind="txnType">
+                    <option value="">All</option><option>Ready</option><option>Off-Plan</option>
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" @onclick="ApplyFilters">
+                <i class="bi bi-funnel me-1"></i> Apply
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card esems-animate-in esems-animate-in-delay-3">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="input-group" style="max-width: 400px;">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" aria-label="Search transactions" placeholder="Search area, building@(mode == "mortgage" ? ", or bank" : "")..."
+                   @bind="searchTerm" @bind:event="oninput" @bind:after="OnSearchChanged" />
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">
+                @if (salesResult != null && mode == "sales") { <text>@salesResult.TotalCount.ToString("N0") records</text> }
+                else if (mortgageResult != null && mode == "mortgage") { <text>@mortgageResult.TotalCount.ToString("N0") records</text> }
+            </span>
+            @if (mode == "sales")
+            {
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-success" @onclick='() => Export("excel")' disabled="@isExporting"
+                            title="Export Excel">
+                        <i class="bi bi-file-earmark-excel"></i> Excel
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" @onclick='() => Export("csv")' disabled="@isExporting"
+                            title="Export CSV">
+                        <i class="bi bi-filetype-csv"></i> CSV
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick='() => Export("pdf")' disabled="@isExporting"
+                            title="Export PDF">
+                        <i class="bi bi-file-earmark-pdf"></i> PDF
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <SkeletonTable Rows="8" Columns="9" />
+    }
+    else if (mode == "sales" && salesResult != null)
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th role="button" tabindex="0" aria-sort="@AriaSort("TransactionDate")"
+                            @onclick='() => SortBy("TransactionDate")'
+                            @onkeydown='e => OnSortKey(e, "TransactionDate")'>
+                            Date @Arrow("TransactionDate")
+                        </th>
+                        <th role="button" tabindex="0" aria-sort="@AriaSort("PropertyType")"
+                            @onclick='() => SortBy("PropertyType")'
+                            @onkeydown='e => OnSortKey(e, "PropertyType")'>
+                            Type @Arrow("PropertyType")
+                        </th>
+                        <th role="button" tabindex="0" aria-sort="@AriaSort("Area")"
+                            @onclick='() => SortBy("Area")'
+                            @onkeydown='e => OnSortKey(e, "Area")'>
+                            Area @Arrow("Area")
+                        </th>
+                        <th>Building</th>
+                        <th class="text-end">Rooms</th>
+                        <th role="button" tabindex="0" class="text-end" aria-sort="@AriaSort("PropertySizeSqft")"
+                            @onclick='() => SortBy("PropertySizeSqft")'
+                            @onkeydown='e => OnSortKey(e, "PropertySizeSqft")'>
+                            Size (sqft) @Arrow("PropertySizeSqft")
+                        </th>
+                        <th role="button" tabindex="0" class="text-end" aria-sort="@AriaSort("AmountAed")"
+                            @onclick='() => SortBy("AmountAed")'
+                            @onkeydown='e => OnSortKey(e, "AmountAed")'>
+                            Amount @Arrow("AmountAed")
+                        </th>
+                        <th class="text-end">Price/sqft</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in salesResult.Items)
+                    {
+                        <tr>
+                            <td>@t.TransactionDate.ToString("dd MMM yyyy")</td>
+                            <td><span class="badge bg-light text-dark border">@t.PropertyType</span></td>
+                            <td class="fw-semibold">@t.AreaName</td>
+                            <td class="text-muted">@t.BuildingName</td>
+                            <td class="text-end">@t.RoomCount</td>
+                            <td class="text-end">@t.PropertySizeSqft.ToString("N0")</td>
+                            <td class="text-end fw-bold">@Currency.FormatExact(t.AmountAed)</td>
+                            <td class="text-end">@Currency.FormatExact(t.PricePerSqft)</td>
+                            <td>
+                                @if (t.TransactionType == "Off-Plan")
+                                {
+                                    <span class="badge bg-warning text-dark">Off-Plan</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Ready</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (mode == "mortgage" && mortgageResult != null)
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th><th>Type</th><th>Area</th><th>Building</th>
+                        <th class="text-end">Size (sqft)</th>
+                        <th class="text-end">Mortgage</th>
+                        <th>Bank</th><th>Mortgage Type</th><th class="text-end">Term</th><th class="text-end">Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in mortgageResult.Items)
+                    {
+                        <tr>
+                            <td>@t.TransactionDate.ToString("dd MMM yyyy")</td>
+                            <td><span class="badge bg-light text-dark border">@t.PropertyType</span></td>
+                            <td class="fw-semibold">@t.AreaName</td>
+                            <td class="text-muted">@t.BuildingName</td>
+                            <td class="text-end">@t.PropertySizeSqft.ToString("N0")</td>
+                            <td class="text-end fw-bold">@Currency.FormatExact(t.AmountAed)</td>
+                            <td>@t.BankName</td>
+                            <td><span class="badge bg-info text-dark">@t.MortgageType</span></td>
+                            <td class="text-end">@(t.LoanTermYears.HasValue ? $"{t.LoanTermYears}yr" : "-")</td>
+                            <td class="text-end">@(t.InterestRate.HasValue ? $"{t.InterestRate:N2}%" : "-")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="card-footer d-flex align-items-center justify-content-between">
+        <span class="text-muted small">Page @currentPage of @TotalPages</span>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-outline-primary" disabled="@(currentPage <= 1)" @onclick="PrevPage">
+                <i class="bi bi-chevron-left"></i> Prev
+            </button>
+            <button class="btn btn-sm btn-outline-primary" disabled="@(currentPage >= TotalPages)" @onclick="NextPage">
+                Next <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string mode = "sales";
+    private bool isLoading = true;
+    private bool isExporting;
+    private int currentPage = 1;
+    private string searchTerm = "";
+    private string sortBy = "TransactionDate";
+    private bool sortDesc = true;
+    private DateTime? dateFrom;
+    private DateTime? dateTo;
+    private string propertyType = "";
+    private string txnType = "";
+
+    private PagedResult<SalesTxnDto>? salesResult;
+    private PagedResult<MortgageTxnDto>? mortgageResult;
+
+    private int TotalPages => mode == "sales" ? (salesResult?.TotalPages ?? 1) : (mortgageResult?.TotalPages ?? 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        HydrateFromUrl();
+        await LoadData();
+    }
+
+    // RFP FR-007: filter state persists on page refresh via URL parameters.
+    // Reads `mode`, `from`, `to`, `propertyType`, `txnType`, `search`, `sort`,
+    // `dir`, `page` off the current URL and applies them before the first load.
+    private void HydrateFromUrl()
+    {
+        var uri = new Uri(Nav.Uri);
+        var qs  = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        if (qs.TryGetValue("mode", out var m) && (m == "sales" || m == "mortgage")) mode = m!;
+        if (qs.TryGetValue("from", out var f) && DateTime.TryParse(f, out var dFrom)) dateFrom = dFrom;
+        if (qs.TryGetValue("to",   out var t) && DateTime.TryParse(t, out var dTo))   dateTo   = dTo;
+        if (qs.TryGetValue("propertyType", out var pt)) propertyType = pt!;
+        if (qs.TryGetValue("txnType",      out var tt)) txnType      = tt!;
+        if (qs.TryGetValue("search",       out var s))  searchTerm   = s!;
+        if (qs.TryGetValue("sort",         out var so)) sortBy       = so!;
+        if (qs.TryGetValue("dir",          out var dir)) sortDesc    = string.Equals(dir, "desc", StringComparison.OrdinalIgnoreCase);
+        if (qs.TryGetValue("page",         out var pg) && int.TryParse(pg, out var pgVal) && pgVal > 0) currentPage = pgVal;
+    }
+
+    /// <summary>
+    /// Replaces the browser URL with the current filter state so refresh or
+    /// link-sharing restore identical results (RFP FR-007).
+    /// </summary>
+    private void PushFilterStateToUrl()
+    {
+        var qs = new Dictionary<string, string?>
+        {
+            ["mode"] = mode,
+            ["from"] = dateFrom?.ToString("yyyy-MM-dd"),
+            ["to"]   = dateTo?.ToString("yyyy-MM-dd"),
+            ["propertyType"] = string.IsNullOrEmpty(propertyType) ? null : propertyType,
+            ["txnType"]      = string.IsNullOrEmpty(txnType) ? null : txnType,
+            ["search"]       = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm.Trim(),
+            ["sort"]         = sortBy == "TransactionDate" && sortDesc ? null : sortBy,
+            ["dir"]          = sortBy == "TransactionDate" && sortDesc ? null : (sortDesc ? "desc" : "asc"),
+            ["page"]         = currentPage > 1 ? currentPage.ToString() : null
+        };
+        var url = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString("/transactions",
+            qs.Where(kv => kv.Value is not null)!);
+        // replaceHistoryEntry=true avoids polluting history on every filter change.
+        Nav.NavigateTo(url, forceLoad: false, replace: true);
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        var filter = BuildFilter();
+        if (mode == "sales") salesResult = await Market.GetSalesAsync(filter);
+        else mortgageResult = await Market.GetMortgagesAsync(filter);
+        isLoading = false;
+    }
+
+    // Wraps LoadData for user-triggered filter/sort/page changes; only these
+    // paths push the URL, so the initial hydrate doesn't recursively rewrite.
+    private async Task ApplyFilters()
+    {
+        await LoadData();
+        PushFilterStateToUrl();
+    }
+
+    private TxnFilter BuildFilter() => new()
+    {
+        Page = currentPage,
+        PageSize = 25,
+        SearchTerm = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm,
+        DateFrom = dateFrom,
+        DateTo = dateTo,
+        PropertyType = string.IsNullOrEmpty(propertyType) ? null : propertyType,
+        TransactionType = string.IsNullOrEmpty(txnType) ? null : txnType,
+        SortBy = sortBy,
+        SortDescending = sortDesc,
+    };
+
+    private async Task SwitchMode(string m)
+    {
+        if (mode == m) return;
+        mode = m;
+        currentPage = 1;
+        await ApplyFilters();
+    }
+
+    private async Task SortBy(string col)
+    {
+        if (sortBy == col) sortDesc = !sortDesc;
+        else { sortBy = col; sortDesc = true; }
+        currentPage = 1;
+        await ApplyFilters();
+    }
+
+    private string Arrow(string col) => sortBy == col ? (sortDesc ? "↓" : "↑") : "";
+
+    // ARIA sort state — announced by screen readers on the active column header.
+    // Returns "ascending" / "descending" / "none" per WAI-ARIA 1.2.
+    private string AriaSort(string col) => sortBy == col ? (sortDesc ? "descending" : "ascending") : "none";
+
+    // Keyboard activation for the sortable headers (Enter or Space).
+    // tabindex="0" + role="button" makes the th focusable; this delegates the
+    // key press to the existing async SortBy handler so the URL is updated too.
+    private async Task OnSortKey(KeyboardEventArgs e, string col)
+    {
+        if (e.Key == "Enter" || e.Key == " ") await SortBy(col);
+    }
+
+    private async Task PrevPage() { if (currentPage > 1) { currentPage--; await ApplyFilters(); } }
+    private async Task NextPage() { if (currentPage < TotalPages) { currentPage++; await ApplyFilters(); } }
+    private async Task OnSearchChanged() { currentPage = 1; await ApplyFilters(); }
+
+    private async Task Export(string format)
+    {
+        if (mode != "sales") return;
+        isExporting = true;
+        try
+        {
+            var filter = BuildFilter() with { Page = 1, PageSize = int.MaxValue };
+            var result = await Market.GetSalesAsync(filter);
+            var fmt = format switch
+            {
+                "csv" => TransactionExportService.Format.Csv,
+                "pdf" => TransactionExportService.Format.Pdf,
+                _     => TransactionExportService.Format.Excel
+            };
+            var payload = Exporter.Export(result.Items, fmt, BuildFilterSummary());
+            var base64 = Convert.ToBase64String(payload.Content);
+            await JS.InvokeVoidAsync("iretpDownload.fromBase64",
+                payload.FileName, payload.ContentType, base64);
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    private string BuildFilterSummary()
+    {
+        var parts = new List<string>();
+        if (dateFrom.HasValue) parts.Add($"from {dateFrom:yyyy-MM-dd}");
+        if (dateTo.HasValue) parts.Add($"to {dateTo:yyyy-MM-dd}");
+        if (!string.IsNullOrEmpty(propertyType)) parts.Add($"type={propertyType}");
+        if (!string.IsNullOrEmpty(txnType)) parts.Add($"status={txnType}");
+        if (!string.IsNullOrWhiteSpace(searchTerm)) parts.Add($"search=\"{searchTerm}\"");
+        return parts.Count == 0 ? "none" : string.Join(" · ", parts);
+    }
+}

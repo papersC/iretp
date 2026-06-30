@@ -1,0 +1,176 @@
+@page "/beneficial-ownership"
+@rendermode InteractiveServer
+@inject WebApiClient Api
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP — Beneficial ownership</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="diagram-3"
+                  Title="Beneficial ownership disclosure"
+                  Subtitle="Publicly disclosed ultimate beneficial ownership for registered developers (RFP Section 20 — flagged by JLL's GRETI 2024 as a key UAE improvement area)." />
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label for="developer" class="form-label small text-muted">Developer</label>
+                    <select id="developer" class="form-select" value="@_selectedId" @onchange="OnDeveloperChanged">
+                        <option value="">— select developer —</option>
+                        @foreach (var d in _developers)
+                        {
+                            <option value="@d.Id">@d.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted">
+                        Disclosure sourced from the developer's most recent RERA annual return.
+                        Owners below the RERA minimum disclosure threshold are not shown.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <SkeletonTable Rows="6" Columns="4" WithCard="true" />
+    }
+    else if (_selectedId != Guid.Empty && _owners.Count == 0)
+    {
+        <div class="alert alert-info">
+            No beneficial ownership disclosure recorded for this developer.
+        </div>
+    }
+    else if (_owners.Count > 0)
+    {
+        <div class="row g-3">
+            <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h2 class="mb-0 h5">Ownership breakdown</h2></div>
+                    <div class="card-body" style="height: 320px; position:relative;">
+                        <canvas id="ownerChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h2 class="mb-0 h5">Disclosed owners</h2></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Owner</th>
+                                    <th>Type</th>
+                                    <th>Country</th>
+                                    <th class="text-end">Ownership</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var owner in _owners)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">@owner.OwnerName</div>
+                                            @if (!string.IsNullOrWhiteSpace(owner.OwnerNameAr))
+                                            {
+                                                <div class="small text-muted" dir="rtl" lang="ar">@owner.OwnerNameAr</div>
+                                            }
+                                        </td>
+                                        <td>@FriendlyType(owner.OwnerType)</td>
+                                        <td class="small text-muted">@(owner.CountryOfIncorporation ?? "—")</td>
+                                        <td class="text-end fw-semibold">@owner.OwnershipPct.ToString("F1")%</td>
+                                    </tr>
+                                }
+                                <tr class="fw-bold table-light">
+                                    <td>Disclosed total</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="text-end">@_owners.Sum(o => o.OwnershipPct).ToString("F1")%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer small text-muted">
+                        Last disclosed @(_owners.Max(o => o.DisclosedAt).ToString("yyyy-MM-dd"))
+                        · source: @(_owners.FirstOrDefault()?.DisclosureSource ?? "—")
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<PublicDeveloperScorecardDto> _developers = new();
+    private List<BeneficialOwnershipDto> _owners = new();
+    private Guid _selectedId = Guid.Empty;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var scorecards = await Api.GetDeveloperScorecardsAsync();
+        if (scorecards is not null) _developers = scorecards.OrderBy(d => d.Name).ToList();
+    }
+
+    private async Task OnDeveloperChanged(ChangeEventArgs e)
+    {
+        if (!Guid.TryParse(e.Value?.ToString(), out var id))
+        {
+            _selectedId = Guid.Empty;
+            _owners = new();
+            return;
+        }
+
+        _selectedId = id;
+        _loading = true;
+        try
+        {
+            _owners = (await Api.GetBeneficialOwnershipAsync(id)) ?? new();
+            await RenderChart();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task RenderChart()
+    {
+        if (_owners.Count == 0) return;
+        var config = new
+        {
+            type = "doughnut",
+            data = new
+            {
+                labels = _owners.Select(o => o.OwnerName).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        data = _owners.Select(o => (double)o.OwnershipPct).ToArray(),
+                        backgroundColor = new[] { "#066735", "#1B4F72", "#F1B44C", "#6B2F9C", "#C0392B", "#9199a4" }
+                    }
+                }
+            },
+            options = new { responsive = true, maintainAspectRatio = false, plugins = new { legend = new { position = "bottom" } } }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "ownerChart", config); } catch { }
+    }
+
+    private static string FriendlyType(string t) => t switch
+    {
+        "Individual" => "Individual",
+        "Corporate" => "Corporate",
+        "SovereignFund" => "Sovereign fund",
+        "Foundation" => "Foundation",
+        _ => t
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "ownerChart"); } catch { }
+    }
+}

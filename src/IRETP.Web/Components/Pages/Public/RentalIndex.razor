@@ -1,0 +1,342 @@
+@page "/rental-index"
+@rendermode InteractiveServer
+@inject MarketDataService Market
+@inject CurrencyService Currency
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP - Rental Index</PageTitle>
+
+<ModuleBanner Icon="house"
+              Title="Rental Index"
+              Subtitle="Annual rent &amp; gross yield by area — plus a yield calculator and multi-zone comparison." />
+
+@if (priceIdx == null || zoneYields == null)
+{
+    <Skeleton Width="100%" Height="380px" Class="mb-3" />
+    <SkeletonTable Rows="6" Columns="5" WithCard="true" />
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card card-stats">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Avg Rent / sqft</div>
+                    <div class="fs-3 fw-bold text-primary">@Currency.FormatExact(zoneYields.Average(z => z.RentPerSqft))</div>
+                    <div class="small text-muted">residential, citywide</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stats success">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Avg Gross Yield</div>
+                    <div class="fs-3 fw-bold text-success">@zoneYields.Average(z => z.GrossYield).ToString("N2")%</div>
+                    <div class="small text-muted">@zoneYields.Count zones tracked</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stats warning">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Top Yield Zone</div>
+                    @{ var topYield = zoneYields.OrderByDescending(z => z.GrossYield).First(); }
+                    <div class="fs-3 fw-bold">@topYield.GrossYield.ToString("N2")%</div>
+                    <div class="small">@topYield.Area</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stats info">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Coverage</div>
+                    <div class="fs-3 fw-bold">5 yrs</div>
+                    <div class="small text-muted">Ejari-registered rentals</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gross Yield Calculator -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h2 class="mb-0 h5"><i class="bi bi-calculator me-2"></i>Gross Rental Yield Calculator</h2>
+            <span class="text-muted small">Gross Yield = (Annual Rent ÷ Purchase Price) × 100</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="purchase-price-aed">Purchase Price (AED)</label>
+                    <input id="purchase-price-aed" type="number" class="form-control" min="0" @bind="calcPrice" @bind:event="oninput" />
+                </div>
+                <div class="col-md-3">
+                    <label for="annual-rent-aed">Annual Rent (AED)</label>
+                    <input id="annual-rent-aed" type="number" class="form-control" min="0" @bind="calcRent" @bind:event="oninput" />
+                </div>
+                <div class="col-md-3">
+                    <label for="property-size-sqft">Property Size (sqft)</label>
+                    <input id="property-size-sqft" type="number" class="form-control" min="0" @bind="calcSize" @bind:event="oninput" />
+                </div>
+                <div class="col-md-3">
+                    <label for="reference-zone">Reference Zone</label>
+                    <select id="reference-zone" class="form-select" @bind="calcZone">
+                        <option value="">— none —</option>
+                        @foreach (var z in zoneYields.Select(z => z.Area))
+                        {
+                            <option>@z</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="row g-3 mt-1">
+                <div class="col-md-3">
+                    <div class="p-3 rounded" style="background:#f1f8f3;">
+                        <div class="small text-muted text-uppercase">Your gross yield</div>
+                        <div class="fs-3 fw-bold text-success">@YieldNow().ToString("N2")%</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded" style="background:#f8fafa;">
+                        <div class="small text-muted text-uppercase">Price / sqft</div>
+                        <div class="fs-4 fw-bold">@Currency.FormatExact(PricePerSqftCalc())</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded" style="background:#f8fafa;">
+                        <div class="small text-muted text-uppercase">Rent / sqft / yr</div>
+                        <div class="fs-4 fw-bold">@Currency.FormatExact(RentPerSqftCalc())</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded" style="background:@(YieldVsZone() >= 0 ? "#f1f8f3" : "#fff2f2");">
+                        <div class="small text-muted text-uppercase">vs. zone avg</div>
+                        <div class="fs-4 fw-bold @(YieldVsZone() >= 0 ? "text-success" : "text-danger")">
+                            @(YieldVsZone() >= 0 ? "+" : "")@YieldVsZone().ToString("N2") pts
+                        </div>
+                        <div class="small text-muted">@(string.IsNullOrEmpty(calcZone) ? "select zone" : calcZone)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone comparison chart -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h2 class="mb-0 h5">Gross Rental Yield by Zone</h2>
+            <span class="text-muted small">Residential only</span>
+        </div>
+        <div class="card-body" style="height: 360px; position: relative;">
+            <canvas id="rentalYieldChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Ranked yield table -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="mb-0 h5">Ranked Zones by Yield</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Area</th>
+                        <th class="text-end">Avg Rent / sqft</th>
+                        <th class="text-end">Avg Price / sqft</th>
+                        <th class="text-end">Gross Yield</th>
+                        <th>Yield band</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int idx = 1;
+                        var max = zoneYields.Max(z => z.GrossYield);
+                    }
+                    @foreach (var z in zoneYields.OrderByDescending(z => z.GrossYield))
+                    {
+                        var pct = (double)(z.GrossYield / max) * 100;
+                        <tr>
+                            <td class="text-muted">@idx</td>
+                            <td class="fw-semibold">@z.Area</td>
+                            <td class="text-end">@z.RentPerSqft.ToString("N0")</td>
+                            <td class="text-end">@z.PricePerSqft.ToString("N0")</td>
+                            <td class="text-end fw-bold text-success">@z.GrossYield.ToString("N2")%</td>
+                            <td style="min-width: 200px;">
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: @pct.ToString("F0")%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        idx++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Latest rental transactions (existing table kept for context) -->
+    <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h2 class="mb-0 h5">Recent Rental Registrations</h2>
+            <div class="input-group" style="max-width: 400px;">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Search area or building..."
+                       @bind="searchTerm" @bind:event="oninput" @bind:after="OnSearchChanged" aria-label="Search area or building" />
+            </div>
+        </div>
+        @if (result != null)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Reg. Date</th><th>Type</th><th>Area</th><th>Building</th>
+                            <th class="text-end">Rooms</th>
+                            <th class="text-end">Size (sqft)</th>
+                            <th class="text-end">Annual Rent</th>
+                            <th class="text-end">Rent/sqft</th>
+                            <th>Contract</th><th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in result.Items)
+                        {
+                            <tr>
+                                <td>@t.RegistrationDate.ToString("dd MMM yyyy")</td>
+                                <td><span class="badge bg-light text-dark border">@t.PropertyType</span></td>
+                                <td class="fw-semibold">@t.AreaName</td>
+                                <td class="text-muted">@t.BuildingName</td>
+                                <td class="text-end">@t.RoomCount</td>
+                                <td class="text-end">@t.PropertySizeSqft.ToString("N0")</td>
+                                <td class="text-end fw-bold">@Currency.FormatExact(t.AnnualRentAed)</td>
+                                <td class="text-end">@Currency.FormatExact(t.RentPerSqft)</td>
+                                <td>
+                                    @if (t.ContractType == "Renewed")
+                                    {
+                                        <span class="badge bg-info text-dark">Renewed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary">New</span>
+                                    }
+                                </td>
+                                <td class="small text-muted">@t.PaymentFrequency</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <span class="text-muted small">Page @currentPage of @(result?.TotalPages ?? 1)</span>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" disabled="@(currentPage <= 1)" @onclick="PrevPage">
+                        <i class="bi bi-chevron-left"></i> Prev
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" disabled="@(currentPage >= (result?.TotalPages ?? 1))" @onclick="NextPage">
+                        Next <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private record ZoneYield(string Area, decimal RentPerSqft, decimal PricePerSqft, decimal GrossYield);
+
+    private PagedResult<RentalTxnDto>? result;
+    private List<PriceIndexRowDto>? priceIdx;
+    private List<ZoneYield>? zoneYields;
+
+    private int currentPage = 1;
+    private string searchTerm = "";
+
+    private decimal calcPrice = 2_000_000;
+    private decimal calcRent = 120_000;
+    private decimal calcSize = 900;
+    private string calcZone = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        priceIdx = await Market.GetPriceIndexAsync();
+        // Derive per-zone rent/sqft by sampling the rental fixture.
+        var rentals = (await Market.GetRentalsAsync(new TxnFilter { Page = 1, PageSize = int.MaxValue })).Items;
+        var byZone = rentals.Where(r => r.PropertySizeSqft > 0)
+            .GroupBy(r => r.AreaName)
+            .Select(g => new { Area = g.Key, RentPsf = g.Average(r => r.RentPerSqft) })
+            .ToList();
+        zoneYields = priceIdx.Join(byZone, p => p.AreaName, b => b.Area,
+            (p, b) => new ZoneYield(
+                p.AreaName,
+                Math.Round(b.RentPsf, 0),
+                p.AvgPricePerSqft,
+                p.AvgPricePerSqft == 0 ? 0 : Math.Round(b.RentPsf / p.AvgPricePerSqft * 100, 2)))
+            .OrderByDescending(z => z.GrossYield)
+            .ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (zoneYields == null) return;
+        var top10 = zoneYields.OrderByDescending(z => z.GrossYield).Take(10).ToList();
+        var config = new
+        {
+            type = "bar",
+            data = new
+            {
+                labels = top10.Select(z => z.Area).ToArray(),
+                datasets = new[]
+                {
+                    new {
+                        label = "Gross Yield %",
+                        data = top10.Select(z => (double)z.GrossYield).ToArray(),
+                        backgroundColor = "#34C38F",
+                        borderRadius = 4
+                    }
+                }
+            },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                plugins = new { legend = new { display = false } },
+                scales = new {
+                    y = new { beginAtZero = true, title = new { display = true, text = "%" } }
+                }
+            }
+        };
+        await JS.InvokeVoidAsync("iretpChart.render", "rentalYieldChart", config);
+    }
+
+    private async Task LoadData()
+    {
+        result = await Market.GetRentalsAsync(new TxnFilter
+        {
+            Page = currentPage,
+            PageSize = 15,
+            SearchTerm = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm,
+        });
+    }
+
+    private async Task PrevPage() { if (currentPage > 1) { currentPage--; await LoadData(); } }
+    private async Task NextPage() { if (result != null && currentPage < result.TotalPages) { currentPage++; await LoadData(); } }
+    private async Task OnSearchChanged() { currentPage = 1; await LoadData(); }
+
+    private decimal YieldNow() => calcPrice <= 0 ? 0 : Math.Round(calcRent / calcPrice * 100, 2);
+    private decimal PricePerSqftCalc() => calcSize <= 0 ? 0 : Math.Round(calcPrice / calcSize, 0);
+    private decimal RentPerSqftCalc()  => calcSize <= 0 ? 0 : Math.Round(calcRent / calcSize, 0);
+    private decimal YieldVsZone()
+    {
+        if (string.IsNullOrEmpty(calcZone) || zoneYields == null) return 0;
+        var z = zoneYields.FirstOrDefault(z => z.Area == calcZone);
+        return z == null ? 0 : YieldNow() - z.GrossYield;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "rentalYieldChart"); } catch { }
+    }
+}

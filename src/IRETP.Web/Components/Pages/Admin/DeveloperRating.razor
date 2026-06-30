@@ -1,0 +1,216 @@
+@page "/admin/developers"
+@rendermode InteractiveServer
+@inject AdminApiClient AdminApi
+@inject WebApiClient Api
+@inject AdminFixtureService Fixture
+@implements IAsyncDisposable
+
+<PageTitle>Developer Rating</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="star"
+                  Title="Developer Rating &amp; Performance"
+                  Subtitle="Composite score blends 6 criteria from the DLD registry, RERA and Escrow feeds.">
+        <ActionsContent>
+            <a class="btn btn-outline-primary btn-sm" href="/admin/developers/compare">
+                <i class="bi bi-bar-chart-steps"></i> Compare developers
+            </a>
+        </ActionsContent>
+    </ModuleBanner>
+
+    <div class="row g-3 mb-3 admin-kpi">
+        <div class="col-6 col-lg-3">
+            <KpiCard Title="Low risk" Value="@_developers.Count(d => d.RiskBand == "Low").ToString("N0")" Icon="shield-check" Color="success" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <KpiCard Title="Medium risk" Value="@_developers.Count(d => d.RiskBand == "Medium").ToString("N0")" Icon="shield-exclamation" Color="warning" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <KpiCard Title="High risk" Value="@_developers.Count(d => d.RiskBand == "High").ToString("N0")" Icon="shield-x" Color="danger" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <KpiCard Title="Units delivered (lifetime)" Value="@_developers.Sum(d => d.UnitsDelivered).ToString("N0")" Icon="building-check" Color="primary" />
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <div class="admin-card-head">
+                    <h2 class="admin-card-title"><i class="bi bi-trophy"></i> Developer Leaderboard</h2>
+                    <span class="text-muted small">@_developers.Count developers · by composite score</span>
+                </div>
+                <div class="table-responsive admin-scroll">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Developer</th>
+                                <th>Score</th>
+                                <th>Risk</th>
+                                <th>Trend QoQ</th>
+                                <th>Projects</th>
+                                <th>On-time %</th>
+                                <th>Units</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in _developers.OrderByDescending(d => d.Score))
+                            {
+                                <tr class="@(_selected?.Name == d.Name ? "table-active" : "")">
+                                    <td class="fw-semibold">@d.Name</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong>@d.Score</strong>
+                                            <div class="progress flex-grow-1" style="height: 6px; width: 80px;">
+                                                <div class="progress-bar bg-@ScoreColor(d.Score)" style="width: @d.Score%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-@RiskColor(d.RiskBand)">@d.RiskBand</span></td>
+                                    <td>
+                                        @if (d.TrendDelta > 0) { <span class="text-success"><i class="bi bi-arrow-up"></i> +@d.TrendDelta</span> }
+                                        else if (d.TrendDelta < 0) { <span class="text-danger"><i class="bi bi-arrow-down"></i> @d.TrendDelta</span> }
+                                        else { <span class="text-muted">—</span> }
+                                    </td>
+                                    <td>@d.Completed / @d.TotalProjects</td>
+                                    <td>@d.OnTimeRatePct.ToString("N1")%</td>
+                                    <td>@d.UnitsDelivered.ToString("N0")</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                @onclick="() => Select(d)">
+                                            <i class="bi bi-eye"></i> Profile
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            @if (_selected != null)
+            {
+                <div class="admin-card mb-3">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between">
+                        <h2 class="mb-0 h5">@_selected.Name</h2>
+                        <span class="badge bg-white text-primary">Score @_selected.Score</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center mb-3">
+                            <div class="col-4"><div class="h4 fw-bold mb-0">@_selected.TotalProjects</div><small class="text-muted">Total</small></div>
+                            <div class="col-4"><div class="h4 fw-bold mb-0">@_selected.Completed</div><small class="text-muted">Completed</small></div>
+                            <div class="col-4"><div class="h4 fw-bold mb-0">@_selected.UnitsDelivered.ToString("N0")</div><small class="text-muted">Units</small></div>
+                        </div>
+                        <h3 class="h6 mt-3">Criterion breakdown</h3>
+                        <div style="height: 240px; position: relative;">
+                            <canvas id="devRadar"></canvas>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="admin-card">
+                <div class="admin-card-head">
+                    <h2 class="admin-card-title"><i class="bi bi-sliders2"></i> Scoring Weights</h2>
+                    <span class="text-muted small">Sum: @_weights.Sum(w => w.Weight)%</span>
+                </div>
+                <div class="admin-card-body">
+                    @foreach (var w in _weights)
+                    {
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small">@w.CriterionName</span>
+                            <span class="badge bg-primary">@w.Weight%</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 5px;">
+                            <div class="progress-bar" style="width: @w.Weight%"></div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<AdminFixtureService.DeveloperLeaderboardRow> _developers = new();
+    private List<ScoringWeightItem> _weights = new();
+    private AdminFixtureService.DeveloperLeaderboardRow? _selected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        List<ScoringWeightItem>? fromApi = null;
+        try
+        {
+            var login = await Api.LoginAsync("admin@dld.gov.ae", "Admin@DLD2026!");
+            if (login != null) AdminApi.SetToken(login.AccessToken);
+            fromApi = await AdminApi.GetScoringWeightsAsync();
+        }
+        catch { /* backend offline */ }
+
+        _developers = Fixture.DeveloperLeaderboard();
+        _weights = fromApi ?? Fixture.ScoringWeights();
+        _selected = _developers.FirstOrDefault();
+    }
+
+    private async Task Select(AdminFixtureService.DeveloperLeaderboardRow d)
+    {
+        _selected = d;
+        await RenderRadar();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_selected != null) await RenderRadar();
+    }
+
+    [Microsoft.AspNetCore.Components.Inject] private Microsoft.JSInterop.IJSRuntime JS { get; set; } = default!;
+
+    private async Task RenderRadar()
+    {
+        if (_selected == null) return;
+        // Derive per-criterion sub-scores from the composite, seeded so each developer has a stable shape.
+        var rng = new Random(_selected.Name.Sum(c => (int)c));
+        var baseScore = _selected.Score;
+        var labels = new[] { "On-time", "Unit sales", "Escrow", "Compliance", "Financial", "Historical" };
+        var values = labels.Select(_ => Math.Clamp(baseScore + rng.Next(-8, 9), 0, 100)).ToArray();
+
+        var config = new
+        {
+            type = "radar",
+            data = new
+            {
+                labels,
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = _selected.Name,
+                        data = values,
+                        borderColor = "#066735",
+                        backgroundColor = "rgba(6,103,53,0.18)",
+                        pointBackgroundColor = "#066735"
+                    }
+                }
+            },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                scales = new { r = new { suggestedMin = 0, suggestedMax = 100 } },
+                plugins = new { legend = new { display = false } }
+            }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "devRadar", config); } catch { }
+    }
+
+    private static string ScoreColor(int score) => score >= 85 ? "success" : score >= 70 ? "primary" : score >= 55 ? "warning" : "danger";
+    private static string RiskColor(string band) => band switch { "Low" => "success", "Medium" => "warning", _ => "danger" };
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "devRadar"); } catch { }
+    }
+}

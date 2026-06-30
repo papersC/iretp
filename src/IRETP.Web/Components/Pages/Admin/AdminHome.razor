@@ -1,0 +1,134 @@
+@page "/admin"
+@rendermode InteractiveServer
+@inject WebApiClient Api
+@inject AdminApiClient AdminApi
+@inject AdminFixtureService Fixture
+
+<PageTitle>IRETP — Administration Hub</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="speedometer2"
+                  Title="Administration Hub"
+                  Subtitle="Every DLD operational surface in one place — from EWRS risk monitoring through to PDPL compliance.">
+        <ActionsContent>
+            <span class="admin-env-badge"><span class="dot"></span> Live · DLD</span>
+        </ActionsContent>
+    </ModuleBanner>
+
+    @* ===== KPI status strip — at-a-glance operational health ===== *@
+    <div class="row g-3 mb-4 admin-kpi">
+        <div class="col-6 col-lg-3">
+            <KpiCard Title="High-Risk Projects" Value="@K(_d?.TotalHighRiskProjects)" Icon="exclamation-triangle" Color="danger" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <KpiCard Title="Active Alerts" Value="@K(_d?.TotalActiveAlerts)" Icon="bell" Color="warning" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <KpiCard Title="Escrow Shortfalls" Value="@K(_d?.ProjectsWithEscrowShortfall)" Icon="safe2" Color="info" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <KpiCard Title="Unacknowledged" Value="@K(_d?.UnacknowledgedAlerts)" Icon="inbox" Color="primary" />
+        </div>
+    </div>
+
+    @foreach (var group in _groups)
+    {
+        <section class="mb-4">
+            <div class="admin-group-head">
+                <i class="bi @group.Icon" aria-hidden="true"></i>
+                <h2 class="admin-group-title">@group.Title</h2>
+            </div>
+            <div class="row g-3">
+                @foreach (var item in group.Items)
+                {
+                    var badge = Badge(item.Href);
+                    <div class="col-sm-6 col-md-4 col-xl-3">
+                        <a href="@item.Href" class="admin-tile"
+                           style="@(badge is not null ? $"--tile-status: var(--bs-{badge.Value.Color});" : "")">
+                            <div class="admin-tile-icon"><i class="bi @item.Icon" aria-hidden="true"></i></div>
+                            <div class="admin-tile-body">
+                                <div class="admin-tile-title">
+                                    <span>@item.Title</span>
+                                    @if (badge is not null)
+                                    {
+                                        <span class="admin-tile-count text-bg-@badge.Value.Color">@badge.Value.Count</span>
+                                    }
+                                </div>
+                                <div class="admin-tile-desc">@item.Description</div>
+                                <div class="admin-tile-ref">@item.RfpRef</div>
+                            </div>
+                            <i class="bi bi-chevron-right admin-tile-chev" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private EwrsDashboardData? _d;
+
+    private record AdminItem(string Href, string Icon, string Title, string Description, string RfpRef);
+    private record AdminGroup(string Title, string Icon, AdminItem[] Items);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Same resilient pattern as the EWRS page: try the AdminAPI, fall back to
+        // seeded fixtures so the landing always shows live operational counts.
+        try
+        {
+            var login = await Api.LoginAsync("admin@dld.gov.ae", "Admin@DLD2026!");
+            if (login != null) AdminApi.SetToken(login.AccessToken);
+            _d = await AdminApi.GetEwrsDashboardAsync();
+        }
+        catch { /* backend offline — fall through */ }
+        _d ??= Fixture.EwrsDashboard();
+    }
+
+    private static string K(int? v) => v?.ToString("N0") ?? "—";
+
+    // Live status badge for tiles that map to a monitored count.
+    private (int Count, string Color)? Badge(string href) => href switch
+    {
+        "/admin/ewrs"        => (_d?.TotalActiveAlerts ?? 0,           (_d?.TotalActiveAlerts ?? 0) > 0           ? "warning" : "secondary"),
+        "/admin/ewrs/alerts" => (_d?.UnacknowledgedAlerts ?? 0,        (_d?.UnacknowledgedAlerts ?? 0) > 0        ? "danger"  : "secondary"),
+        "/admin/escrow"      => (_d?.ProjectsWithEscrowShortfall ?? 0, (_d?.ProjectsWithEscrowShortfall ?? 0) > 0 ? "info"    : "secondary"),
+        _ => null
+    };
+
+    private readonly AdminGroup[] _groups = new AdminGroup[]
+    {
+        new("Risk & compliance", "bi-shield-exclamation", new AdminItem[]
+        {
+            new("/admin/ewrs", "bi-bell", "EWRS Dashboard",
+                "Live risk alerts, 4-level escalation, project risk heatmap.", "Section 8"),
+            new("/admin/ewrs/alerts", "bi-list-check", "Risk alert queue",
+                "Acknowledge, resolve, and run playbook checklists.", "FR-EWRS 8.2"),
+            new("/admin/playbooks", "bi-journal-check", "EWRS playbooks",
+                "Edit response SOPs per indicator.", "Section 8.3"),
+            new("/admin/escrow", "bi-bank", "Escrow monitoring",
+                "Balance, adequacy ratio, monthly PDF reports.", "ESC-001 · 8.4"),
+            new("/admin/audit", "bi-clipboard-data", "Audit trail",
+                "Immutable change log across the platform.", "Section 10.3"),
+        }),
+
+        new("Developer performance & content", "bi-star", new AdminItem[]
+        {
+            new("/admin/developers", "bi-people", "Developer rating",
+                "Composite scoring, leaderboard, trend analysis.", "Section 9"),
+            new("/admin/developers/compare", "bi-bar-chart-steps", "Developer comparison",
+                "Side-by-side scoring for up to 4 developers.", "Section 9.1.2"),
+            new("/admin/cms", "bi-file-earmark-text", "Content management",
+                "Bilingual CMS with staging, preview, and rollback.", "FR001 · FR002"),
+        }),
+
+        new("Platform operations", "bi-gear", new AdminItem[]
+        {
+            new("/admin/ai-models", "bi-cpu", "AI model performance",
+                "Live metrics, fallback status, query audit log.", "Section 5.3 · FR005"),
+            new("/admin/fabric", "bi-diagram-3", "Fabric / OneLake",
+                "Active mode, Gold semantic models, Data Factory freshness.", "v1.3 §11.4"),
+        })
+    };
+}

@@ -1,0 +1,93 @@
+@page "/developers"
+@rendermode InteractiveServer
+@inject MarketDataService Market
+@inject CurrencyService Currency
+
+<PageTitle>IRETP - Developer Ranking</PageTitle>
+
+<ModuleBanner Icon="person-badge"
+              Title="Developer Ranking"
+              Subtitle="Top developers by sales value across the Dubai market." />
+
+@if (rankings == null)
+{
+    <SkeletonTable Rows="8" Columns="5" WithCard="true" />
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="mb-0 h5">Top 10 Developers by Sales Value</h2>
+        </div>
+        <div class="card-body">
+            @{
+                var top10 = rankings.Take(10).ToList();
+                var maxVal = top10.Max(r => r.TotalValue);
+            }
+            @foreach (var r in top10)
+            {
+                var pct = (double)(r.TotalValue / maxVal) * 100;
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-baseline mb-1">
+                        <span class="fw-semibold"><span class="text-muted me-2">#@r.Rank</span>@r.Name</span>
+                        <span class="fw-bold text-primary">@Currency.Format(r.TotalValue)</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: @pct.ToString("F0")%"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="mb-0 h5">All Developers</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Developer</th>
+                        <th class="text-end">Transactions</th>
+                        <th class="text-end">Total Value</th>
+                        <th class="text-end">Avg Price/sqft</th>
+                        <th>Top Area</th>
+                        <th>Market Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in rankings)
+                    {
+                        <tr>
+                            <td><span class="badge bg-primary rounded-pill">@r.Rank</span></td>
+                            <td class="fw-semibold">@r.Name</td>
+                            <td class="text-end">@r.TransactionCount.ToString("N0")</td>
+                            <td class="text-end fw-bold">@Currency.Format(r.TotalValue)</td>
+                            <td class="text-end">@r.AvgPricePerSqft.ToString("N0")</td>
+                            <td class="text-muted">@r.TopArea</td>
+                            <td style="min-width: 140px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                        <div class="progress-bar" style="width: @(r.MarketSharePercent * 5)%"></div>
+                                    </div>
+                                    <span class="small text-muted">@r.MarketSharePercent.ToString("N1")%</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<RankingRowDto>? rankings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        rankings = await Market.GetDeveloperRankingsAsync();
+    }
+}

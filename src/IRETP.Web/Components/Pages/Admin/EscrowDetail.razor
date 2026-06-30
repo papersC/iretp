@@ -1,0 +1,206 @@
+@page "/admin/escrow/{ProjectName}"
+@rendermode InteractiveServer
+@inject AdminFixtureService Fixture
+@inject CurrencyService Currency
+@inject EscrowReportService ReportService
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>Escrow — @ProjectName</PageTitle>
+
+<div class="container-fluid py-4">
+    <a href="/admin/escrow" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Back to Escrow dashboard
+    </a>
+
+    @if (_project == null)
+    {
+        <div class="alert alert-warning">Project not found in Escrow registry.</div>
+    }
+    else
+    {
+        <ModuleBanner Icon="safe"
+                      Title="@_project.ProjectName"
+                      Subtitle="@($"{_project.DeveloperName} · {_project.BankName} · RFP ESC-002 immutable audit log")">
+            <ActionsContent>
+                <span class="badge bg-@(_project.Status == 0 ? "success" : _project.Status == 1 ? "warning" : "danger") fs-6">
+                    @(_project.Status == 0 ? "Adequate" : _project.Status == 1 ? "Warning" : "Critical")
+                </span>
+                <button class="btn btn-outline-danger btn-sm" @onclick="DownloadMonthlyReport" disabled="@_generating">
+                    @if (_generating) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    <i class="bi bi-file-earmark-pdf"></i> Monthly Health Report
+                </button>
+            </ActionsContent>
+        </ModuleBanner>
+
+        <div class="row g-3 mb-3 admin-kpi">
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Current balance" Value="@Currency.FormatExact(_project.CurrentBalance)" Icon="cash-stack" Color="primary" />
+            </div>
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Required minimum" Value="@Currency.FormatExact(_project.RequiredMinimumBalance)" Icon="shield" Color="info" />
+            </div>
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Adequacy ratio" Value="@($"{_project.AdequacyRatio:P1}")" Icon="percent" Color="@(_project.AdequacyRatio < 0.8m ? "danger" : _project.AdequacyRatio < 1m ? "warning" : "success")" />
+            </div>
+            <div class="col-6 col-lg-3">
+                <KpiCard Title="Ledger entries (90d)" Value="@_audit.Count.ToString("N0")" Icon="list-columns" Color="primary" />
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-lg-8">
+                <div class="admin-card">
+                    <div class="admin-card-head"><h2 class="admin-card-title"><i class="bi bi-graph-up"></i> Balance trend</h2></div>
+                    <div class="admin-card-body" style="height: 260px; position: relative;">
+                        <canvas id="escrowBalanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="admin-card h-100">
+                    <div class="admin-card-head"><h2 class="admin-card-title"><i class="bi bi-arrow-left-right"></i> Inflows vs Outflows</h2></div>
+                    <div class="admin-card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-7 text-muted">Total inflows (90d)</dt>
+                            <dd class="col-5 text-end fw-bold text-success">
+                                @Currency.FormatExact(_audit.Where(e => e.Amount > 0).Sum(e => e.Amount))
+                            </dd>
+                            <dt class="col-7 text-muted">Total outflows (90d)</dt>
+                            <dd class="col-5 text-end fw-bold text-danger">
+                                @Currency.FormatExact(Math.Abs(_audit.Where(e => e.Amount < 0).Sum(e => e.Amount)))
+                            </dd>
+                            <dt class="col-7 text-muted">Net movement</dt>
+                            <dd class="col-5 text-end fw-bold">
+                                @Currency.FormatExact(_audit.Sum(e => e.Amount))
+                            </dd>
+                            <dt class="col-7 text-muted">Largest single withdrawal</dt>
+                            <dd class="col-5 text-end">
+                                @Currency.FormatExact(_audit.Where(e => e.Amount < 0).DefaultIfEmpty().Min(e => e?.Amount ?? 0))
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card-head">
+                <h2 class="admin-card-title"><i class="bi bi-shield-lock"></i> Immutable transaction log</h2>
+                <span class="small text-muted">@_audit.Count entries · read-only</span>
+            </div>
+            <div class="table-responsive admin-scroll">
+                <table class="table table-sm table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Timestamp (UTC)</th>
+                            <th>Type</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end">Balance after</th>
+                            <th>Reference</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in _audit)
+                        {
+                            <tr>
+                                <td class="small">@e.At.ToString("dd MMM yyyy, HH:mm")</td>
+                                <td>
+                                    @if (e.Amount > 0)
+                                    {
+                                        <span class="badge bg-success">@e.Type</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@e.Type</span>
+                                    }
+                                </td>
+                                <td class="text-end fw-bold @(e.Amount >= 0 ? "text-success" : "text-danger")">
+                                    @(e.Amount >= 0 ? "+" : "")@Currency.FormatExact(e.Amount)
+                                </td>
+                                <td class="text-end">@Currency.FormatExact(e.BalanceAfter)</td>
+                                <td class="small"><code>@e.ReferenceNumber</code></td>
+                                <td class="small text-muted">@e.Description</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string ProjectName { get; set; } = "";
+
+    private EscrowItem? _project;
+    private List<AdminFixtureService.EscrowAuditEntry> _audit = new();
+    private bool _generating;
+
+    protected override void OnInitialized()
+    {
+        var decoded = Uri.UnescapeDataString(ProjectName ?? "");
+        _project = Fixture.EscrowDashboard()
+            .FirstOrDefault(e => e.ProjectName.Equals(decoded, StringComparison.OrdinalIgnoreCase));
+        if (_project != null)
+            _audit = Fixture.EscrowAuditLog(_project.ProjectName);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_project == null || _audit.Count == 0) return;
+        var points = _audit.OrderBy(e => e.At).ToList();
+        var config = new
+        {
+            type = "line",
+            data = new
+            {
+                labels = points.Select(p => p.At.ToString("dd MMM")).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = "Balance (AED)",
+                        data = points.Select(p => (double)p.BalanceAfter).ToArray(),
+                        borderColor = "#066735",
+                        backgroundColor = "rgba(6,103,53,0.12)",
+                        fill = true,
+                        tension = 0.3,
+                        pointRadius = 0
+                    }
+                }
+            },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                plugins = new { legend = new { display = false } },
+                scales = new { y = new { ticks = new { callback = "aed" } } }
+            }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "escrowBalanceChart", config); } catch { }
+    }
+
+    private async Task DownloadMonthlyReport()
+    {
+        if (_project == null) return;
+        _generating = true;
+        try
+        {
+            var report = ReportService.Generate(_project, _audit);
+            var b64 = Convert.ToBase64String(report.Pdf);
+            await JS.InvokeVoidAsync("iretpDownload.fromBase64",
+                report.FileName, "application/pdf", b64);
+        }
+        finally
+        {
+            _generating = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "escrowBalanceChart"); } catch { }
+    }
+}

@@ -1,0 +1,302 @@
+TECHNICAL & COMMERCIAL PROPOSAL
+In Response to RFP No. DLD-IRETP-2026-001
+Integrated Real Estate Transparency Platform
+(IRETP)
+Submitted to:
+Dubai Land Department (DLD)
+Submitted by:
+UnifyApps
+Enterprise Operating System for AI
+Submission Date: 18 May 2026
+Classification: CONFIDENTIAL
+[Heading 1] Confidentiality Statement
+This proposal and all information contained herein are submitted in strict confidence by UnifyApps in response to RFP No. DLD-IRETP-2026-001 issued by the Dubai Land Department. The contents of this document constitute confidential and proprietary information and are intended solely for the use of Dubai Land Department's evaluation team. Disclosure of any part of this document to any third party without the prior written consent of UnifyApps is strictly prohibited.
+UnifyApps acknowledges and accepts the confidentiality obligations set out in Section 4.3 of the RFP. All information provided by DLD in connection with this procurement shall be treated as strictly confidential and shall not be disclosed or used for any purpose other than the preparation and submission of this proposal.
+[Heading 1] Table of Contents
+[Heading 1] Executive Summary
+UnifyApps is pleased to present this comprehensive proposal to the Dubai Land Department (DLD) for the design, development, deployment, and post-go-live support of the Integrated Real Estate Transparency Platform (IRETP). We have read the RFP in full, and we submit this proposal with the conviction that UnifyApps is uniquely and demonstrably positioned to deliver this platform. on time, to specification, and to a standard that will meaningfully advance Dubai's standing in the JLL Global Real Estate Transparency Index (GRETI).
+The IRETP is not a simple web portal. It is a mission-critical, multi-stakeholder data platform that must simultaneously serve global investors demanding institutional-grade transparency, DLD leadership requiring proactive risk intelligence, and the general public expecting a modern, responsive, multilingual experience. The stakes. Dubai's international competitiveness as a real estate destination. could not be higher.
+UnifyApps is the Enterprise Operating System for AI. Our platform consolidates, in a single unified product, all six capabilities that this project demands: application building, workflow automation, agentic AI with retrieval-augmented generation, data integration and orchestration, pre-built connectors and integration capabilities, and enterprise governance. Because all six layers operate within a single platform, there are no integration gaps, no data consistency delays, and no vendor finger-pointing when issues arise. Every capability this RFP demands exists natively in one product.
+Single unified platform. six layers, zero integration gaps between them
+Native multi-model Agentic AI with RAG. non-advisory constraint enforced at system-prompt layer
+Native Microsoft Fabric / OneLake connector. Day 1 connectivity, no integration development needed
+Arabic RTL natively supported. full UI mirroring, chart axis alignment, export labelling
+Working IRETP prototype already built on DLD design language. Phase 1 begins from a working foundation
+90-day delivery. 30 days ahead of RFP maximum, backed by parallel phase execution
+Our recommendation is for Dubai Land Department to host the platform within its own data center and leverage the existing LLM capabilities already available internally. This approach would significantly reduce the overall project budget by focusing primarily on the platform licensing and the associated professional services.
+Existing UAE Government deployments. Digital Dubai Authority, Ajman DDA, The Department of Government Enablement (DGE) in Abu Dhabi, Dubai economy and tourism (DET), Sharjah Airport International Free Zone, DIEZ (Dubai Integrated Economic Zones Authority), EDGE, ADIO, Wasl, …
+Our proposal is structured to address every section of the RFP. The platform we propose is not a theoretical construct. it is an assembly of capabilities we have already delivered, reconfigured and extended to meet DLD's precise requirements. We look forward to the opportunity to bring this platform to life.
+[Heading 1] 1. Understanding of the Requirement
+[Heading 2] 1.1 Strategic Context
+Dubai Land Department's objective extends well beyond building a website. The IRETP is a strategic instrument designed to advance Dubai's position on the JLL GRETI. a biennial index that directly influences where over 80% of global direct commercial real estate investment flows. Every functional and technical decision in this proposal has been made with that strategic objective in mind.
+We have mapped every identified GRETI gap against the platform components we are proposing, and we are confident that full and correct implementation of the IRETP will create measurable, auditable improvements across all six GRETI sub-indices within the first assessment cycle following go-live.
+[Heading 2] 1.2 Platform Architecture Summary
+The IRETP as described in this RFP comprises two integrated pillars, delivered across four phases within a 90 calendar day window from contract signing. We have read and understood every section of RFP No. DLD-IRETP-2026-001 v1.3 in full, including all 55 deliverables listed in Section 13, all 10 UAT test categories in Section 17.3, all 14 cost table line items in Section 14, and all architectural requirements in Section 11.
+[Heading 2] 1.3 Critical Constraints We Have Fully Absorbed
+We draw attention to the following constraints, which are non-negotiable and which our proposed solution has been explicitly designed to satisfy:
+Pre-Publication Analytics Assessment gate: no data is published publicly until the mandatory assessment is completed and signed off by the DLD Data Liaison Officer. This is hard-coded into our Phase 1 delivery plan.
+AI non-advisory constraint: the AI Agent is prohibited from providing investment advice, recommending specific properties, or making price forecasts. This constraint is enforced at the system-prompt level within UnifyApps Agentic AI and is validated as a mandatory UAT test case.
+Microsoft Fabric / OneLake: DLD's existing data architecture is the foundation of our data layer proposal, not an afterthought. We do not duplicate data outside the Fabric ecosystem. All platform visualisations and APIs are served from the Gold layer.
+UAE data residency: all AI inference, data storage, and processing occur within the UAE regardless of which AI model is active. Our BYO LLM architecture confirms a UAE-region inference endpoint as a prerequisite for any model selected.
+DESC ISR v3 compliance: our security plan is built to this standard from day one, not retrofitted after delivery.
+[Heading 1] 2. Why UnifyApps. Platform Overview
+[Heading 2] 2.1 The Enterprise Operating System for AI
+UnifyApps is the Enterprise Operating System for AI. a single, unified platform that replaces the fragmented collection of point solutions that enterprise digital transformation has historically required. Rather than assembling a portal from one vendor, an AI agent from another, an integration layer from a third, and a workflow engine from a fourth, UnifyApps delivers all of these capabilities within a single product with a single data model, a single security boundary, and a single support relationship.
+This matters profoundly for the IRETP. DLD is not procuring a static display platform. It is procuring a living, intelligent data ecosystem that must simultaneously serve public users, institutional investors, internal staff at every level up to Director General, and automated data pipelines. The number of integration points between those components. and the failure modes that integration points introduce. are the primary source of risk in a project of this complexity. UnifyApps eliminates those integration points by design.
+[Heading 2] 2.2 The Six-Layer Architecture. Mapped to IRETP
+UnifyApps is architected across six integrated layers. All six are active in the IRETP platform. Because they operate within a single product, there is no integration gap between layers, no data consistency lag, and no vendor accountability gap when issues require cross-layer resolution.
+[Heading 2] 2.3 UAE Government Track Record
+UnifyApps is not new to the UAE public sector. We have delivered enterprise digital platforms for government entities across the Emirates, giving us direct, practical familiarity with the regulatory environment, procurement culture, and technical infrastructure that characterises Dubai Government projects.
+[Heading 2] 2.4 Working Prototype. Already Built
+Please refer to Appendix A for Screenshots of the Prototype.
+UnifyApps does not come to this RFP with a concept or a design file. We have already built a functional prototype of the IRETP External Public Portal on the DLD design language. The following screens are fully working today and are available for review in the AI System Demonstration.  What DLD is commissioning is the productionisation and full-scope enhancement of a working foundation; not a build from scratch.
+What is already built and working:
+Market Overview — the main portal screen. Full-screen GIS map with official Dubai zone polygon overlays, numbered cluster badges showing project counts per zone, and three switchable map layers: Projects, Average Price per Sqft, and Sales Volume. Top KPI bar showing Total Sales Volume, Total Sales Transactions, Average Price per Sqft, and Top Region by Value, all with YoY trend indicators. Collapsible left panel rendering four analytical sections at city level: Demand Trend, Value and Price Trend, Region and Momentum, and Market Composition including a property type bar chart. The entire panel updates to zone-level data on any zone click.
+Zone Detail Panel. Click any Dubai zone on the map and the left panel transitions to show zone-specific KPIs across all four sections, a scrollable project card list with developer names and project thumbnails, and an AI Insight summary specific to that zone. The selected zone boundary highlights on the map simultaneously.
+Zone Detail Full Page. Standalone analytics page for any selected zone. Includes an average price per sqft area chart over 12 months, a monthly transactions horizontal bar chart, left-side navigation between analytical views (Demand Trend, Value and Price Trend, Market Composition, Region and Momentum), and a draggable date range slider that updates all charts on the page.
+Property Distribution Page. Dedicated analytics view showing a value trend area chart, a monthly flats transactions bar chart with labelled data points, KPI cards for Total Market Value, Off-Plan Dominance, and Hotel Apartment Leadership with YoY indicators, and a market value contribution breakdown by property type rendered as horizontal proportion bars.
+Projects Map View. Zone-level map with the selected area boundary overlaid on a detailed street map. Project pins are colour-coded by property value tier — red for highest, amber for average, green for lowest — with a toggle between Property Value and Completion Timeline views and a Map View / List View switch.
+Project Detail Card. Slide-in overlay on project pin click showing the project hero image, starting price in AED, construction progress bar, launch and completion dates, developer name, and full project description.
+AI Insight Panel. Present on every map and analytics screen. Renders a three-bullet market summary contextual to the current view; city level, zone level, or property type level; with Expand Insight and Ask AI interaction points.
+The remaining Phase 1 screens not yet in the prototype; the AI chat interface with inline chart generation, investor registration and watchlist, data export engine, and the Slice and Dice analytics page, are being completed now and will be demonstrated to DLD.
+No other vendor responding to this RFP can show DLD a working portal on Day 0. The design system is proven, the GIS integration is working, the analytics layer is rendering, and the AI Insight component is live. Phase 1 development begins from this foundation. The 90-day delivery commitment is not ambitious given what already exists.
+[Heading 1] 3. Proposed Solution Architecture
+[Heading 2] 3.1 Architecture Overview
+The UnifyApps IRETP architecture is structured across four conceptual tiers, each with clearly defined responsibilities, data flows, and security boundaries. The architecture is designed to fully leverage DLD's existing Microsoft Fabric ecosystem, with the External Public Portal's visualisation layer served by a purpose-built web frontend consuming data from the OneLake Gold layer. consistent with DLD's guidance in Section 11.4.2 of the RFP.
+The four tiers are:
+Tier 2. UnifyApps Integration & Data Layer: UnifyApps Integrations connects to the Gold layer via OneLake APIs and semantic model endpoints. UnifyApps Data orchestrates derived metric calculation, data quality monitoring, and real-time freshness alerting. All data served to any platform component flows from this tier.
+Tier 3. UnifyApps Application & AI Layer: Unify Applications renders the External Public Portal (public-facing) and Internal Management Platform (staff-facing). Unify Agentic AI serves the AI Agent on both platforms. Unify Automations executes EWRS risk triggers, alert routing, and investor notification workflows.
+Tier 4. Presentation & Access: Public users and registered investors access the External Portal via browser. DLD staff access the Internal Platform via browser with MFA. The Open Data API provides machine-readable access for researchers, PropTech developers, and financial institutions.
+[Heading 2] 3.2 Microsoft Fabric / OneLake Alignment
+DLD's existing investment in the Microsoft Fabric ecosystem is the data foundation of this platform. UnifyApps treats the OneLake Gold layer as the single, authoritative source of truth for all IRETP data. Our approach is explicitly non-duplicative: we do not introduce parallel data stores, shadow databases, or separate ETL layers outside the Fabric ecosystem.
+UnifyApps ships with a native, pre-built connector to Microsoft Fabric and OneLake. DLD connects their Fabric environment in the UnifyApps Integrations admin interface and the Gold layer is immediately queryable by all pipelines, automations, and the Agentic AI knowledge layer. This is not a custom integration that needs to be scoped, built, or tested.
+Other vendors responding to this RFP will spend the first two to four weeks building and testing a Fabric integration from scratch. UnifyApps starts Day 1 with the connector already working. That difference compounds across the entire 90-day delivery window.
+The Architecture Integration Map below summarises how each proposed component connects to DLD's existing Fabric environment:
+[Heading 2] 3.3 External Public Portal. Visualisation Layer
+UnifyApps agrees with DLD's assessment in Section 11.4.2 that Power BI is not suitable as the primary visualisation engine for the External Public Portal, for the following reasons: (a) the Power BI licensing model does not scale cost-effectively to 10,000+ anonymous concurrent users; (b) anonymous public access requires complex embed token management with significant licensing implications; and (c) the UX/UI customisation constraints of Power BI Embedded are inconsistent with the investor-grade interface quality this platform demands.
+Our proposed external visualisation layer is a custom-built web frontend using UnifyApps App Builder, consuming data served via API endpoints from DLD's OneLake Gold layer. This approach delivers:
+Zero per-user licensing cost at any public user volume
+Full anonymous access with no licensing constraint
+Unlimited UI/UX customisation. including full RTL support, investor-grade design, and DLD brand alignment
+Performance at scale: server-side data aggregation means chart rendering is independent of dataset size
+Full maintenance control: open-source charting libraries with no dependency on Microsoft roadmap decisions
+Power BI and Fabric-native reporting tools are retained and preferred for all Internal Platform components. EWRS dashboards, Developer Performance dashboards, and internal management reporting. where the named-user licensing model is cost-appropriate.
+[Heading 2] 3.4 Technology Stack Proposal
+The stack below reflects our recommended Option A: on-premises deployment at DLD's data centre. Option B (Azure UAE North) substitutes managed cloud equivalents for the same components, both options run the identical UnifyApps platform with no capability difference. Section 7.4 provides the full hosting decision rationale.
+The IRETP is architected for horizontal scale from Day 1. Every application layer runs as a stateless Kubernetes workload, meaning additional capacity is added by deploying more pods rather than upgrading servers. Scale-out does not require re-architecture at any user volume.
+The platform is sized for Year 1 projections of 5,000 registered investors and 98 internal staff. It is designed and tested to handle 3x that volume; 15,000 concurrent registered users, 10,000+ peak anonymous sessions, and triple the API call volume; without any infrastructure change. The Kubernetes Horizontal Pod Autoscaler manages compute scaling automatically in response to CPU and memory pressure; DLD does not need to intervene.
+Each data layer scales independently. MongoDB handles write-heavy operational data with replica set scaling. StarRocks is purpose-built for OLAP queries at 100M+ row volumes with no performance degradation as the transaction dataset grows. OpenSearch scales the RAG vector index as the knowledge base expands. Redis caching absorbs the majority of read requests before they reach the database layer, meaning database load grows far slower than user growth.
+Load testing is a mandatory Phase 1 go-live acceptance criterion. Before the External Portal goes live, the platform must demonstrate the target performance thresholds under simulated peak load: P95 API response under 500ms, P90 AI text response under 8 seconds, and full portal functionality maintained under 10,000 concurrent sessions. DLD signs off on the load test results as part of Phase 1 UAT acceptance. The same load test suite runs again before Phase 3 go-live to cover the expanded internal platform load.
+[Heading 1] 4. Real Estate AI Agent. Architecture & Design
+[Heading 2] 4.1 Our Position on AI in This Platform
+Artificial intelligence is among the most over-used terms in technology proposals. Every vendor responding to this RFP will assert AI capability. The distinction between a credible AI proposal and a marketing document rests not on the presence of AI, but on whether each AI capability has been placed where it creates demonstrable value. and whether the temptation to apply AI indiscriminately has been resisted.
+We make one commitment that we consider the most important in this entire proposal: the non-advisory constraint is non-negotiable, technically enforceable, and UAT-verified. The AI Agent will retrieve, present, and analyse DLD data. It will never recommend properties, forecast prices as facts, or provide investment guidance. This is not a policy choice we might revisit. it is a hard architectural constraint enforced at the system-prompt level within UnifyApps Agentic AI.
+[Heading 2] 4.2 Multi-Model AI Architecture
+DLD's requirement for a multi-model AI architecture. with the ability to switch models from the administration interface without redeployment. is a precise description of how UnifyApps Agentic AI is architected. Our AI orchestration layer sits between the AI Agent and the underlying language models. It enables:
+Different models for different task types: for example, a high-capability model for complex data retrieval and analysis queries, and a lighter, faster model for DLD service navigation. allocating inference cost to the queries that justify it. UnifyApps advises DLD on the optimal model selection per task type as part of our LLM evaluation process.
+Model switching from the admin interface: the active model can be changed by a System Administrator without any code changes, redeployment, or vendor involvement
+New model addition by configuration: adding a new AI model provider. whether a managed API service or a self-hosted open-source LLM. requires only a configuration update in the orchestration layer. No redeployment or vendor involvement needed.
+[Heading 2] 4.3 RAG Architecture. Grounding Every Response in DLD Data
+Retrieval-Augmented Generation is mandatory for every response the AI Agent delivers. This means the Agent never generates an answer from general training data alone. every factual claim is grounded in retrieved, timestamped DLD data. The RAG pipeline operates as follows:
+Step 1. Query Parsing: The user's natural-language question is parsed and classified (data query, service navigation, analytical request, comparative query)
+Step 2. Retrieval: OpenSearch retrieves the most relevant data chunks from the indexed Gold layer, including transaction records, project data, developer profiles, zone boundaries, RERA regulations, and DLD service procedures. OpenSearch provides the same vector search capability as Azure AI Search at zero additional licence cost. it is used identically on both the on-prem and Azure deployments
+Step 3. Augmentation: Retrieved data is injected into the LLM context alongside the system prompt (which enforces the non-advisory constraint and cites source requirements)
+Step 4. Generation: The LLM generates a response grounded exclusively in the retrieved data. Every data point is cited with its source and timestamp.
+Step 5. Validation: A post-generation validation layer checks the response for any investment advisory language. Flagged responses are either reformulated or declined with an appropriate message.
+[Heading 2] 4.4 LLM Selection. Platform-Native Evaluation
+UnifyApps does not recommend a specific LLM for IRETP. We run the evaluation on the platform itself.
+The Unify Agentic AI platform has built-in tools to run structured experiments across multiple LLM providers simultaneously, measured against DLD's actual data, actual query patterns, and actual requirements. The result is an evidence-based selection. DLD sees the numbers and makes the decision.
+Every LLM vendor will tell DLD their model is the best choice for Arabic real estate data. UnifyApps does not make that claim. In Phase 0 we connect each candidate model to the orchestration layer and run the same evaluation harness across all of them against DLD's actual Gold layer data. Accuracy, latency, cost, and Arabic NLP quality are measured against DLD's real queries, not generic benchmarks. The model that wins the evaluation is the one DLD deploys.
+The Phase 0 evaluation, delivered as a written report on Day 14, covers every dimension that matters for IRETP:
+The evaluation report presents all results in a side-by-side table. UnifyApps provides a written recommendation based on the data. DLD reviews, asks questions, and makes the final selection. We then configure the orchestration layer for the selected model within one working day.
+Because the platform is LLM-agnostic, switching models after go-live is a configuration change with no redeployment and no downtime. If DLD wants to re-run the evaluation in Year 2 against newer models, the same harness runs again. The platform cost per session is the same regardless of which model is active.
+[Heading 2] 4.5 Arabic NLP Capability
+Phase 1 requires full conversational capability in both English and Arabic. Arabic NLP accuracy must be within 5% of English accuracy on the same standardised test set. Our implementation approach:
+Arabic NLP capability is a weighted criterion in the LLM evaluation framework UnifyApps applies during Phase 0. Candidate models are assessed against a Gulf Arabic real estate terminology test set before any model recommendation is made to DLD.
+Arabic-specific test set: we propose developing a 100-question Arabic-language DLD data test set in parallel with the English test set, covering zone names, transaction types, developer names, RERA procedures, and comparative market queries
+Arabic zone names and developer names are validated against DLD's official records (mandatory in our Phase 1 delivery plan, consistent with Section 13 deliverable 48)
+RTL text rendering in AI chat interface: all generated text, charts, and tables are displayed with correct RTL alignment when the user's active language is Arabic
+[Heading 1] 5. Internal Platform. EWRS & Developer Performance
+[Heading 2] 5.1 Early Warning Risk System (EWRS). Phase 2
+The Early Warning Risk System is the intelligence core of the Internal Management Platform. UnifyApps Automations provides the rules engine, threshold management, multi-channel alert routing, and audit-trail playbook functionality that the EWRS requires. All 10 risk indicators described in Section 8.1 are implemented as configurable automation rules within the platform.
+Key design decisions that differentiate our EWRS from a simpler notification system:
+Threshold configurability is first-class: every threshold value is adjustable from the EWRS configuration panel by authorised administrators. Changes are automatically logged with timestamp and approver identity. creating a full configuration audit trail that DLD can review at any time.
+Playbook integration is built in, not bolted on: each alert type is linked at the data model level to its pre-defined SOP checklist. When a Level 1 officer acknowledges an alert, the associated checklist is instantiated and becomes an active audit record. not a static document reference.
+Multi-level escalation is automated, not manual: if a Level 1 alert is not acknowledged within 4 business hours, the system automatically escalates to Level 2. If a Level 3 alert is not acknowledged within 1 hour during business hours (4 hours after hours), it escalates to Level 4 automatically. No human action is required to trigger escalation.
+[Heading 2] 5.2 Developer Performance & Rating Engine. Phase 3
+The Developer Performance & Rating engine provides DLD with the transparent, data-driven accountability framework for real estate developers that directly addresses the GRETI Governance sub-index gap. Our scoring model is built within UnifyApps Data and Automations, with all scoring parameters configurable from the Weight Configuration Panel by authorised administrators.
+The Public Developer Scorecard on the External Portal displays a simplified version of each developer's rating. showing completed projects count, on-time delivery percentage, RERA compliance rating, and total units delivered. making developer accountability data accessible to international investors and directly supporting GRETI Governance sub-index improvement.
+[Heading 1] 6. Phased Delivery Plan
+[Heading 2] 6.1 Timeline Overview. 90 Calendar Days
+UnifyApps commits to delivering all four phases within 90 calendar days from contract signing. 30 days ahead of the RFP maximum of 120 days. Phases are developed in parallel across dedicated team tracks; go-live sequencing follows the mandatory gate order. Each phase goes live only after its UAT is fully signed off by DLD.
+Three constraints are treated as fixed: (1) the Pre-Publication Analytics Assessment gate before Phase 1 go-live; (2) the external VAPT assessment before Phase 3 go-live. DESC-approved assessor pre-engaged on Day 1 to secure the Day 62 slot; (3) DLD Project Sponsor sign-off on each phase acceptance form.
+[Heading 2] 6.2 Why 90 Days is Achievable. and Honest
+The 90-day commitment is based on four structural advantages of the UnifyApps platform, each of which creates genuine time savings compared to a traditional development approach. We state these precisely because the RFP evaluation panel will scrutinise any compressed timeline claim.
+No integration build time between platform layers: on a traditional stack, Weeks 3–8 of a project like this are consumed integrating the portal builder with the AI service, with the workflow engine, with the data layer. On UnifyApps all six layers are native to one platform. That integration time is eliminated entirely. It becomes configuration time, which is measured in hours, not weeks.
+The pre-built component library replaces construction with configuration: GIS mapping, dashboard widgets, multi-dimensional filter tables, export engines, alert notification systems, RBAC management, and AI agent UI are all pre-built UnifyApps components. The majority of functional requirements in Sections 3–9 of the RFP are configured and extended, not built from scratch.
+Parallel team tracks, not sequential queues: we assign dedicated sub-teams to each phase. Phase 2 development begins Day 14 regardless of Phase 1 go-live status. Phase 3 begins Day 42. Phase 4 begins Day 62. Go-live sequencing is preserved; development sequencing is not.
+Phase 4 is configuration-dominant: extended language support on UnifyApps is primarily an i18n resource file exercise. translating string files, validating RTL layout, and testing. It does not require new application development. Combined with the supplementary modules (ESG, benchmarking, PDF generator), Phase 4 is genuinely completable in 3 weeks by a focused team.
+The one honest constraint we flag: the VAPT assessor must be pre-engaged at contract signing to secure the Day 62 testing slot. This is a coordination action, not a technical constraint, and we will initiate it on Day 1 of the engagement.
+[Heading 1] 7. Security & DESC ComplianceUnifyApps
+[Heading 1] We provide an Agentic AI platform that helps enterprises successfully drive their AI transformation goals by offering one unified platform to build and manage AI Agents and Intelligent Apps, automate workflows, and manage data; all while ensuring enterprise-grade governance, security, and scalability.
+
+https://trust.unifyapps.com/
+[Heading 2] 7.1 DESC ISR v3 Compliance Framework
+Security and regulatory compliance are not a post-delivery audit for UnifyApps.They are structural design constraints that shape every architectural decision from Day 1. Our DESC ISR v3 compliance roadmap is structured across the full project lifecycle and extends through the 12-month warranty period.
+[Heading 2] 7.2 Security Testing Plan
+[Heading 2] 7.3 ISO 27001 Roadmap
+UnifyApps holds active ISO 27001 certification for our platform engineering and support operations. For the IRETP-specific delivery, we commit to completing an ISO 27001 gap assessment against the platform configuration by Phase 3 (Day 88) and presenting a documented certification roadmap to DLD. We target full ISO 27001 certification for the IRETP environment within 6 months of final go-live.
+[Heading 2] 7.4 Hosting. On-Premises at DLD Data Centre (Recommended)
+In reference to Annex A.
+UnifyApps recommends Option A: on-premises deployment at DLD's data centre. This is not a default recommendation. It is the result of a deliberate analysis of DLD's specific requirements, the UnifyApps platform's on-prem capability, and the 5-year total cost of ownership. Both options deliver identical platform functionality; the infrastructure choice affects data sovereignty posture, compliance pathway, and long-term cost. all of which favour on-premises for a UAE government entity of DLD's scale.
+UnifyApps runs on-premise with the same feature set, performance characteristics, and update cadence as its cloud offering. There is no capability reduction for on-premise deployment. The full orchestration stack, knowledge base, admin dashboard, and analytics pipeline operate inside DLD's infrastructure. (Source: UnifyApps On-Prem Deployment Infrastructure Sizing, March 2026.)
+[Heading 3] Why On-Premises Is the Right Choice for IRETP
+Five reasons drive this recommendation:
+Data sovereignty without compromise: all IRETP data. investor profiles, transaction records, EWRS risk signals, escrow balances, AI session logs. resides within DLD's physical infrastructure. No data transits to a third-party cloud provider's infrastructure. This is the strongest possible position for a UAE government entity under Law No. (45) of 2021 (Personal Data Protection) and the Dubai Data Law.
+DESC ISR v3 compliance posture: on-prem deployment puts the full stack within DLD's DESC compliance boundary. DLD controls the physical security, network boundary, and audit scope of the entire platform. not just the application layer. For a platform handling real estate transaction data and escrow monitoring, this is the defensible long-term compliance posture.
+5-year TCO advantage: on-prem is AED 504,200 cheaper over 5 years despite higher upfront hardware cost (AED 942,000 hardware vs AED 0 for cloud). Annual cloud hosting of ~AED 491,780 (Azure AKS + managed services) is eliminated; replaced by ~AED 229,440 data centre colocation + hardware maintenance. The open-source monitoring stack (Prometheus, Grafana, OpenSearch) eliminates ~AED 32,000/year in commercial licence costs on both options.
+No cloud lock-in or external service dependency: the UnifyApps platform on-prem depends on no external managed services (no Azure SQL, no Azure AI Search, no Azure AD). DLD is not exposed to cloud service discontinuations, pricing changes, or API deprecation cycles. The full stack. MongoDB, StarRocks, Kafka, OpenSearch, Redis, Kubernetes. is open-source with no single-vendor dependency.
+Proven UAE government on-prem delivery: UnifyApps has delivered government deployments on on-premises infrastructure across the Middle East, including a citizen-facing housing services portal for a UAE government authority. identical architecture patterns, bilingual interaction, on-premise Kubernetes stack, RBAC-enforced data separation. The phasing, team structure, and Day 1 VAPT scheduling in this proposal are informed by that deployment.
+[Heading 3] Hosting Options Summary
+Infrastructure setup, hardware procurement, security tooling, and third-party SaaS licences are priced and managed by a designated implementation partner. The UnifyApps platform licence and professional services are quoted directly by UnifyApps. This two-party commercial structure is detailed in the accompanying Commercial Proposal document.
+Data Residency: all production data, backup data, and DR data remain within the UAE at all times. regardless of hosting option.
+Disaster Recovery: RTO < 4 hours, RPO < 1 hour on both options. DR environment is physically separate UAE location.
+Backups: daily automated encrypted backups, 30-day retention. Quarterly restoration tests reported to DLD.
+IaC: 100% of infrastructure defined as code (Terraform). All IaC scripts delivered to DLD at project completion.
+[Heading 1] 8. Visualisation Layer Comparative Analysis. Power BI vs UnifyApps App Builder
+Section 11.4.2 of the RFP requires vendors proposing an alternative to Power BI for the External Public Portal to provide a comparative analysis addressing: total licensing cost at projected public user volumes, anonymous access capability, UI/UX customisation depth, performance at scale, and long-term maintainability. This section provides that analysis with specific cost modelling at 10,000+ concurrent anonymous external users.
+[Heading 2] 8.1 Licensing Cost at Scale. The Core Issue with Power BI
+Power BI Embedded's licensing model was designed for enterprise applications with authenticated named users. not for public-facing investor portals with anonymous access at scale. There are three licensing paths available for Power BI with public/anonymous access. We have costed all three below at DLD's projected user volumes:
+[Heading 2] 8.2 Full Comparative Analysis. Power BI vs UnifyApps App Builder
+[Heading 3] Conclusion: Power BI Remains the Right Choice for Internal Use
+Power BI is retained and recommended for all Internal Platform components where named-user licensing is cost-appropriate: EWRS dashboards, Developer Rating dashboards, and internal management reporting. For the External Public Portal, where anonymous public access and 5,000+ concurrent registered investors make per-user licensing prohibitive, the UnifyApps App Builder is the correct technical and commercial choice. This is a deliberate split. not a rejection of Power BI, but a right-tool-for-right-audience decision.
+[Heading 1] 9. Data Understanding & Accuracy Methodology
+UnifyApps is a SaaS platform company, not a data consultancy. We do not assign analysts to review DLD data. What we do is configure the UnifyApps platform to connect to DLD's existing OneLake Gold layer. the source of truth that DLD's own data team already maintains and governs. and build the validation automations that ensure what the platform displays is exactly what the Gold layer contains.
+Data accuracy is a platform configuration discipline, not a headcount discipline. Everything described in this section is achieved through UnifyApps Automations, UnifyApps Data pipelines, and the Unify Agentic AI indexing configuration. not by deploying specialist staff to perform manual data analysis.
+[Heading 2] 9.1 Connecting to DLD's Data Ecosystem
+Phase 0 (Days 1–14) focuses on one thing: understanding DLD's Gold layer structure well enough to configure correct pipelines. This involves:
+Reading DLD's existing OneLake Gold layer schema with DLD's designated data liaison. field names, data types, update cadence, and any known quality notes
+Configuring UnifyApps Data connectors to the Gold layer as read-only sources. no writes, no modifications to DLD's existing data infrastructure
+Agreeing the calculation logic for all derived metrics (price per sqft, rental yield, EWRS risk indicators, developer scores) in writing with DLD before any pipeline is built
+Documenting the field mapping between Gold layer fields and IRETP display fields. approved by DLD before development begins
+[Heading 2] 9.2 Pre-Publication Analytics Assessment Methodology
+Before any data goes live on the External Portal, the platform must pass a structured Pre-Publication Analytics Assessment. This is the RFP's required analytics assessment methodology, and it is a hard go-live gate, the portal does not launch until it passes and is signed off in writing by DLD's designated data liaison.
+The assessment covers three layers of analytical validation:
+The first layer is raw data reconciliation. A random sample of transaction records is pulled from the Gold layer and compared against what the platform displays. Required match rate: 99.5% or above. Any field-level discrepancy is traced back to the pipeline and resolved before the gate can pass.
+The second layer is derived metric validation. Every computed metric displayed on the portal; price per sqft averages, YoY percentage changes, zone-level aggregations, off-plan share ratios, median values, rental yield calculations; is independently recalculated from the raw Gold layer data and compared against the platform output. Zero tolerance for calculation errors. Trend direction indicators (up arrows, down arrows, percentage labels) are verified for correct direction and correct magnitude.
+The third layer is edge case review. Statistical outliers across all metric types are identified, categorised as legitimate extreme values or data entry errors, and handled by agreement with DLD before go-live. Any outlier that would materially mislead a public investor is flagged and either annotated or suppressed pending DLD instruction.
+The assessment is conducted jointly by the UnifyApps delivery team and DLD's data liaison. Results are documented in a Pre-Publication Analytics Assessment Report, which becomes a permanent DLD data governance artefact. DLD provides written sign-off before the platform goes live. If the assessment fails at any threshold, the Phase 1 go-live date moves; this gate does not bend.
+[Heading 2] 9.3 Ongoing Data Accuracy Monitoring
+DLD's Gold layer is the source of truth. If the Gold layer contains an error, the IRETP will reflect that error. our platform connects to it faithfully. Our responsibility is to ensure the platform displays exactly what the Gold layer contains, with no transformation errors and no pipeline-introduced discrepancies.
+[Heading 1] 10. Mandatory Data Integration and Accuracy Case Study
+Civil Service and Government Development Bureau; Government of Qatar
+Engagement overview
+UnifyApps delivered the Government Services Performance Experience Platform for the Civil Service and Government Development Bureau (CGB), a central government authority in Qatar responsible for overseeing service quality across all ministries and government entities. The platform was delivered in partnership with malomatia, a Microsoft Gold Partner and leading Qatari IT services company. The platform serves the highest levels of Qatar's government, providing real-time service performance intelligence to the Prime Minister, Deputy Ministers, and ministry leadership teams. It operates bilingually in Arabic and English.
+The platform is directly analogous to the IRETP in scope and complexity: a public-sector analytics and AI platform integrating multiple siloed government data sources into a single trusted intelligence layer, serving multiple user personas with different access levels, with a mandatory accuracy validation requirement before any data reaches senior decision-makers.
+The data integration challenge
+CGB faced a data landscape that is structurally identical to the challenge DLD faces with the IRETP. Five separate data source systems operated independently with no common data model, inconsistent formats, varying update cadences, and unreliable data quality that had actively eroded leadership trust in the existing reports:
+The core problem was not the absence of data. CGB had data. The problem was that each source had been built independently, used different field names for the same concepts, applied inconsistent classification logic, and contained records that conflicted with records in other sources about the same citizen interaction. Aggregating across these sources without resolving those inconsistencies would produce scores and insights that were actively misleading.
+How UnifyApps resolved the data quality issues
+UnifyApps implemented a Unified Integration Layer, a middleware architecture that connected all five source systems into a standardized unified data model before any data reached the analytics layer or the user interface. No source data was presented to users in its raw form. Every record passed through validation and transformation before entering the CGB Azure Data Lake Gold layer.
+Three specific data quality mechanisms were applied:
+LLM-driven data structuring and classification. Unstructured Arabic-language content from social media and call centre records was processed by an LLM pipeline that classified each record into sentiment categories (Positive, Negative, Neutral), extracted topics, and assigned relevance scores. The LLM handled Gulf Arabic dialect variation,  a significant data quality challenge that rule-based systems cannot address, because the same concept is expressed differently across Qatari, Saudi, Egyptian, and Levantine Arabic.
+Human-in-the-loop validation dashboard. Recognising that LLM classification introduces bias and inaccuracies, particularly on ambiguous Gulf Arabic phrasing,  UnifyApps built a mandatory human verification layer. CGB administrators reviewed a queue of AI-generated classifications before they were promoted to the production dataset. Every AI insight carried a confidence score. Reviewers could examine the underlying source record (the original social media post, service centre case, or call record) to verify the classification before approving it. This was not an optional QA step, no AI-classified record entered production without human sign-off.
+Sentiment validation with linguistic expertise. Arabic-speaking subject matter experts from malomatia reviewed the AI sentiment classifications on a structured sample basis. The validation framework calculated Precision, Recall, and Weighted F1 Score per sentiment class. The F1 Score; the harmonic mean of precision and recall; was the primary KPI for data quality. Discrepancies between LLM output and human reviewer judgement were fed back into the system as a continuous improvement loop, improving classification accuracy over successive cycles.
+Accuracy methodology and sign-off
+The score calculation methodology used Analytical Hierarchical Process (AHP), a statistically rigorous weighting method, to derive each entity's Experience Score from the underlying source metrics. Every metric was normalised to a 0-100 scale before weighting, ensuring that metrics measured on different original scales (CSAT 0-5, transaction completion percentage, call resolution rate) contributed proportionally to the composite score.
+Before any entity scores were presented to ministry leadership, UnifyApps ran a structured validation cycle:
+The AI classification pipeline's Weighted F1 Score was confirmed above the agreed threshold across all three sentiment classes
+A human reviewer sign-off queue cleared all pending validations
+Score calculations were verified against the raw source data to confirm the derived weighted mean matched expected ranges
+CGB administrators reviewed the initial score outputs for each entity before the platform was presented to Prime Minister-level users
+The platform went live only after this multi-stage validation was completed and formally accepted by CGB.
+Direct relevance to the IRETP
+Every element of this engagement maps directly to what DLD requires for the IRETP:
+The Unified Integration Layer connecting five disparate government source systems is the same architectural pattern proposed for the IRETP in Section 3.2, where UnifyApps connects to DLD's OneLake Gold layer via the native Fabric connector and handles the data transformation and standardisation pipeline.
+The human-in-the-loop validation dashboard, where no AI-processed data reaches end users without administrator review,  is the same methodology proposed for the IRETP Pre-Publication Analytics Assessment in Section 9.2. DLD's data liaison signs off on the reconciliation report before the portal goes live. The mechanism is the same.
+The six-persona RBAC model (Prime Minister, Prime Minister's Team, Deputy Minister, Deputy Minister's Team, Services Owner, CGB Admin) is structurally identical to the six internal roles defined for the IRETP internal platform.
+The bilingual Arabic/English requirement, the AHP-based composite scoring methodology, and the leadership dashboard design serving heads of state, all delivered successfully in a GCC government context,  directly evidence UnifyApps' capability to deliver the IRETP.
+[Heading 1] 11. Project Team & Qualifications
+[Heading 2] 11.1 Core Delivery Team
+The IRETP delivery team uses UnifyApps standard professional services profiles only: Project Manager, Delivery / Technical Lead, Developer, QA Engineer, and UI/UX Designer. Full PS cost breakdown by phase is in the Commercial Proposal, Section 14.3.
+[Heading 2] 11.2 UAE Market Presence
+UnifyApps has a registered UAE legal entity. The Project Manager, Delivery / Technical Lead, onsite Developers, QA Engineer, and UI/UX Designer are all UAE-resident. Remote Developer roles are filled from the nearest time-zone-aligned office. DLD can request in-person meetings at any point during delivery.
+[Heading 1] 12. Cost Structure
+The full detailed cost tables (Sections 14.1 to 14.4 and 15.4 per RFP format) are in the separate Commercial Proposal document.
+UnifyApps recommends Option A (on-premises at DLD data centre) for all reasons detailed in Section 7.4. The UnifyApps platform licence and professional services costs are identical for both hosting options.
+[Heading 1] 13. Warranty & Technical Support. 12 Months Post Go-Live
+[Heading 2] 13.1 Support Philosophy
+The 12-month warranty and technical support obligation is not a separate procurement or an optional add-on. It is a contractual extension of our delivery responsibility. We do not consider a project delivered until the platform has operated stably, accurately, and securely through its first full year of live operation.
+Our warranty and support scope is structured around five categories: defect resolution, data pipeline defect correction, security patch management, performance defect resolution, and DLD data structure change management. All five are covered at no additional cost within the warranty contract.
+[Heading 2] 13.2 Support Incident SLA Commitments
+Business hours: Monday to Friday, 08:00–16:00 UAE Standard Time, excluding UAE public holidays. A named Support Lead is assigned as DLD's primary contact. An emergency out-of-hours escalation number is provided from Day 1 of the warranty period for P1 incidents.
+[Heading 2] 13.3 Warranty & Support Pricing
+[Heading 1] 14. AI Agent Knowledge Update Approach
+The Unify Agentic AI platform manages all RAG knowledge updates through its built-in knowledge source management and indexing configuration. There is no external pipeline tooling, no Azure Data Factory, no custom indexing scripts. DLD administrators manage knowledge sources through the UnifyApps admin interface without vendor involvement.
+[Heading 2] 14.1 How Knowledge Updates Work on UnifyApps
+Every knowledge source connected to the AI Agent is configured once in the Unify Agentic AI admin interface. The admin defines the indexing strategy. schedule (hourly, daily, weekly) or event-triggered (on webhook from CMS publish (UnifyApps App Builder or external headless CMS)). and the platform handles the rest automatically.
+[Heading 2] 14.2 Index Management in the Admin Interface
+DLD administrators have full visibility and control over all knowledge layers without vendor involvement:
+Index freshness dashboard: last update timestamp per knowledge layer, next scheduled update, and record count. visible in the Unify Agentic AI admin panel at all times
+On-demand re-index: any knowledge layer can be manually triggered for immediate re-indexing from the admin interface. no vendor action required
+Rollback: every index update creates a snapshot of the prior version. If a post-update issue is detected, the System Administrator rolls back to any prior version in 2 clicks. completes within 5 minutes
+Accuracy benchmark: a set of benchmark queries runs automatically after each index update. If results deviate from baseline, an alert fires to DLD and the support team before any updated content reaches end users
+[Heading 2] 14.3 What UnifyApps Does Not Do
+We do not fine-tune or retrain LLMs. All AI accuracy work is knowledge source management and indexing configuration. entirely within the UnifyApps platform. If the chosen LLM provider releases an improved model version, we update the model configuration in the orchestration layer: a configuration change, no redeployment, no ML work.
+[Heading 1] 15. Risk Register
+The following risk register identifies the principal delivery, technical, data, security, and operational risks associated with the IRETP project, with probability and impact ratings and our proposed mitigation actions.
+[Heading 1] 16. Knowledge Transfer & Exit Plan
+DLD will receive full platform ownership at project completion and at any point of contract expiry. This is not conditional on any ongoing commercial relationship with UnifyApps.
+[Heading 2] 16.1 Deliverables at Project Completion (Day 90)
+Source code repositories: all application code, IaC scripts (Terraform), CI/CD pipeline configurations, and AI model configuration files delivered to DLD via GitHub repositories transferred to DLD's GitHub organisation.
+Complete technical documentation: system architecture documentation, API reference (all endpoints), operational runbooks, disaster recovery playbook, and data dictionary. all delivered as part of the Phase 4 deliverables.
+Infrastructure control: all cloud infrastructure credentials, access policies, and DNS management transferred to DLD's Azure subscription upon contract completion. No UnifyApps-controlled infrastructure persists after handover.
+Data export: full platform data export in machine-readable, open formats (JSON, CSV, Parquet) completed within 30 calendar days of contract expiry upon request.
+Data destruction certification: written certification of complete data destruction from all UnifyApps-controlled systems within 60 days of DLD's request.
+[Heading 2] 16.2 Intellectual Property
+All deliverables, results, works, documents, data, reports, designs, and materials prepared, developed, or submitted under this contract shall be the exclusive intellectual property of Dubai Land Department, consistent with Section 4.4 of the RFP. UnifyApps retains no rights to use, reproduce, or publish any deliverable in whole or in part without prior written approval from DLD.
+[Heading 1] 17. Beyond the Brief. GRETI Score Maximisation
+Section 20 of the RFP identifies additional recommended features that would maximise GRETI score improvement beyond the core scope. Two of these. Beneficial Ownership Transparency and Mortgage & Debt Market Transparency. were specifically cited by JLL in the GRETI 2024 report as high-impact areas for UAE ranking advancement. We address both below, along with our implementation approach for all Phase 4 supplementary features.
+[Heading 2] 17.1 Beneficial Ownership Transparency
+JLL's 2024 GRETI report identified beneficial ownership transparency as a key gap for the UAE. International institutional investors. particularly those subject to FATF compliance requirements. need to understand the corporate ownership structures of the developers they are considering. Without this visibility, due diligence is incomplete, and the UAE cannot reach the "Highly Transparent" tier on this specific indicator.
+UnifyApps proposes the following implementation approach, structured to work within the constraints of publicly available information:
+Developer ownership disclosure module: where DLD or RERA holds publicly available corporate ownership information for registered developers (consistent with UAE commercial registry data), this is displayed on the Public Developer Scorecard. beneficial owner name, ownership percentage, and UAE commercial registration number.
+Integration with UAE commercial registry: UnifyApps Integrations can connect to the UAE Federal Authority for Identity and Citizenship (ICA) commercial registry API or equivalent data source authorised by DLD, providing structured, machine-readable ownership data.
+Investor-facing disclosure statement: where beneficial ownership data is not available for a specific developer, a clear disclosure statement is displayed. "Beneficial ownership data not available in public records". rather than a blank field. Transparency about the absence of data is itself a transparency measure.
+GRETI impact: this feature directly addresses the Governance sub-index's beneficial ownership transparency indicator, which JLL assessed as a significant gap in the UAE's 2024 rating.
+[Heading 2] 17.2 Mortgage & Debt Market Transparency
+The GRETI 2024 report identified debt market transparency as a significant gap for the UAE. Aggregate mortgage data is already recorded in DLD's transaction registry (mortgage transactions are a transaction type in the existing data model), but it is not currently presented in a form that gives institutional investors the debt market intelligence they use in other transparent markets.
+UnifyApps proposes the following mortgage and debt market transparency module:
+Mortgage activity dashboard: total mortgage financing registered per zone per period, trend chart (24-month history), mortgage-to-total-transaction ratio, MoM and YoY trend.
+Average LTV ratio by zone: where LTV data is available from RERA escrow records or DLD mortgage records, zone-level average LTV with distribution histogram.
+Mortgage volume trend: total AED value of mortgages registered, split by property type, zone, and transaction status (off-plan vs. ready). This is fully derivable from existing DLD transaction data with no new source system required.
+Data source: all mortgage data sourced exclusively from registered DLD transaction records. the same Gold-layer data source as the rest of the portal. No additional integration or data collection is required for the aggregate mortgage data layer.
+[Heading 2] 17.3 Implementation Roadmap for Beyond-Brief Features
+We recommend that DLD discuss the Beneficial Ownership and Mortgage Transparency modules with the JLL GRETI assessment team before finalising the project scope. Both are cited directly in the GRETI 2024 report, and their inclusion would create measurable indicators of progress that the next GRETI assessment cycle (2026) could capture. within the timeline of this project's delivery.
+[Heading 1] Annex A. On- Prem Architecture
+[Heading 1] Technical Architecture
+[Heading 1] Annex B. List of Customers
+UnifyApps has delivered platform implementations across government and regulated environments where security, compliance, and operational scale are critical requirements:
+Reference contacts available upon request for all clients listed above.
+[Heading 2] Relevant Experience & Customer References
+[Heading 1] Annex C. System Architecture Diagram
+The following diagram illustrates the three-tier IRETP architecture: the user access layer, the UnifyApps platform (six integrated layers), and the DLD Microsoft Fabric data foundation. Option A (recommended): on-premises Kubernetes at DLD data centre. Option B: Azure UAE North. Both options run the identical platform. Infrastructure choice does not affect any platform capability. The Connector Engine integrates with DLD's existing OneLake Gold layer as the single source of analytical truth via 856+ pre-built connectors.
+Note: All data displayed on the IRETP platform. transaction records, price indices, rental yields, developer scores, risk indicators. is sourced exclusively from the OneLake Gold layer. UnifyApps does not write to or duplicate any data in the DLD Fabric ecosystem. The Gold layer remains DLD's single source of truth for all platform outputs.
+[Heading 1] Annex D. Phased Delivery Gantt Chart (90 Calendar Days)
+Note: The VAPT external assessor is pre-engaged at contract signing (Day 1) to secure the Day 62 test slot. this is the critical path item. The Pre-Publication Analytics Assessment (Days 32–37) is a mandatory go-live gate and is built into the Phase 1 timeline, not scheduled reactively. All UAT windows are preserved within the 90-day schedule.
+[Heading 1] Appendix A. Working Live POC:
+[Heading 1] Appendix B. Mandatory Proposal Contents Compliance
+The following checklist confirms compliance with Section 16.2 of the RFP. All items are included in or attached to this proposal.
+[Heading 1] Appendix C. Functional Requirements Compliance Matrix
+The following matrix maps every numbered functional and non-functional requirement from RFP No. DLD-IRETP-2026-001 to the specific UnifyApps capability that satisfies it, alongside the acceptance criterion from the RFP and a precise statement of how our implementation meets it. This matrix covers all requirement IDs referenced in Sections 3–10 and 17 of the RFP.
+[Heading 2] Content Management System (CMS). Section 3.1
+[Heading 2] Homepage Market Overview Dashboard. Section 3.2
+[Heading 2] Transactions Page. Section 3.3
+[Heading 2] Interactive GIS Map. Section 3.4
+[Heading 2] Price Index & Rental Index. Section 3.5
+[Heading 2] Interactive Analytics Engine (Slice & Dice). Section 4
+[Heading 2] Real Estate AI Agent. Section 5
+[Heading 2] Investor Notification & Alert System. Section 6
+[Heading 2] Escrow Monitoring. Section 8.4
+[Heading 2] Non-Functional Requirements. Section 10
+[Heading 2] RBAC Matrix. Section 10.3

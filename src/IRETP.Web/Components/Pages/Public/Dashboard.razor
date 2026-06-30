@@ -1,0 +1,400 @@
+@page "/"
+@rendermode InteractiveServer
+@inject MarketDataService Market
+@inject MapDataService MapData
+@inject CurrencyService Currency
+@inject LocalizationService T
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP - @T["nav.dashboard"]</PageTitle>
+
+<div class="esems-animate-in">
+    <h1 class="mb-1 greeting">@T["dashboard.welcome"]</h1>
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <p class="text-muted mb-0">@T["dashboard.subtitle"]</p>
+        @if (kpi != null)
+        {
+            <!-- FR-003: data freshness — refresh timestamp + elapsed badge. -->
+            <span class="small text-muted"
+                  title="@kpi.DataAsOf.ToString("yyyy-MM-dd HH:mm") UTC">
+                <i class="bi bi-clock-history me-1"></i>
+                @T["dashboard.asOf"] @RefreshAgeLabel(kpi.DataAsOf)
+            </span>
+        }
+    </div>
+</div>
+
+@if (kpi == null || topAreas == null || topDevelopers == null)
+{
+    <SkeletonKpiGrid Count="4" ColClass="col-sm-6 col-lg-3" />
+    <div class="row g-3 mb-3">
+        <div class="col-md-6"><Skeleton Width="100%" Height="280px" /></div>
+        <div class="col-md-6"><Skeleton Width="100%" Height="280px" /></div>
+    </div>
+    <SkeletonTable Rows="6" Columns="4" WithCard="true" />
+}
+else
+{
+    <!-- KPI cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-stats kpi-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="kpi-icon-wrap" style="background: rgba(var(--primary-color-rgb),.1); color: var(--primary-color);">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label">@T["dashboard.totalVolume"]</div>
+                        <div class="kpi-value">@Currency.Format(kpi.TotalSalesVolume)</div>
+                        <div class="kpi-trend up"><i class="bi bi-arrow-up"></i> 26.78% YoY</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-stats success kpi-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="kpi-icon-wrap" style="background: rgba(52,195,143,.1); color: #34C38F;">
+                        <i class="bi bi-activity"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label">@T["dashboard.totalTransactions"]</div>
+                        <div class="kpi-value">@kpi.TotalSalesTransactions.ToString("N0")</div>
+                        <div class="kpi-trend up"><i class="bi bi-arrow-up"></i> 15.24% YoY</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-stats info kpi-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="kpi-icon-wrap" style="background: rgba(80,165,241,.1); color: #50A5F1;">
+                        <i class="bi bi-grid"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label">@T["dashboard.avgPricePerSqft"]</div>
+                        <div class="kpi-value">@Currency.FormatExact(kpi.AveragePricePerSqft)</div>
+                        <div class="kpi-trend up"><i class="bi bi-arrow-up"></i> 5.85% YoY</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-stats warning kpi-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="kpi-icon-wrap" style="background: rgba(241,180,76,.1); color: #F1B44C;">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label">@T["dashboard.topRegion"]</div>
+                        <div class="kpi-value" style="font-size: 1.15rem;">@kpi.TopRegionByValue</div>
+                        <div class="kpi-trend text-muted small">by total value</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FR-004: Interactive market charts with 6M/12M/36M/Custom filter -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h2 class="mb-0 h5"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>@T["dashboard.marketCharts"]</h2>
+            <div class="d-flex align-items-center gap-2" role="group" aria-label="Period filter">
+                <div class="btn-group btn-group-sm" role="group">
+                    @foreach (var p in new[] { 6, 12, 36 })
+                    {
+                        var active = _periodMonths == p && !_customRange;
+                        <button type="button" class="btn @(active ? "btn-primary" : "btn-outline-secondary")"
+                                @onclick="() => SelectPreset(p)">Last @p M</button>
+                    }
+                    <button type="button" class="btn @(_customRange ? "btn-primary" : "btn-outline-secondary")"
+                            @onclick="() => _customRange = true">@T["common.custom"]</button>
+                </div>
+                @if (_customRange)
+                {
+                    <input type="date" class="form-control form-control-sm" style="max-width: 8.5rem;"
+                           @bind="_customFrom" @bind:after="ReloadChartsAsync" />
+                    <span class="text-muted small">→</span>
+                    <input type="date" class="form-control form-control-sm" style="max-width: 8.5rem;"
+                           @bind="_customTo"   @bind:after="ReloadChartsAsync" />
+                }
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="small text-muted mb-1">@T["dashboard.monthlyVolume"]</div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="fr004-volume"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="small text-muted mb-1">@T["dashboard.typeBreakdown"]</div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="fr004-breakdown"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="small text-muted mb-1">@T["dashboard.topZones"]</div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="fr004-topzones"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="small text-muted mb-1">@T["dashboard.psfTrend"]</div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="fr004-psf"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <a href="/map" class="quick-action">
+                <div class="qa-icon"><i class="bi bi-map"></i></div>
+                <div>
+                    <div class="fw-semibold">@T["dashboard.interactiveMap"]</div>
+                    <div class="text-muted small">@T["dashboard.mapDesc"]</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="/transactions" class="quick-action">
+                <div class="qa-icon"><i class="bi bi-receipt"></i></div>
+                <div>
+                    <div class="fw-semibold">@T["nav.transactions"]</div>
+                    <div class="text-muted small">@T["dashboard.txnDesc"]</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="/analytics" class="quick-action">
+                <div class="qa-icon"><i class="bi bi-bar-chart-line"></i></div>
+                <div>
+                    <div class="fw-semibold">@T["nav.analytics"]</div>
+                    <div class="text-muted small">@T["dashboard.analyticsDesc"]</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Top lists -->
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h2 class="mb-0 h5"><i class="bi bi-trophy me-2 text-warning"></i>@T["dashboard.topAreas"]</h2>
+                    <a href="/analytics" class="small">@T["common.next"] →</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    @{
+                        var top5Areas = topAreas.Take(5).ToList();
+                        var maxArea = top5Areas.Max(a => a.TotalValue);
+                    }
+                    @foreach (var a in top5Areas)
+                    {
+                        var pct = (double)(a.TotalValue / maxArea) * 100;
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                <span class="fw-semibold"><span class="badge bg-primary me-2">#@a.Rank</span>@a.Name</span>
+                                <span class="fw-bold text-primary small">@Currency.Format(a.TotalValue)</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" style="width: @pct.ToString("F0")%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h2 class="mb-0 h5"><i class="bi bi-building me-2 text-primary"></i>@T["dashboard.topDevelopers"]</h2>
+                    <a href="/developers" class="small">@T["common.next"] →</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    @{
+                        var top5Dev = topDevelopers.Take(5).ToList();
+                        var maxDev = top5Dev.Max(d => d.TotalValue);
+                    }
+                    @foreach (var d in top5Dev)
+                    {
+                        var pct = (double)(d.TotalValue / maxDev) * 100;
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                <span class="fw-semibold"><span class="badge bg-success me-2">#@d.Rank</span>@d.Name</span>
+                                <span class="fw-bold text-primary small">@Currency.Format(d.TotalValue)</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: @pct.ToString("F0")%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private MapKpiSummaryDto? kpi;
+    private List<RankingRowDto>? topAreas;
+    private List<RankingRowDto>? topDevelopers;
+
+    // FR-004 period filter
+    private int _periodMonths = 12;
+    private bool _customRange = false;
+    private DateTime _customFrom = DateTime.UtcNow.Date.AddMonths(-12);
+    private DateTime _customTo   = DateTime.UtcNow.Date;
+
+    protected override async Task OnInitializedAsync()
+    {
+        kpi = await MapData.GetKpiSummaryAsync();
+        topAreas = await Market.GetAreaRankingsAsync();
+        topDevelopers = await Market.GetDeveloperRankingsAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ReloadChartsAsync();
+        }
+    }
+
+    private async Task SelectPreset(int months)
+    {
+        _customRange = false;
+        _periodMonths = months;
+        await ReloadChartsAsync();
+    }
+
+    private async Task ReloadChartsAsync()
+    {
+        var (from, to) = CurrentRange();
+        var series   = await Market.GetMonthlySalesSeriesAsync(from, to);
+        var slices   = await Market.GetTransactionTypeBreakdownAsync(from, to);
+        var zones    = await Market.GetTopZonesByActivityAsync(from, to, 5);
+
+        await JS.InvokeVoidAsync("iretpChart.render", "fr004-volume", new
+        {
+            type = "line",
+            data = new
+            {
+                labels = series.Labels,
+                datasets = new object[]
+                {
+                    new { label = T["dashboard.monthlyVolume"], data = series.Counts, borderColor = "#066735",
+                          backgroundColor = "rgba(6,103,53,.1)", tension = 0.3, fill = true, borderWidth = 2 }
+                }
+            },
+            options = new
+            {
+                responsive = true, maintainAspectRatio = false,
+                plugins = new { legend = new { display = false } },
+                scales = new { y = new { beginAtZero = true } }
+            }
+        });
+
+        await JS.InvokeVoidAsync("iretpChart.render", "fr004-breakdown", new
+        {
+            type = "doughnut",
+            data = new
+            {
+                labels = slices.Select(s => s.Label).ToArray(),
+                datasets = new object[]
+                {
+                    new { data = slices.Select(s => s.Count).ToArray(),
+                          backgroundColor = new[] { "#066735", "#50A5F1", "#F1B44C", "#34C38F" } }
+                }
+            },
+            options = new
+            {
+                responsive = true, maintainAspectRatio = false,
+                plugins = new { legend = new { position = "bottom" } }
+            }
+        });
+
+        await JS.InvokeVoidAsync("iretpChart.render", "fr004-topzones", new
+        {
+            type = "bar",
+            data = new
+            {
+                labels = zones.Select(z => z.Name).ToArray(),
+                datasets = new object[]
+                {
+                    new { label = T["dashboard.transactions"], data = zones.Select(z => z.TransactionCount).ToArray(),
+                          backgroundColor = "#50A5F1" }
+                }
+            },
+            options = new
+            {
+                indexAxis = "y",
+                responsive = true, maintainAspectRatio = false,
+                plugins = new { legend = new { display = false } }
+            }
+        });
+
+        await JS.InvokeVoidAsync("iretpChart.render", "fr004-psf", new
+        {
+            type = "line",
+            data = new
+            {
+                labels = series.Labels,
+                datasets = new object[]
+                {
+                    new { label = "AED / sqft", data = series.AvgPricePerSqft, yAxisID = "y",
+                          borderColor = "#F1B44C", backgroundColor = "rgba(241,180,76,.1)",
+                          tension = 0.3, borderWidth = 2 },
+                    new { label = T["dashboard.transactions"], data = series.Counts, yAxisID = "y1",
+                          borderColor = "#34C38F", backgroundColor = "rgba(52,195,143,.1)",
+                          tension = 0.3, borderWidth = 2, borderDash = new[] { 4, 4 } }
+                }
+            },
+            options = new
+            {
+                responsive = true, maintainAspectRatio = false,
+                plugins = new { legend = new { position = "bottom" } },
+                scales = new
+                {
+                    y  = new { type = "linear", position = "left",  beginAtZero = true },
+                    y1 = new { type = "linear", position = "right", beginAtZero = true, grid = new { drawOnChartArea = false } }
+                }
+            }
+        });
+    }
+
+    private string RefreshAgeLabel(DateTime asOfUtc)
+    {
+        var age = DateTime.UtcNow - asOfUtc;
+        if (age.TotalMinutes < 1)  return $"just now ({asOfUtc:HH:mm} UTC)";
+        if (age.TotalMinutes < 60) return $"{age.TotalMinutes:N0} min ago ({asOfUtc:HH:mm} UTC)";
+        if (age.TotalHours < 24)   return $"{age.TotalHours:N0} h ago ({asOfUtc:HH:mm} UTC)";
+        return $"{asOfUtc:yyyy-MM-dd HH:mm} UTC";
+    }
+
+    private (DateTime from, DateTime to) CurrentRange()
+    {
+        if (_customRange)
+        {
+            var from = _customFrom > _customTo ? _customTo : _customFrom;
+            var to   = _customFrom > _customTo ? _customFrom : _customTo;
+            return (from, to);
+        }
+        var today = DateTime.UtcNow.Date;
+        return (today.AddMonths(-_periodMonths), today);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        foreach (var id in new[] { "fr004-volume", "fr004-breakdown", "fr004-topzones", "fr004-psf" })
+        {
+            try { await JS.InvokeVoidAsync("iretpChart.destroy", id); } catch { }
+        }
+    }
+}

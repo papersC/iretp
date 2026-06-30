@@ -1,0 +1,49 @@
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public decimal? TrendMoM { get; set; }
+    [Parameter] public decimal? TrendYoY { get; set; }
+    [Parameter] public string Color { get; set; } = "primary";
+
+    private string BgClass => Color switch
+    {
+        "success" => "background: rgba(52,195,143,.12); color: #34C38F;",
+        "warning" => "background: rgba(241,180,76,.12); color: #F1B44C;",
+        "danger" => "background: rgba(244,106,106,.12); color: #F46A6A;",
+        "info" => "background: rgba(80,165,241,.12); color: #50A5F1;",
+        _ => "background: rgba(0,91,153,.12); color: #005B99;"
+    };
+}
+
+<div class="kpi-card h-100">
+    <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-label">@Title</span>
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <div class="kpi-icon-wrap" style="@BgClass">
+                    <i class="bi bi-@Icon"></i>
+                </div>
+            }
+        </div>
+        <div class="kpi-value mb-1">@Value</div>
+        @if (TrendMoM.HasValue || TrendYoY.HasValue)
+        {
+            <div class="d-flex gap-3 mt-auto">
+                @if (TrendMoM.HasValue)
+                {
+                    <span class="kpi-trend @(TrendMoM >= 0 ? "up" : "down")">
+                        <i class="bi bi-@(TrendMoM >= 0 ? "arrow-up-right" : "arrow-down-right") me-1"></i>@($"{Math.Abs(TrendMoM.Value):N1}%") <span class="text-muted fw-normal">MoM</span>
+                    </span>
+                }
+                @if (TrendYoY.HasValue)
+                {
+                    <span class="kpi-trend @(TrendYoY >= 0 ? "up" : "down")">
+                        <i class="bi bi-@(TrendYoY >= 0 ? "arrow-up-right" : "arrow-down-right") me-1"></i>@($"{Math.Abs(TrendYoY.Value):N1}%") <span class="text-muted fw-normal">YoY</span>
+                    </span>
+                }
+            </div>
+        }
+    </div>
+</div>

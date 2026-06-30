@@ -1,0 +1,60 @@
+@* Floating "Ask AI" launcher — visible on every page. Renders a small drawer
+   with suggested prompts; selecting one navigates to /ai-agent carrying the
+   prompt via a querystring the AI Agent page pre-fills on init. *@
+@inject NavigationManager Nav
+@inject LocalizationService T
+
+<div class="iretp-ai-fab" style="@(IsOnAiPage ? "display:none;" : "")">
+    @if (_open)
+    {
+        <div class="iretp-ai-panel shadow-lg">
+            <div class="iretp-ai-panel-head">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-stars text-success"></i>
+                    <strong>@T["nav.aiAgent"]</strong>
+                </div>
+                <button class="btn-close" @onclick="() => _open = false" aria-label="Close"></button>
+            </div>
+            <div class="iretp-ai-panel-body">
+                <p class="small text-muted mb-2">Ask the IRETP Agent anything about DLD data.</p>
+                @foreach (var s in _suggestions)
+                {
+                    <button class="iretp-ai-suggestion" @onclick="() => Launch(s)">
+                        <i class="bi bi-chat-dots me-2"></i>@s
+                    </button>
+                }
+                <button class="btn btn-primary w-100 mt-2" @onclick="() => Launch(null)">
+                    Open full chat <i class="bi bi-arrow-up-right"></i>
+                </button>
+            </div>
+        </div>
+    }
+    <button class="iretp-ai-fab-btn" @onclick="() => _open = !_open" aria-label="Open AI Assistant">
+        @if (_open) { <i class="bi bi-x-lg"></i> }
+        else        { <i class="bi bi-stars"></i> }
+    </button>
+</div>
+
+@code {
+    private bool _open;
+
+    private readonly string[] _suggestions =
+    {
+        "Top 5 areas by sales value",
+        "Average price per sqft in Dubai Marina",
+        "Which developers have the highest market share?",
+        "What's the rental yield in JVC?"
+    };
+
+    private bool IsOnAiPage =>
+        Nav.Uri.Contains("/ai-agent", StringComparison.OrdinalIgnoreCase);
+
+    private void Launch(string? prompt)
+    {
+        _open = false;
+        var target = prompt == null
+            ? "/ai-agent"
+            : "/ai-agent?q=" + Uri.EscapeDataString(prompt);
+        Nav.NavigateTo(target);
+    }
+}

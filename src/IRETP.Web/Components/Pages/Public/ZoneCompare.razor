@@ -1,0 +1,257 @@
+@page "/analytics/compare"
+@rendermode InteractiveServer
+@using IRETP.Application.DTOs
+@inject WebApiClient Api
+
+<PageTitle>IRETP — Zone Comparison</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="bar-chart-steps"
+                  Title="Zone Comparison"
+                  Subtitle="@($"Side-by-side comparison of up to {MaxZones} Dubai zones across price, yield, volume and developer mix (RFP AN-005).")">
+        <ActionsContent>
+            <span class="badge bg-light text-dark border">
+                @_selected.Count / @MaxZones zones selected
+            </span>
+        </ActionsContent>
+    </ModuleBanner>
+
+    <!-- Zone picker -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0 h5">Pick zones</h2>
+            @if (_selected.Count > 0)
+            {
+                <button class="btn btn-sm btn-outline-secondary" @onclick="ClearSelection">
+                    <i class="bi bi-x-circle"></i> Clear
+                </button>
+            }
+        </div>
+        <div class="card-body">
+            @if (_zones is null)
+            {
+                <div class="d-flex flex-wrap gap-2">
+                    @for (int i = 0; i < 12; i++)
+                    {
+                        <Skeleton Width="@($"{60 + (i * 7) % 50}px")" Height="32px" />
+                    }
+                </div>
+            }
+            else
+            {
+                <input class="form-control form-control-sm mb-3" placeholder="Filter zones…"
+                       @bind="_filter" @bind:event="oninput" aria-label="Filter zones" />
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var z in FilteredZones())
+                    {
+                        var isSelected = _selected.Contains(z.ZoneId);
+                        var disabled = !isSelected && _selected.Count >= MaxZones;
+                        <button type="button"
+                                class="btn btn-sm @(isSelected ? "btn-primary" : "btn-outline-secondary")"
+                                disabled="@disabled"
+                                @onclick="() => Toggle(z.ZoneId)">
+                            @z.Name
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <SkeletonKpiGrid Count="3" ColClass="col-md-4" />
+        <Skeleton Width="100%" Height="280px" />
+    }
+    else if (_comparison.Count > 0)
+    {
+        <!-- Comparison grid -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white"><h2 class="mb-0 h5">Side-by-side metrics</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:25%;">Metric</th>
+                            @foreach (var z in _comparison)
+                            {
+                                <th class="text-end">@z.ZoneName</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Transactions (last 12 months)</td>
+                            @foreach (var z in _comparison)
+                            { <td class="text-end fw-semibold">@z.TotalTransactions12Months.ToString("N0")</td> }
+                        </tr>
+                        <tr><td>Avg sale price per sqft</td>
+                            @foreach (var z in _comparison)
+                            { <td class="text-end">AED @z.AverageSalePricePerSqft.ToString("N0")</td> }
+                        </tr>
+                        <tr><td>Avg gross rental yield</td>
+                            @foreach (var z in _comparison)
+                            { <td class="text-end">@z.AverageGrossRentalYield.ToString("F2")%</td> }
+                        </tr>
+                        <tr><td>Price trend (3m vs 6m)</td>
+                            @foreach (var z in _comparison)
+                            { <td class="text-end">@TrendCell(z.PriceTrend, z.PriceTrendPercentage)</td> }
+                        </tr>
+                        <tr><td>Active off-plan projects</td>
+                            @foreach (var z in _comparison)
+                            { <td class="text-end">@z.ActiveOffPlanProjects.ToString("N0")</td> }
+                        </tr>
+                        <tr><td>Completed projects</td>
+                            @foreach (var z in _comparison)
+                            { <td class="text-end">@z.CompletedProjects.ToString("N0")</td> }
+                        </tr>
+                        <tr><td>Top developers</td>
+                            @foreach (var z in _comparison)
+                            {
+                                <td class="text-end small">
+                                    @if (z.TopDevelopers.Count == 0)
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                    else
+                                    {
+                                        @string.Join(", ", z.TopDevelopers.Select(d => $"{d.Name} ({d.ProjectCount})"))
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Side-by-side bar charts (price + yield) -->
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h6 class="mb-0">Avg price per sqft</h6></div>
+                    <div class="card-body">
+                        @foreach (var z in _comparison)
+                        {
+                            var pct = MaxPrice == 0 ? 0 : (double)(z.AverageSalePricePerSqft / MaxPrice) * 100;
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                    <span class="small">@z.ZoneName</span>
+                                    <span class="fw-bold text-primary">AED @z.AverageSalePricePerSqft.ToString("N0")</span>
+                                </div>
+                                <div class="progress" style="height:8px;">
+                                    <div class="progress-bar" style="width:@pct.ToString("F0")%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h6 class="mb-0">Gross rental yield</h6></div>
+                    <div class="card-body">
+                        @foreach (var z in _comparison)
+                        {
+                            var pct = MaxYield == 0 ? 0 : (double)(z.AverageGrossRentalYield / MaxYield) * 100;
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                    <span class="small">@z.ZoneName</span>
+                                    <span class="fw-bold text-success">@z.AverageGrossRentalYield.ToString("F2")%</span>
+                                </div>
+                                <div class="progress" style="height:8px;">
+                                    <div class="progress-bar bg-success" style="width:@pct.ToString("F0")%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (_selected.Count > 0)
+    {
+        <div class="alert alert-warning">No data returned for the selected zones.</div>
+    }
+    else
+    {
+        <div class="alert alert-info">Pick up to @MaxZones zones above to start comparing.</div>
+    }
+</div>
+
+@code {
+    private const int MaxZones = 5;
+
+    private List<ZoneHeatmapItem>? _zones;
+    private readonly HashSet<Guid> _selected = new();
+    private List<ZoneDetailDto> _comparison = new();
+    private string _filter = "";
+    private bool _loading;
+
+    private decimal MaxPrice => _comparison.Count == 0 ? 0 : _comparison.Max(z => z.AverageSalePricePerSqft);
+    private decimal MaxYield => _comparison.Count == 0 ? 0 : _comparison.Max(z => z.AverageGrossRentalYield);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _zones = await Api.GetZoneHeatmapAsync() ?? new(); } catch { _zones = new(); }
+    }
+
+    private IEnumerable<ZoneHeatmapItem> FilteredZones() =>
+        string.IsNullOrWhiteSpace(_filter)
+            ? _zones!
+            : _zones!.Where(z => z.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase));
+
+    private async Task Toggle(Guid id)
+    {
+        if (_selected.Contains(id)) _selected.Remove(id);
+        else if (_selected.Count < MaxZones) _selected.Add(id);
+        await RefreshComparison();
+    }
+
+    private async Task ClearSelection()
+    {
+        _selected.Clear();
+        _comparison = new();
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private async Task RefreshComparison()
+    {
+        if (_selected.Count == 0)
+        {
+            _comparison = new();
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            _comparison = await Api.CompareZonesAsync(_selected) ?? new();
+        }
+        catch
+        {
+            _comparison = new();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static RenderFragment TrendCell(string trend, decimal pct) => __b =>
+    {
+        var (icon, cls) = trend switch
+        {
+            "up"   => ("bi-arrow-up-right",   "text-success"),
+            "down" => ("bi-arrow-down-right", "text-danger"),
+            _      => ("bi-dash",              "text-muted")
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", cls);
+        __b.OpenElement(2, "i");
+        __b.AddAttribute(3, "class", $"bi {icon} me-1");
+        __b.CloseElement();
+        __b.AddContent(4, $"{pct:F1}%");
+        __b.CloseElement();
+    };
+}

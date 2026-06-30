@@ -1,0 +1,116 @@
+### TechnicalProposal_IRETP.docx: 230 paras, 35 tables
+  H1: 1. Executive Summary
+  H1: 2. Solution Architecture Overview
+  H1: 3. External Public Portal — Functional Requirements (RFP §3)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 4. Interactive Analytics Engine (RFP §4)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 5. Real Estate AI Agent (RFP §5)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 6. Investor Notification & Alert System (RFP §6)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 7. Multilingual Requirements (RFP §7)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 8. Internal Platform — Early Warning Risk System (RFP §8)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 9. Developer Performance & Rating + Escrow (RFP §9 & §8.4)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 10. Non-Functional, Security & RBAC (RFP §10)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 11. Technology & Hosting Architecture (RFP §11)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 12. DLD Data Familiarisation & Analytics Assessment (RFP §12)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 13. Phased Delivery Plan (RFP §13)
+  H3: Implementation Mapping
+  H3: Highlights
+  H1: 14. Warranty & Technical Support (RFP §15)
+  H3: Implementation Mapping
+  H3: Highlights
+  H1: 15. Acceptance Criteria (RFP §17)
+  H3: Implementation Mapping
+  H3: Highlights
+  H1: 16. Data Governance, Privacy & Ownership (RFP §19)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 17. Additional Recommended Features (RFP §20)
+  H3: Implementation Mapping
+  H3: Highlights
+  H3: Code References
+  H1: 18. Value-Add Engineering Improvements (Vendor Commitments)
+  H3: Implementation Mapping
+  H3: Highlights
+  H1: 19. Closing Statement
+
+### FinancialProposal_IRETP.docx: 37 paras, 9 tables
+  H1: 1. Preamble & Disclaimer
+  H1: 2. Executive Cost Summary
+  H1: 3. Infrastructure & Hosting Setup Costs (RFP §14.1 — One-Time CAPEX)
+  H1: 4. Software Licences & Subscriptions (RFP §14.2 — First Year)
+  H1: 5. Application Development & Implementation (RFP §14.3 — By Phase)
+  H1: 6. Annual Recurring Costs (RFP §14.4 — OPEX)
+  H1: 7. Payment Milestone Schedule
+  H1: 8. Value-Add Items (Included at No Extra Charge)
+
+### ComplianceMatrix_IRETP.docx: 61 paras, 22 tables
+  H1: 1. How to Read this Matrix
+  H1: 2. Compliance Summary
+  H1: 3. Detailed Compliance Matrix
+  H2: §3 — External Public Portal
+  H2: §4 — Interactive Analytics
+  H2: §5 — Real Estate AI Agent
+  H2: §6 — Investor Notifications
+  H2: §7 — Multilingual Requirements
+  H2: §8 — EWRS & Escrow Monitoring
+  H2: §9 — Developer Performance & Rating
+  H2: §10 — Non-Functional, Security & RBAC
+  H2: §11 — Technology & Hosting
+  H2: §12 — Data Familiarisation
+  H2: §13 — Phased Delivery Plan
+  H2: §14 — Cost Structure
+  H2: §15 — Warranty & Support
+  H2: §16 — Vendor Qualifications
+  H2: §17 — Acceptance Criteria
+  H2: §18 — Proposal Evaluation
+  H2: §19 — Data Governance & Privacy
+  H2: §20 — Additional Recommended Features
+  H2: Vendor Commitments (Value-Add)
+  H1: 4. Acceptance Statement
+
+### AppendixA_DESC_ISR_IRETP.docx: 47 paras, 13 tables
+  H1: 1. Purpose & Scope
+  H1: 2. Control Summary
+  H1: 3. Detailed Control Mapping
+  H2: Domain: Governance
+  H2: Domain: Asset Management
+  H2: Domain: HR Security
+  H2: Domain: Physical
+  H2: Domain: Operations
+  H2: Domain: Access Control
+  H2: Domain: Cryptography
+  H2: Domain: Incident Mgmt
+  H2: Domain: Business Continuity
+  H2: Domain: Compliance
+  H1: 4. Residual Risks & Remediation Plan
+  H1: 5. Acceptance Statement

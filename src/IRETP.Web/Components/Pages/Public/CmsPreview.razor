@@ -1,0 +1,107 @@
+@page "/cms/preview/{Token}"
+@rendermode InteractiveServer
+@inject WebApiClient Api
+@inject UiStateService Ui
+
+<PageTitle>IRETP — CMS preview</PageTitle>
+
+<div class="container py-4">
+    <div class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-eye fs-3"></i>
+        <div>
+            <strong>Preview view — not live on the public portal.</strong>
+            <div class="small">
+                This link is shared with DLD senior management for approval.
+                It is single-use-scoped and expires automatically.
+            </div>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="card shadow-sm p-4">
+            <Skeleton Width="60%" Height="1.5rem" Class="mb-3" />
+            <Skeleton Width="100%" Height=".875rem" Class="mb-2" />
+            <Skeleton Width="95%" Height=".875rem" Class="mb-2" />
+            <Skeleton Width="80%" Height=".875rem" Class="mb-2" />
+            <Skeleton Width="90%" Height=".875rem" />
+        </div>
+    }
+    else if (_content is null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Preview link is invalid or has expired. Ask the content owner for a fresh link.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small text-muted">CMS preview</div>
+                    <h4 class="mb-0">@_content.PageKey / @_content.SectionKey</h4>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-primary">v@(_content.VersionNumber)</span>
+                    <div class="small text-muted mt-1">
+                        Snapshot @_content.SnapshotAt.ToString("yyyy-MM-dd HH:mm") ·
+                        expires @_content.ExpiresAt.ToString("yyyy-MM-dd HH:mm")
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                        <button class="nav-link @(_locale == "en" ? "active" : "")" @onclick='() => _locale = "en"'>
+                            English
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link @(_locale == "ar" ? "active" : "")" @onclick='() => _locale = "ar"'>
+                            العربية
+                        </button>
+                    </li>
+                </ul>
+
+                <div dir="@(_locale == "ar" ? "rtl" : "ltr")"
+                     class="cms-preview-body p-3 border rounded bg-light">
+                    @((MarkupString)(_locale == "ar" ? _content.ContentAr : _content.ContentEn))
+                </div>
+
+                <div class="small text-muted mt-3">
+                    Content type: <code>@_content.ContentType</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-secondary">
+            <div class="card-body small text-muted">
+                <strong>For reviewers:</strong> No actions are available on this page.
+                Approve by replying to the DLD team who shared the link — they will publish the
+                change to production once approval is received.
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Token { get; set; } = "";
+
+    private CmsPreviewContentDto? _content;
+    private bool _loading = true;
+    private string _locale = "en";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _content = await Api.GetCmsPreviewAsync(Token);
+            _locale = Ui.Language == "ar" ? "ar" : "en";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -1,0 +1,134 @@
+================== AppendixA_DESC_ISR_IRETP ==================
+Dubai Land Department
+RFP No. DLD-IRETP-2026-001
+Appendix A — DESC ISR v3 Control Mapping
+Integrated Real Estate Transparency Platform (IRETP) — RFP DLD-IRETP-2026-001 Security Compliance Evidence
+
+## H1: 1. Purpose & Scope
+This document provides a clause-by-clause mapping of the Dubai Electronic Security Centre (DESC) Information Security Regulation version 3 (ISR v3) controls to the IRETP platform's implementation. It serves as the vendor's pre-VAPT self-assessment and supports the DESC compliance submission required before Phase 3 acceptance (RFP §10.2.1).
+Status definitions:
+I: Implemented — control is active in the codebase / hosting layer today.
+PI: Partially Implemented — core control is in place; a process or configuration item is documented for completion in the operational runbook (Phase 1).
+P: Planned — control will be fully in place before Phase 3 VAPT. Owner and due date tracked in the project risk register.
+
+## H1: 2. Control Summary
+
+## H1: 3. Detailed Control Mapping
+
+## H2: Domain: Governance
+
+## H2: Domain: Asset Management
+
+## H2: Domain: HR Security
+
+## H2: Domain: Physical
+
+## H2: Domain: Operations
+
+## H2: Domain: Access Control
+
+## H2: Domain: Cryptography
+
+## H2: Domain: Incident Mgmt
+
+## H2: Domain: Business Continuity
+
+## H2: Domain: Compliance
+
+## H1: 4. Residual Risks & Remediation Plan
+
+## H1: 5. Acceptance Statement
+The vendor certifies that this ISR v3 self-assessment is accurate as of the proposal submission date and commits to resolving all Partial and Planned controls before the Phase 3 DESC-authorised VAPT engagement. The vendor will engage a DESC-approved penetration testing firm and submit the final VAPT report as a Phase 3 acceptance deliverable.
+
+--- TABLES ---
+
+[T0] (3r x 2c)
+Programme | Integrated Real Estate Transparency Platform (IRETP)
+Document Date | May 2026
+Classification | Confidential — Vendor Proposal
+
+[T1] (11r x 5c)
+Control Domain | Implemented | Partial | Planned | Total
+Access Control | 6 | 1 | 0 | 7
+Asset Management | 2 | 1 | 0 | 3
+Business Continuity | 1 | 0 | 1 | 2
+Compliance | 3 | 0 | 1 | 4
+Cryptography | 2 | 0 | 0 | 2
+Governance | 4 | 1 | 0 | 5
+HR Security | 1 | 0 | 2 | 3
+Incident Mgmt | 3 | 0 | 0 | 3
+Operations | 6 | 0 | 0 | 6
+Physical | 2 | 0 | 0 | 2
+
+[T2] (6r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+1.1 | Information Security Policy | I | Security requirements documented in this proposal (§10). Policies enforced via AuthorizationPolicies, AuditLogService and rate limiter. | AuthorizationPolicies.cs / AuditLogService.cs
+1.2 | Roles & Responsibilities | I | RBAC matrix (UserRoles + AuthorizationPolicies) assigns least-privilege roles: DldViewer, DldOperator, DldSupervisor, SystemAdministrator, RegisteredInvestor. | AuthorizationPolicies.cs / UserRole.cs
+1.3 | Risk Assessment Process | I | Risks identified during design; EWRS surfaces risk posture in real-time to DLD leadership. Annual risk review in support contract. | RiskEngineService.cs
+1.4 | Security Exception Management | PI | Exceptions managed via AuditLog with timestamp + approver. Formal exception register process to be formalised in the operational runbook. | AuditLogService.cs
+1.5 | Third-party & Vendor Risk | I | AI provider UAE-residency requirement enforced at infrastructure level; all third-party libraries scanned (dotnet list package --vulnerable in CI); contractual security clauses with SMS/SMTP providers. | WebAPI/Program.cs / AdminAPI/Program.cs
+
+[T3] (4r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+2.1 | Asset Inventory | I | Solution comprises 3 hosts (WebAPI, AdminAPI, Web), 1 SQL DB, 1 Redis, 1 OneLake workspace, 1 AI model endpoint, 1 SMTP relay, 1 SMS gateway. Infrastructure-as-code manifests enumerate all assets. | Infrastructure deployment manifests
+2.2 | Data Classification | I | Data classified as: Public (price/rental index, transactions), Internal (risk scores, escrow details, audit logs), Confidential (beneficial ownership, personal investor data). BeneficialOwner and ApplicationUser entities tagged accordingly. | Domain/Entities/* entity XML comments
+2.3 | Media & Asset Disposal | PI | Database purge procedures and right-to-erasure workflow in place via account deletion endpoint; formal media-destruction policy for on-premises option in operational runbook. | AccountController.cs
+
+[T4] (4r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+3.1 | Pre-employment Screening | P | Vendor staff background-check process documented in vendor qualification dossier (RFP §16). Completed before project start. | Vendor HR policy
+3.2 | Security Awareness Training | P | Mandatory security awareness training for all project staff and DLD platform administrators delivered in project kickoff. | Training schedule (P1 M1)
+3.3 | Disciplinary Process | I | Every privileged action is recorded in AuditLog with identity and timestamp, enabling accountability and disciplinary investigation. | AuditLogService.cs
+
+[T5] (3r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+4.1 | Secure Areas | I | Option A/C: Azure UAE North datacentre physical security (ISO 27001 certified). Option B: DLD-approved DC physical controls. Administrative access via Azure Portal with MFA only. | Hosting design document
+4.2 | Equipment Security | I | All application tiers run in managed services (PaaS); no bare-metal managed by the vendor. Developer workstations protected by full-disk encryption + Defender for Endpoint. | Vendor workstation policy
+
+[T6] (7r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+5.1 | Change Management | I | All changes to production deployed via CI/CD pipelines (GitHub Actions / Azure Pipelines) with peer-reviewed pull requests and staged environments. No direct production access. | CI/CD pipeline definitions
+5.2 | Capacity Management | I | Azure App Service auto-scale rules and Redis Premium tier elasticity. Capacity reviewed against OpenTelemetry metrics monthly. | WebAPI/AdminAPI App Service config
+5.3 | Malware Protection | I | Microsoft Defender for Cloud enabled on all Azure resources. Dependency scanning in CI (dotnet list package --vulnerable). Container images scanned before push. | Azure Defender / CI pipeline
+5.4 | Backup & Recovery | I | SQL geo-redundant backups (35-day retention); Redis persistence (AOF); OneLake recycle-bin policy. RPO ≤ 4 h; RTO ≤ 8 h. | Hosting design / Azure Backup
+5.5 | Logging & Monitoring | I | Structured logging via Serilog sinks to Seq / Azure Monitor. OpenTelemetry traces + metrics to OTLP. All privileged events in AuditLog (queryable from Admin/AuditLogs.razor). Alerts on anomalies. | AuditLogService.cs / OpenTelemetry config
+5.6 | Vulnerability Management | I | OWASP ZAP scripted scans on every deployment to staging. DESC-authorised VAPT before Phase 3 go-live. Monthly dependency scan report. | CI/CD pipeline / VAPT schedule
+
+[T7] (8r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+6.1 | Access Control Policy | I | Least-privilege RBAC via AuthorizationPolicies (internal.read, internal.edit, internal.manage, internal.admin, external.investor). No shared accounts; each user has a named ApplicationUser identity. | AuthorizationPolicies.cs
+6.2 | User Registration & Provisioning | I | User registration via Auth/Register.razor with email verification. Role assignment by SystemAdministrator only via UserAdminController. | UserAdminController.cs / Register.razor
+6.3 | Privileged Access Management | I | SystemAdmin policy restricts to SystemAdministrator role; Hangfire dashboard read-only for admin; AdminAPI not reachable from the public internet (private network or VPN). | AdminAPI network config / AuthorizationPolicies.cs
+6.4 | Authentication | I | JWT bearer (HS256, zero clock-skew) + federated OIDC (UAE Pass / Azure AD / Keycloak). Refresh-token rotation. CAPTCHA on registration and password reset. | WebAPI/Program.cs / CaptchaController.cs
+6.5 | Session Management | I | Short-lived access tokens (configurable TTL); sliding refresh tokens with family rotation; logout revokes the token family. | RefreshToken entity / AuthController.cs
+6.6 | Network Access Control | I | AdminAPI bound to private VNET only (not reachable from public internet). WebAPI behind WAF (OWASP ruleset). TLS 1.2+ enforced everywhere. CORS allow-list (not wildcard in production). | WebAPI/Program.cs (CORS) / hosting network config
+6.7 | Remote Access | PI | Developer access to production via Azure Bastion / jump-box with MFA; no direct SSH from developer laptops. Formal remote-access policy in operational runbook. | Hosting design / operational runbook (P1)
+
+[T8] (3r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+7.1 | Cryptographic Controls | I | JWT signed with HMAC-SHA256; passwords hashed with ASP.NET Core Identity (PBKDF2 + salt); HMAC-SHA256 unsubscribe tokens; TLS 1.2+ for all transport; Azure Key Vault for secrets in production. | WebAPI/Program.cs / HmacUnsubscribeTokenService.cs
+7.2 | Key Management | I | JWT signing key sourced from Azure Key Vault (IOptionsMonitor); key rotation supported without redeployment. Secrets never in appsettings.json in production. | WebAPI/Program.cs / Key Vault binding
+
+[T9] (4r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+8.1 | Incident Response Procedure | I | EWRS L1–L4 escalation framework mirrors incident severity; Sev 1/2 alerting via AlertEscalationService. Playbooks.razor provides DLD staff step-by-step SOPs. | AlertEscalationService.cs / Admin/Playbooks.razor
+8.2 | Reporting & Learning | I | AuditLog records every security event; monthly support report includes incident register, root-cause summaries and recommended improvements. | AuditLogService.cs / support SLA §15.3
+8.3 | Evidence Preservation | I | AuditLog is append-only; EscrowTransaction is immutable. Logs retained for 12 months on the logging sink. | AuditLogService.cs / EscrowTransaction entity
+
+[T10] (3r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+9.1 | BCM Planning | I | RTO ≤ 8 h, RPO ≤ 4 h. Azure cross-AZ replicas for SQL and Redis. OneLake geo-redundancy. App Service slot-swap deployment for zero downtime releases. | Hosting design / Azure SLA documentation
+9.2 | DR Testing | P | Annual DR drill scheduled in Q4 of each operating year. Results reported to DLD in the monthly support pack. | DR test plan (to be provided with operational runbook)
+
+[T11] (5r x 5c)
+Control ID | Control Title | Status | IRETP Implementation | Evidence
+10.1 | UAE Legal & Regulatory Compliance | I | UAE Federal PDPL honoured through UserConsentService (opt-in/out), minimum-data design, erasure workflow. All data and AI inference remain in the UAE. | UserConsentService.cs / hosting design
+10.2 | Intellectual Property | I | All platform IP vests in DLD on payment (RFP §19.1). Open-source components are permissively licensed (MIT/Apache 2). License SBOM generated by CI. | Licence SBOM / Financial Proposal §19
+10.3 | Privacy & Personal Data Protection | I | BeneficialOwner and investor personal data tagged. Every read by an internal user logged with reason code. Right-to-erasure endpoint exposed on AccountController. | UserConsentService.cs / AccountController.cs / AuditLogService.cs
+10.4 | DESC Compliance Reporting | P | DESC ISR v3 compliance self-assessment submitted with proposal (this document). Annual external audit scheduled in operating year. | This document / DESC audit schedule
+
+[T12] (4r x 5c)
+Risk ID | Risk Description | Current State | Likelihood | Remediation
+R-1 | Partially Implemented controls | 3 controls (1.4, 2.3, 6.7) marked PI | Medium | Operational runbook and formal process completed by Phase 1 M1
+R-2 | Planned controls pre-VAPT | 3 controls (3.1, 3.2, 9.2) marked P | Low | Completed before Phase 3 VAPT; tracked in risk register
+R-3 | AI model provider UAE residency | Depends on provider UAE endpoint availability | Medium | Provider contractually bound to UAE inference; UAE-hosted open-source fallback (Llama/Mistral) available

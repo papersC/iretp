@@ -1,0 +1,217 @@
+@page "/mortgage"
+@rendermode InteractiveServer
+@inject WebApiClient Api
+@inject CurrencyService Currency
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP — Mortgage & debt transparency</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="bank"
+                  Title="Mortgage &amp; debt market transparency"
+                  Subtitle="Registered mortgage activity derived from DLD transaction records (RFP Section 20). Flagged by JLL GRETI 2024 as a key UAE improvement area for institutional investors.">
+        <ActionsContent>
+            <div class="btn-group btn-group-sm">
+                <button class="btn @(_lookback == 12 ? "btn-primary" : "btn-outline-primary")" @onclick='() => SetLookback(12)'>12m</button>
+                <button class="btn @(_lookback == 24 ? "btn-primary" : "btn-outline-primary")" @onclick='() => SetLookback(24)'>24m</button>
+                <button class="btn @(_lookback == 60 ? "btn-primary" : "btn-outline-primary")" @onclick='() => SetLookback(60)'>5y</button>
+            </div>
+        </ActionsContent>
+    </ModuleBanner>
+
+    @if (_loading)
+    {
+        <SkeletonKpiGrid Count="5" ColClass="col-6 col-md-4 col-xl" />
+        <Skeleton Width="100%" Height="320px" Class="mb-3" />
+    }
+    else if (_data is null)
+    {
+        <NetworkError Service="Mortgage" />
+    }
+    else
+    {
+        <!-- KPIs -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4 col-xl">
+                <div class="card shadow-sm text-center py-3 h-100">
+                    <div class="h3 fw-bold text-primary mb-0">@_data.TotalMortgageRecords.ToString("N0")</div>
+                    <small class="text-muted">Registered mortgages (@(_lookback)m)</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl">
+                <div class="card shadow-sm text-center py-3 h-100">
+                    <div class="h3 fw-bold text-success mb-0">@Currency.Format(_data.TotalRegisteredValueAed)</div>
+                    <small class="text-muted">Total registered value</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl">
+                <div class="card shadow-sm text-center py-3 h-100">
+                    <div class="h3 fw-bold text-info mb-0">@Currency.Format(_data.AverageMortgageValueAed)</div>
+                    <small class="text-muted">Avg mortgage size</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl">
+                <div class="card shadow-sm text-center py-3 h-100">
+                    <div class="h3 fw-bold text-warning mb-0">@_data.MortgageValueShareOfAllTransactionsPct.ToString("F1")%</div>
+                    <small class="text-muted">Share of all transactions</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl">
+                <div class="card shadow-sm text-center py-3 h-100">
+                    <div class="h3 fw-bold @(_data.MomValueChangePct >= 0 ? "text-success" : "text-danger") mb-0">
+                        @(_data.MomValueChangePct >= 0 ? "+" : "")@_data.MomValueChangePct.ToString("F1")%
+                    </div>
+                    <small class="text-muted">MoM change (value)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h2 class="mb-0 h5">Monthly registered mortgage value</h2></div>
+                    <div class="card-body" style="height: 280px; position:relative;">
+                        <canvas id="mortgageTrend"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h2 class="mb-0 h5">By property type</h2></div>
+                    <div class="card-body" style="height: 280px; position:relative;">
+                        <canvas id="mortgageTypes"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone table -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white"><h2 class="mb-0 h5">Zone-level mortgage activity</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Zone</th>
+                            <th class="text-end">Mortgages</th>
+                            <th class="text-end">Value</th>
+                            <th class="text-end">% of zone volume</th>
+                            <th class="text-end">LTV proxy (mortgage ÷ sales)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var z in _data.ByZone)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@z.ZoneName</td>
+                                <td class="text-end">@z.MortgageCount.ToString("N0")</td>
+                                <td class="text-end">@Currency.Format(z.MortgageValue)</td>
+                                <td class="text-end">@z.MortgageSharePct.ToString("F1")%</td>
+                                <td class="text-end">
+                                    <div class="d-flex align-items-center gap-2 justify-content-end">
+                                        <div class="progress" style="height:6px; width:80px;">
+                                            <div class="progress-bar" style="width:@(Math.Min(z.AverageLtvProxyPct, 100).ToString("F0"))%"></div>
+                                        </div>
+                                        <span>@z.AverageLtvProxyPct.ToString("F1")%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (_data.ByZone.Count == 0)
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-3">No mortgage activity in the selected window.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private MortgageDashboardDto? _data;
+    private bool _loading = true;
+    private int _lookback = 24;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        _loading = true;
+        try
+        {
+            _data = await Api.GetMortgageDashboardAsync(_lookback);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SetLookback(int months)
+    {
+        if (_lookback == months) return;
+        _lookback = months;
+        await Load();
+        await InvokeAsync(StateHasChanged);
+        await RenderCharts();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_data is null) return;
+        if (firstRender || _data.Trend.Count > 0) await RenderCharts();
+    }
+
+    private async Task RenderCharts()
+    {
+        if (_data is null) return;
+
+        var trendConfig = new
+        {
+            type = "bar",
+            data = new
+            {
+                labels = _data.Trend.Select(p => p.Label).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = "Value (AED)",
+                        data = _data.Trend.Select(p => (double)p.Value).ToArray(),
+                        backgroundColor = "#1B4F72"
+                    }
+                }
+            },
+            options = new { responsive = true, maintainAspectRatio = false, plugins = new { legend = new { display = false } } }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "mortgageTrend", trendConfig); } catch { }
+
+        var typeConfig = new
+        {
+            type = "doughnut",
+            data = new
+            {
+                labels = _data.ByPropertyType.Select(p => p.PropertyType).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        data = _data.ByPropertyType.Select(p => (double)p.Value).ToArray(),
+                        backgroundColor = new[] { "#066735", "#1B4F72", "#F1B44C", "#6B2F9C", "#C0392B" }
+                    }
+                }
+            },
+            options = new { responsive = true, maintainAspectRatio = false, plugins = new { legend = new { position = "bottom" } } }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "mortgageTypes", typeConfig); } catch { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "mortgageTrend"); } catch { }
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "mortgageTypes"); } catch { }
+    }
+}

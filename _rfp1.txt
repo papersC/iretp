@@ -1,0 +1,358 @@
+﻿PAGES: 9
+--- PAGE 1 ---
+   
+Page 1 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+ 
+ 
+Invitation to Submit a Request for Proposal (RFP) 
+ 
+ 
+Subject:  Integrated Real Estate Transparency Platform 
+ 
+Dubai Land Department invites interested parties to submit a proposal in accordance with the attached 
+RFP. 
+ 
+Important Dates 
+ 
+Activity Deadline 
+Releasing of RFP 22-04-2026 
+Deadline for receiving the queries 28-04-2026 
+Answering the queries 05-05-2026 
+Submission of the Proposal (Closing date) 14-05-2026 
+ 
+We look forward to receiving your proposal. 
+  
+--- PAGE 2 ---
+   
+Page 2 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+1. Introduction 
+(To be completed by the requesting department) 
+The Dubai Land Department (DLD) hereby issues this Request for Proposal (RFP) for the design, 
+development, deployment, maintenance, and post -go-live support of the Integrated Real Estate 
+Transparency Platform (IRETP). The primary strategic objective is to advance Dubai's standing in the JLL 
+Global Real Estate Transparency Index (GRETI) and to reinforce investor confidence among international 
+financial institutions, sovereign wealth funds, and global investors. 
+The platform directly supports the Dubai Economic Agenda D33 and the Smart Dubai Strategy by providing 
+open, accurate, real-time, and interactive real estate data to the public while equipping DLD leadership with 
+powerful internal risk management and developer oversight tools. 
+General Introduction 
+Dubai Land Department is a government entity falls under the umbrella of the Dubai Executive Council 
+responsible for registering, regulating properties, promoting real estate investment and settlement of rent 
+disputes. In addition, the dept. is responsible to educate and raise the awareness of real estate stakeholders.  
+Dubai Land Department provides a comprehensive range of real estate services, most notably the 
+responsibility of overlooking sales transactions, regulations, and registration of all transactions in real estate 
+market. Playing a significant role in the necessary improvement processes to accelerate DubaiΓÇÖs real estate 
+sector.  
+1.1 Dubai Land Department 
+Dubai Land Department operates under the authorities stipulated in the following laws: 
+ΓÇó Law No. 7 of 2013 ΓÇô Regarding the Dubai Land Department. 
+ΓÇó Law No. (4) of 2019 ΓÇô Regarding the Real Estate Regulatory Agency. 
+In consideration of the above-mentioned laws, the main objectives of Dubai Land Department are: 
+ΓÇó Achieving the governmentΓÇÖs strategic objectives in the real estate sector in full. 
+ΓÇó Keeping pace with the latest global real estate registration systems. 
+ΓÇó Enhancing the efficiency of real estate regulation and oversight in the Emirate. 
+ΓÇó Managing and developing the real estate leasing sector in the Emirate. 
+ΓÇó Continuously updating and developing the real estate registration system in line with the latest global 
+systems. 
+ΓÇó Encouraging investment in the real estate sector by creating a distinguished environment for investors. 
+ΓÇó Enhancing the contribution of the real estate sector to the comprehensive development of the Emirate. 
+ΓÇó Planning and developing an integrated strategy for real estate development within the Emirate to achieve 
+excellence at the international level. 
+ 
+For more details about DL D Laws & Regulations  of Dubai Land Department , please  visit our website     
+www.dubailand.gov.ae  
+--- PAGE 3 ---
+   
+Page 3 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+1.2  Nature of Work and Classification of Customers: 
+Dubai Land Department has the following main operational and business sectors: 
+ΓÇó Real Estate Registration Sector : This sector specializes in developing and updating the DepartmentΓÇÖs 
+systems and procedures, ensuring accurate documentation of all real estate transactions, auditing all 
+completed real estate transactions, managing the real estate valuation system, in addition to its role in 
+developing and updating systems and procedures related to rental affairs (Ejari s ystem), ensuring the 
+documentation of all rental transactions, and other related tasks. 
+ΓÇó Real Estate Regulatory Agency (RERA): RERA specializes in managing the real estate licensing system, 
+real estate training system, disseminating real estate knowledge, o rganizing and managing escrow 
+accounts for real estate development, monitoring and supervising them, setting standards, principles, 
+and conditions governing ownersΓÇÖ associations and jointly owned property management companies, and 
+ensuring the preparation of the special register for jointly owned properties. In addition, it audits ownersΓÇÖ 
+association operations, handles investor inquiries and complaints related to ownersΓÇÖ committees or 
+related entities, takes necessary actions, and develops and manages the real estate oversight system, 
+among others. 
+ΓÇó Corporate Support Sector : The Corporate Support Sector includes all supporting activities such as 
+talent acquisition, development and training, performance management, contract and asset 
+management, administrative support and assistance, preparation of financial budgets, development of 
+marketing and communication strategies, corporate identity development, preparation of the digital 
+transformation strategy, provision of secure infrastructure, and technical support. 
+ 
+1.3    DLD Key Services: 
+The Key services provided by DLD are: 
+ΓÇó Jointly owned property services 
+ΓÇó Real estate development services  
+ΓÇó Real estate leasing services 
+ΓÇó Real estate residency services  
+ΓÇó Real estate transaction services  
+ΓÇó Real estate ownership data services 
+ 
+  
+--- PAGE 4 ---
+   
+Page 4 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+2. Scope of Work  
+ 
+The selected vendor shall design, develop, integrate, and deploy an end-to-end Integrated Real Estate 
+Transparency Platform for Dubai Land Department, comprising a public investor-facing portal and an 
+internal management system. The scope includes delivering real-time data visualization, GIS mapping, self-
+service analytics, open data APIs, and an AI-powered data assistant (non-advisory), alongside internal 
+capabilities such as an Early Warning Risk System, escrow monitoring, and a developer performance rating 
+engine. The vendor shall ensure full integration with DLDΓÇÖs existing data ecosystem, maintain high data 
+accuracy and governance standards, implement a secure and scalable architecture compliant with UAE 
+regulations, and deliver the solution in phased releases within the defined timeline, followed by post-go-live 
+warranty and technical support. 
+2.1 Key Deliverables 
+Based on the scope of work, below is a summary table of the key deliverables (including but not limited to): 
+(To be completed by the requesting department) 
+ 
+Section List of main deliverables Indicative Timelines 
+Phase 1 External Public Portal One month 
+Phase 2 Early Warning Risk System (EWRS) One month 
+Phase 3 Developer Performance & Rating One month 
+Phase 4 Extended Languages for the External Portal One month 
+ 
+3. Evaluation 
+Evaluation Weight: 70% Technical Requirements  |  30% Budget & Total Cost of Ownership  Proposals 
+that do not meet the minimum technical score threshold will not proceed to financial evaluation. The 
+highest-ranked proposal on the combined weighted score will be recommended for contract award, subject 
+to DLD's internal governance approvals. 
+3.1 Evaluation criteria 
+Proposals will be evaluated based on the submitted technical and financial proposals. The weight of the 
+technical and financial proposals will be as follows: 
+ 
+ 
+--- PAGE 5 ---
+   
+Page 5 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+3.2 Technical Evaluation (70%) 
+The Technical proposal shall be evaluated based on the following: 
+Technical Evaluation Criterion Weight (of 70%) Evaluation Method 
+Proposed Technical Solution: quality and 
+appropriateness of the proposed technology stack, 
+architecture design, hosting model, AI model 
+approach, scalability strategy, and overall alignment 
+with the functional and non-functional requirements of 
+this RFP. This criterion specifically includes 
+evaluation of how well the vendorΓÇÖs proposed 
+architecture aligns with DLDΓÇÖs existing Microsoft 
+Fabric ecosystem (Section 11.4) ΓÇö proposals 
+demonstrating strong alignment and a clear 
+Architecture Integration Map will be scored more 
+favourably. For the External Public Portal, the quality 
+of the visualisation layer comparative analysis 
+(Section 11.4.2) will also be evaluated. 
+25% Technical review panel 
+evaluation + Architecture 
+Q&A session with the 
+vendor's technical team 
+Data Understanding & Accuracy Methodology: 
+credibility, depth, and practicality of the proposed 
+DLD data familiarisation plan, analytics assessment 
+methodology, and ongoing data accuracy monitoring 
+framework. Given the critical importance of data 
+accuracy to this project, this criterion carries 
+significant weight. 
+20% Data methodology review 
+panel + evaluation of the 
+mandatory data 
+integration case study 
+Security & Compliance Approach: completeness and 
+credibility of the security plan including DESC ISR v3 
+compliance roadmap, VAPT scheduling, SOC 
+provider selection, and ISO 27001 certification 
+pathway. 
+10% Security review panel 
+evaluation 
+Relevant Experience & Demonstrated Capability: 
+quality of the project portfolio, relevance of prior work 
+to this RFP's scope, and strength of the AI system 
+demonstration. 
+10% Portfolio review + 
+reference checks 
+(minimum 2 client 
+references contacted by 
+DLD) 
+Warranty & Technical Support Plan: credibility and 
+completeness of the 12-month warranty offer, SLA 
+commitments, support team structure, data accuracy 
+monitoring plan, and AI Agent knowledge update 
+approach. 
+5% Support plan review panel 
+TOTAL TECHNICAL SCORE 
+Minimum threshold to proceed to financial evaluation: 
+70 out of 100 on the combined technical sub-criteria. 
+70%  
+ 
+--- PAGE 6 ---
+   
+Page 6 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+3.3 Financial Evaluation (30%) 
+ 
+Financial Evaluation Criterion Weight (of 30%) Evaluation Method 
+Total Cost of Ownership (5-Year): the combined total 
+of infrastructure setup CAPEX (Section 14.1), licence 
+and subscription costs (Section 14.2), implementation 
+CAPEX across all four phases (Section 14.3), and 
+five years of annual recurring OPEX (Section 14.4). 
+The proposal offering the best value for money on a 
+5-year TCO basis will score highest. 
+20% Financial evaluation 
+committee using a 
+standard 5-year TCO 
+model applied 
+consistently across all 
+proposals 
+Pricing Transparency & Completeness: the degree to 
+which all cost tables are fully and accurately 
+completed with no missing items, bundling of line 
+items, or ambiguous entries. Proposals with clearly 
+itemised, justified costs will score higher than those 
+with opaque or bundled pricing. 
+10% Financial review of all four 
+cost tables in the 
+proposal 
+TOTAL FINANCIAL SCORE 
+ 30%  
+ 
+4. Tender Conditions 
+ 
+4.1 Definitions 
+The terms ΓÇ£BiddersΓÇ¥ and ΓÇ£Service Provider,ΓÇ¥ as used in this RFP document, mean the individual(s) or 
+company(ies) to whom the invitation letter for the Request for Proposal is addressed. 
+ 
+4.2 Ownership of the RFP 
+This Request for Proposal shall remain the property of Dubai Land Department and is sent to the bidder 
+solely fo r the purpose of preparing and submitting a proposal accordingly. Bidders must maintain the 
+confidentiality of the RFP and may not disclose it to any third party for any purpose other than obtaining 
+quotations directly related to their proposal. 
+ 
+4.3 Confidentiality Statement 
+ΓÇó All information contained in this document or shared with the recipient as part of the briefing process is 
+considered strictly confidential. Accordingly, the recipient may not disclose this document or any 
+attachments, in whole or in part,  to any third party without prior written approval from Dubai Land 
+Department. 
+ΓÇó The recipient also acknowledges that the information shared herein constitutes the intellectual property 
+--- PAGE 7 ---
+   
+Page 7 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+of Dubai Land Department and is subject to non -disclosure agreements as recognized under copyright 
+and intellectual property protection regulations. 
+ 
+4.4 Intellectual Property 
+The bidder acknowledges that all deliverables, results, works, documents, data, reports, designs, and 
+materials, of whatever type or form, prepared, developed, or submitted under this Request and any resulting 
+purchase order, shall be the exclusive intellectual property of Dubai Land Department. 
+The bidder shall have no right to use, reproduce, publish, or dispose of them in whole or in part for any 
+purpose whatsoever without obtaining prior written approval from the Department, with the Department 
+retaining all intellectual property rights without restriction. 
+ 
+4.5 Award / Acceptance Conditions 
+The successful bidder will be notified of acceptance of its proposal through the issuance of an Award / 
+Acceptance Notification. 
+ Trade License Certificate   
+All Bidders shall submit a copy of their current Registered Trade License Certificate or Certificate of 
+Incorporation. 
+ 
+ Performance Bond 
+The successful bidder must submit a performance bond valued at 10% for proposals with a value of not less 
+than AED 500,000. 
+ 
+ Contracting 
+The bidder should ensure attaching the following documents with the bid. 
+ΓÇó Commercial License  
+ΓÇó Company Establishment Contract 
+ΓÇó Company Profile 
+ΓÇó A list of completed projects with contact numbers and the name of the responsible person 
+ΓÇó Tax Certificate 
+ΓÇó Bank Letter with bank account number address 
+ΓÇó Power of attorney authorized to sign for the company 
+ΓÇó Passport copy of the authorized signature 
+ 
+4.6 Technical & Financial Submittals 
+ΓÇó In order for the Department to review and consider the proposal, the bidder must comply with 
+providing all requirements in the submitted proposal. Failure to provide all requirements may result in 
+rejection of the proposal. 
+--- PAGE 8 ---
+   
+Page 8 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+ΓÇó The bidder acknowledges that the information provided herein forms an integral part of its proposal 
+and must be used in its preparation. 
+ΓÇó The financial proposal must cover all required items, products, and services, must be unconditional, and 
+must be valid for not less than 120 calendar days from the proposal opening date. Failure to do so may 
+result in the proposal being disregarded. 
+ΓÇó The declared cost must include all expenses, taxes, foreign exchange variations, inflation charges, etc. 
+All tenders shall be within the United Arab Emirates. Currency: UAE Dirham only. 
+ΓÇó The Department shall pay the amount due to the bidder under any issued invoice based on the contract 
+terms within 45 working days from the date of submission of the invoice to the Department. 
+ΓÇó Dubai Land Department urges potential bidders to link the invoicing schedule to the completion and 
+acceptance of the specified deliverables set out in this RFP. 
+ΓÇó Dubai Land Department applies Law No. (12) of 2020 regarding contracts and store management in 
+the Government of Dubai.  
+--- PAGE 9 ---
+   
+Page 9 of 9 
+                   DLD/SS/AA/CP/P68/No.13/Vr.5/Issue Date: Jan.2026 
+ 
+5. Terms and Conditions: 
+ 
+5.1 Communication 
+ 
+All queries should be submitted via email to : 
+(To be completed by the requesting department) 
+ 
+Tender Officer              
+  
+Name: Huda Mohammad        
+            
+E-mail: huda.alabed@dubailand.gov.ae    
+ 
+With CC to Contracts Team 
+ 
+Name: Contracts Team  
+               
+E-mail: contracts@dubailand.gov.ae 
+ 
+5.2 Authentication of the Submitted Proposal 
+All proposals must be executed by the bidder or its authorized representative. Where the bidder is a 
+company, it must submit all legal documents related to the company. In addition, the bidder must provide 
+evidence in the form of a notarized board/shareholdersΓÇÖ resolution and a power of attorney authorizing 
+the person(s) signing the proposal or any agreement submitted by the company. 
+ 
+5.3 Amendment of Requirements 
+Dubai Land Department reserves the right, at any stage of the submission period, to add, change, or amend 
+its requirements. In such cases, Dubai Land Department shall notify bidders of such changes through an 
+addendum and any time extension that may be granted for proposal submission. 
+ 
+5.4 Validity of Proposals 
+Proposals shall remain valid and binding on bidde rs for a period of one hundred and twenty (120) calendar 
+days from the proposal opening date, with an extension clause subject to mutual agreement. 
+ 
+5.5 Conflicts of Interest 
+When selecting potential companies, consultants, and subcontractors, bidders must ensure that such service 
+providers do not have any conflict of interest (whether actual or perceived) related to Dubai Land 
+Department. 
+ 

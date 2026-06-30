@@ -1,0 +1,43 @@
+@*
+    Standardised "API unreachable" / fetch-failed indicator.
+
+    Replaces the variants of `<div class="alert alert-warning">…API unreachable…</div>`
+    that were drifting across pages with different wording. Adds an icon,
+    a title, and an optional retry button.
+
+    Usage:
+        <NetworkError Service="Mortgage" />
+        <NetworkError Service="ESG" Detail="Make sure certification data is seeded." OnRetry="LoadData" />
+        <NetworkError Title="Custom title" Detail="Custom message" />
+*@
+
+@code {
+    [Parameter] public string? Service { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Detail { get; set; }
+    [Parameter] public EventCallback OnRetry { get; set; }
+
+    private string ResolvedTitle => !string.IsNullOrEmpty(Title)
+        ? Title
+        : !string.IsNullOrEmpty(Service)
+            ? $"{Service} API is unreachable"
+            : "Service unreachable";
+
+    private string ResolvedDetail => !string.IsNullOrEmpty(Detail)
+        ? Detail
+        : "Make sure the backend service is running and try again.";
+}
+
+<div class="alert alert-warning d-flex align-items-start gap-3" role="alert">
+    <i class="bi bi-exclamation-triangle fs-4 mt-1" aria-hidden="true"></i>
+    <div class="flex-grow-1">
+        <strong class="d-block mb-1">@ResolvedTitle</strong>
+        <span>@ResolvedDetail</span>
+    </div>
+    @if (OnRetry.HasDelegate)
+    {
+        <button type="button" class="btn btn-sm btn-outline-warning flex-shrink-0" @onclick="OnRetry">
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Retry
+        </button>
+    }
+</div>

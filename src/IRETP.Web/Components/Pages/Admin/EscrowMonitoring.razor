@@ -1,0 +1,135 @@
+@page "/admin/escrow"
+@rendermode InteractiveServer
+@inject AdminApiClient AdminApi
+@inject WebApiClient Api
+@inject AdminFixtureService Fixture
+@inject CurrencyService Currency
+@inject IJSRuntime JS
+
+<PageTitle>Escrow Monitoring</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="bank"
+                  Title="Escrow Monitoring">
+        <ActionsContent>
+            @if (_escrows != null)
+            {
+                <span class="badge bg-success">@_escrows.Count(e => e.Status == 0) adequate</span>
+                <span class="badge bg-warning text-dark">@_escrows.Count(e => e.Status == 1) warning</span>
+                <span class="badge bg-danger">@_escrows.Count(e => e.Status == 2) critical</span>
+            }
+        </ActionsContent>
+    </ModuleBanner>
+
+    @if (_loading)
+    {
+        <SkeletonTable Rows="6" Columns="6" WithCard="true" />
+    }
+    else if (_escrows != null && _escrows.Count > 0)
+    {
+        <div class="admin-card">
+            <div class="admin-card-head">
+                <h2 class="admin-card-title"><i class="bi bi-bank"></i> Escrow accounts</h2>
+                <span class="badge text-bg-light border">@_escrows.Count accounts</span>
+            </div>
+            <div class="table-responsive admin-scroll">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr><th>Project</th><th>Developer</th><th>Bank</th><th class="text-end">Balance</th><th class="text-end">Required Min</th><th>Adequacy</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in _escrows.OrderBy(e => e.AdequacyRatio))
+                        {
+                            <tr>
+                                <td class="fw-semibold">@e.ProjectName</td>
+                                <td>@e.DeveloperName</td>
+                                <td class="text-muted">@e.BankName</td>
+                                <td class="text-end">@Currency.FormatExact(e.CurrentBalance)</td>
+                                <td class="text-end">@Currency.FormatExact(e.RequiredMinimumBalance)</td>
+                                <td style="min-width: 180px;">
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-@(e.AdequacyRatio >= 1 ? "success" : e.AdequacyRatio >= 0.8m ? "warning" : "danger")"
+                                             style="width: @($"{Math.Min(e.AdequacyRatio * 100, 100):N0}")%">
+                                            @($"{e.AdequacyRatio:P0}")
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(e.Status == 0 ? "success" : e.Status == 1 ? "warning" : "danger")">
+                                        @(e.Status == 0 ? "Adequate" : e.Status == 1 ? "Warning" : "Critical")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-dark me-1"
+                                            @onclick="() => DownloadReport(e)"
+                                            disabled="@(_downloadingFor == e.ProjectId)">
+                                        @if (_downloadingFor == e.ProjectId)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-file-earmark-pdf me-1"></i>
+                                        }
+                                        Monthly PDF
+                                    </button>
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="/admin/escrow/@Uri.EscapeDataString(e.ProjectName)">
+                                        <i class="bi bi-eye"></i> Detail
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No escrow accounts found in the system.</div>
+    }
+</div>
+
+@code {
+    private List<EscrowItem>? _escrows;
+    private bool _loading = true;
+    private Guid? _downloadingFor;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var login = await Api.LoginAsync("admin@dld.gov.ae", "Admin@DLD2026!");
+            if (login != null) AdminApi.SetToken(login.AccessToken);
+            _escrows = await AdminApi.GetEscrowDashboardAsync();
+        }
+        catch { /* backend offline */ }
+
+        _escrows ??= Fixture.EscrowDashboard();
+        _loading = false;
+    }
+
+    private async Task DownloadReport(EscrowItem escrow)
+    {
+        _downloadingFor = escrow.ProjectId;
+        try
+        {
+            var result = await AdminApi.DownloadEscrowMonthlyReportAsync(escrow.ProjectId);
+            if (result is null)
+            {
+                await JS.InvokeVoidAsync("alert",
+                    "Monthly escrow report is unavailable — ensure the Admin API is reachable and the project has an escrow account.");
+                return;
+            }
+
+            var base64 = Convert.ToBase64String(result.Value.Content);
+            await JS.InvokeVoidAsync("iretpDownload.fromBase64",
+                result.Value.FileName, "application/pdf", base64);
+        }
+        finally
+        {
+            _downloadingFor = null;
+        }
+    }
+}

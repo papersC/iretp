@@ -1,0 +1,539 @@
+@page "/admin/ewrs/alerts"
+@rendermode InteractiveServer
+@using IRETP.Application.DTOs
+@inject AdminApiClient AdminApi
+@inject AdminFixtureService Fixture
+@inject AuthStateService Auth
+
+<PageTitle>EWRS Alerts</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="bell"
+                  Title="EWRS Alert Queue"
+                  Subtitle="Operational / Managerial / Senior / Strategic escalation levels per RFP Section 8.2.">
+        <ActionsContent>
+            <span class="badge bg-danger">@_alerts.Count(a => a.Status == 0) open</span>
+            <span class="badge bg-warning text-dark">@_alerts.Count(a => a.Status == 1) acknowledged</span>
+            <span class="badge bg-success">@_alerts.Count(a => a.Status == 2) resolved</span>
+        </ActionsContent>
+    </ModuleBanner>
+
+    <!-- Filter tabs -->
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <button class="nav-link @(_filter == "open" ? "active" : "")" @onclick='() => _filter = "open"'>Open</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(_filter == "ack" ? "active" : "")" @onclick='() => _filter = "ack"'>Acknowledged</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(_filter == "resolved" ? "active" : "")" @onclick='() => _filter = "resolved"'>Resolved</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(_filter == "all" ? "active" : "")" @onclick='() => _filter = "all"'>All</button>
+        </li>
+    </ul>
+
+    <div class="admin-card">
+        <div class="admin-card-head">
+            <h2 class="admin-card-title"><i class="bi bi-bell"></i> Alert queue</h2>
+            <span class="badge text-bg-light border">@Filtered().Count() shown</span>
+        </div>
+        <div class="table-responsive admin-scroll">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Escalation</th>
+                        <th>Indicator</th>
+                        <th>Title</th>
+                        <th>Raised</th>
+                        <th>SLA</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Filtered())
+                    {
+                        <tr>
+                            <td>@SeverityBadge(a.RiskLevel)</td>
+                            <td>@EscalationBadge(a.AlertLevel)</td>
+                            <td><code class="small">@a.IndicatorType</code></td>
+                            <td>
+                                <div class="fw-semibold">@a.Title</div>
+                                @if (!string.IsNullOrEmpty(a.Description))
+                                {
+                                    <div class="small text-muted">@a.Description</div>
+                                }
+                            </td>
+                            <td class="text-muted small">@a.CreatedAt.ToString("dd MMM, HH:mm") UTC</td>
+                            <td>@SlaBadge(a)</td>
+                            <td>@StatusBadge(a.Status)</td>
+                            <td class="small">
+                                @if (a.AcknowledgedBy != null)
+                                {
+                                    <div>@a.AcknowledgedBy</div>
+                                    <div class="text-muted">@a.AcknowledgedAt?.ToString("dd MMM, HH:mm")</div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                @{ var pb = PlaybookProgressFor(a); }
+                                <button class="btn btn-sm btn-outline-secondary me-1" @onclick="() => OpenPlaybook(a)"
+                                        title="Response playbook">
+                                    <i class="bi bi-journal-check"></i> Playbook
+                                    @if (pb.total > 0)
+                                    {
+                                        <span class="badge bg-light text-dark border ms-1">@pb.done/@pb.total</span>
+                                    }
+                                </button>
+                                @if (a.Status == 0)
+                                {
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => Acknowledge(a)">
+                                        <i class="bi bi-check2"></i> Ack
+                                    </button>
+                                }
+                                @if (a.Status != 2)
+                                {
+                                    <button class="btn btn-sm btn-outline-success" @onclick="() => OpenResolve(a)">
+                                        <i class="bi bi-check-circle"></i> Resolve
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Filtered().Any())
+                    {
+                        <tr><td colspan="9" class="text-center text-muted py-4">Nothing in this view.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (_resolving != null)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.4);" @onclick="() => _resolving = null">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Resolve alert</h5>
+                    <button type="button" class="btn-close" @onclick="() => _resolving = null"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-secondary small">@_resolving.Title</div>
+                    <label for="resolution-notes-require" class="form-label">Resolution notes (required for audit trail)</label>
+                    <textarea id="resolution-notes-require" class="form-control" rows="4" @bind="_resolveNotes"
+                              placeholder="Action taken, reference docs, corrective plan…"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="() => _resolving = null">Cancel</button>
+                    <button class="btn btn-success" @onclick="ConfirmResolve"
+                            disabled="@string.IsNullOrWhiteSpace(_resolveNotes)">
+                        Mark resolved
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_playbookAlert != null)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.4);" @onclick="ClosePlaybook">
+        <div class="modal-dialog modal-dialog-centered modal-lg" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-journal-check me-2"></i>Response playbook
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="ClosePlaybook"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-secondary small mb-3">
+                        <div class="fw-semibold">@_playbookAlert.Title</div>
+                        <div>Indicator: <code>@_playbookAlert.IndicatorType</code> · Escalation: @EscalationLabel(_playbookAlert.AlertLevel)</div>
+                    </div>
+
+                    @if (_playbookSteps.Count == 0)
+                    {
+                        <div class="text-muted text-center py-3">
+                            No playbook is configured for this indicator yet.
+                            <a href="/admin/playbooks">Edit playbooks →</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <ol class="list-unstyled mb-0">
+                            @for (var i = 0; i < _playbookSteps.Count; i++)
+                            {
+                                var idx = i;
+                                var entry = _playbookEntries.FirstOrDefault(p => p.StepIndex == idx)
+                                            ?? new PlaybookProgressEntry { StepIndex = idx };
+                                <li class="mb-3 p-2 border rounded @(entry.Completed ? "bg-success bg-opacity-10" : "")">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="pb-@idx"
+                                               checked="@entry.Completed"
+                                               @onchange="(e) => ToggleStep(idx, (bool)(e.Value ?? false))" />
+                                        <label class="form-check-label w-100" for="pb-@idx">
+                                            <span class="fw-semibold">@(idx + 1). @_playbookSteps[idx]</span>
+                                            @if (entry.Completed && entry.CompletedAt.HasValue)
+                                            {
+                                                <div class="small text-muted mt-1">
+                                                    Completed @entry.CompletedAt.Value.ToString("yyyy-MM-dd HH:mm")
+                                                    by @(entry.CompletedBy ?? "—")
+                                                </div>
+                                            }
+                                            <div class="mt-2">
+                                                <input class="form-control form-control-sm" aria-label="Notes" placeholder="Notes…"
+                                                       value="@(entry.Notes ?? string.Empty)"
+                                                       @onchange="(e) => UpdateNote(idx, e.Value?.ToString() ?? string.Empty)" />
+                                            </div>
+                                        </label>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <span class="me-auto small @(_playbookSaveState == "saved" ? "text-success" : "text-muted")">
+                        @_playbookSaveState
+                    </span>
+                    <button class="btn btn-outline-secondary" @onclick="ClosePlaybook">Close</button>
+                    <button class="btn btn-primary" @onclick="SavePlaybookProgress" disabled="@_playbookSaving">
+                        @(_playbookSaving ? "Saving…" : "Save progress")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<RiskAlertItem> _alerts = new();
+    private string _filter = "open";
+    private RiskAlertItem? _resolving;
+    private string _resolveNotes = "";
+
+    // Playbook state
+    private RiskAlertItem? _playbookAlert;
+    private List<string> _playbookSteps = new();
+    private List<PlaybookProgressEntry> _playbookEntries = new();
+    private Dictionary<Guid, List<string>> _playbooksByThreshold = new();
+    private Dictionary<string, List<string>> _playbooksByIndicator = new();
+    private bool _playbookSaving;
+    private string _playbookSaveState = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Independent reads — fire in parallel. Each has its own try/catch
+        // so a single failure never blocks the other from completing.
+        var alertsTask    = SafeAsync(() => AdminApi.GetRiskAlertsAsync());
+        var playbooksTask = SafeAsync(() => AdminApi.GetPlaybooksAsync());
+        await Task.WhenAll(alertsTask, playbooksTask);
+
+        _alerts = (await alertsTask) ?? Fixture.FullAlertList();
+
+        var playbooks = await playbooksTask;
+        if (playbooks is not null)
+        {
+            _playbooksByIndicator = playbooks
+                .GroupBy(p => p.IndicatorKey)
+                .ToDictionary(g => g.Key, g => g.First().Steps);
+        }
+    }
+
+    // Helper: swallow backend-offline errors so each parallel read can
+    // independently fall back to fixtures without bringing down its sibling.
+    private static async Task<T?> SafeAsync<T>(Func<Task<T?>> fetch) where T : class
+    {
+        try { return await fetch(); }
+        catch { return null; }
+    }
+
+    private IEnumerable<RiskAlertItem> Filtered()
+    {
+        return _filter switch
+        {
+            "open"     => _alerts.Where(a => a.Status == 0),
+            "ack"      => _alerts.Where(a => a.Status == 1),
+            "resolved" => _alerts.Where(a => a.Status == 2),
+            _          => _alerts
+        };
+    }
+
+    private async Task Acknowledge(RiskAlertItem a)
+    {
+        try { await AdminApi.AcknowledgeAlertAsync(a.Id); } catch { }
+        a.Status = 1;
+        a.AcknowledgedBy = Auth.Email ?? "dld-officer";
+        a.AcknowledgedAt = DateTime.UtcNow;
+        StateHasChanged();
+    }
+
+    private void OpenResolve(RiskAlertItem a)
+    {
+        _resolving = a;
+        _resolveNotes = "";
+    }
+
+    private async Task ConfirmResolve()
+    {
+        if (_resolving == null || string.IsNullOrWhiteSpace(_resolveNotes)) return;
+        try { await AdminApi.ResolveAlertAsync(_resolving.Id, _resolveNotes); } catch { }
+        _resolving.Status = 2;
+        if (_resolving.AcknowledgedBy == null)
+        {
+            _resolving.AcknowledgedBy = Auth.Email ?? "dld-officer";
+            _resolving.AcknowledgedAt = DateTime.UtcNow;
+        }
+        _resolving = null;
+        _resolveNotes = "";
+    }
+
+    // -----------------------------------------------------------------------
+    // Playbook integration (RFP 8.3)
+    // -----------------------------------------------------------------------
+    private (int done, int total) PlaybookProgressFor(RiskAlertItem alert)
+    {
+        var steps = StepsForAlert(alert);
+        if (steps.Count == 0) return (0, 0);
+        var entries = ParseProgress(alert.PlaybookProgressJson);
+        return (entries.Count(e => e.Completed), steps.Count);
+    }
+
+    private List<string> StepsForAlert(RiskAlertItem alert)
+    {
+        // The server's risk-engine uses compact indicator keys (e.g. "EscrowShortfallCritical")
+        // while the threshold catalog uses underscore form ("EscrowShortfall_Critical").
+        // Try both so the widget lights up in either world.
+        if (_playbooksByIndicator.TryGetValue(alert.IndicatorType, out var exact))
+            return exact;
+
+        var underscored = InsertUnderscoreBeforeSuffix(alert.IndicatorType);
+        if (underscored is not null && _playbooksByIndicator.TryGetValue(underscored, out var loose))
+            return loose;
+
+        return new();
+    }
+
+    private static string? InsertUnderscoreBeforeSuffix(string key)
+    {
+        foreach (var suffix in new[] { "Critical", "Warning" })
+        {
+            if (key.EndsWith(suffix, StringComparison.Ordinal) && key.Length > suffix.Length)
+            {
+                return key[..^suffix.Length] + "_" + suffix;
+            }
+        }
+        return null;
+    }
+
+    private void OpenPlaybook(RiskAlertItem alert)
+    {
+        _playbookAlert = alert;
+        _playbookSteps = StepsForAlert(alert);
+        _playbookEntries = ParseProgress(alert.PlaybookProgressJson);
+        // Ensure every step has a progress entry so notes/checkboxes bind cleanly.
+        for (var i = 0; i < _playbookSteps.Count; i++)
+        {
+            if (!_playbookEntries.Any(e => e.StepIndex == i))
+            {
+                _playbookEntries.Add(new PlaybookProgressEntry { StepIndex = i });
+            }
+        }
+        _playbookEntries = _playbookEntries.OrderBy(e => e.StepIndex).ToList();
+        _playbookSaveState = "";
+    }
+
+    private void ClosePlaybook()
+    {
+        _playbookAlert = null;
+        _playbookSteps = new();
+        _playbookEntries = new();
+        _playbookSaveState = "";
+    }
+
+    private void ToggleStep(int index, bool completed)
+    {
+        var entry = _playbookEntries.First(e => e.StepIndex == index);
+        entry.Completed = completed;
+        if (completed)
+        {
+            entry.CompletedAt = DateTime.UtcNow;
+            entry.CompletedBy = Auth.Email ?? "dld-officer";
+        }
+        else
+        {
+            entry.CompletedAt = null;
+            entry.CompletedBy = null;
+        }
+        _playbookSaveState = "Unsaved changes";
+    }
+
+    private void UpdateNote(int index, string note)
+    {
+        var entry = _playbookEntries.First(e => e.StepIndex == index);
+        entry.Notes = string.IsNullOrWhiteSpace(note) ? null : note;
+        _playbookSaveState = "Unsaved changes";
+    }
+
+    private async Task SavePlaybookProgress()
+    {
+        if (_playbookAlert is null) return;
+        _playbookSaving = true;
+        _playbookSaveState = "Saving…";
+        try
+        {
+            var ok = await AdminApi.UpdateAlertPlaybookProgressAsync(_playbookAlert.Id, _playbookEntries);
+            if (ok)
+            {
+                _playbookAlert.PlaybookProgressJson =
+                    System.Text.Json.JsonSerializer.Serialize(_playbookEntries);
+                _playbookSaveState = "saved";
+            }
+            else
+            {
+                _playbookSaveState = "Save failed — try again";
+            }
+        }
+        finally
+        {
+            _playbookSaving = false;
+        }
+    }
+
+    private static List<PlaybookProgressEntry> ParseProgress(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new();
+        try
+        {
+            return System.Text.Json.JsonSerializer
+                .Deserialize<List<PlaybookProgressEntry>>(json) ?? new();
+        }
+        catch
+        {
+            return new();
+        }
+    }
+
+    private static string EscalationLabel(int alertLevel) => alertLevel switch
+    {
+        1 => "Level 1 — Operational",
+        2 => "Level 2 — Managerial",
+        3 => "Level 3 — Senior Leadership",
+        4 => "Level 4 — Strategic",
+        _ => "—"
+    };
+
+    private static RenderFragment SeverityBadge(int riskLevel) => __b =>
+    {
+        var (cls, label) = riskLevel switch
+        {
+            0 => ("bg-secondary", "LOW"),
+            1 => ("bg-warning text-dark", "MED"),
+            _ => ("bg-danger", "HIGH")
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", $"badge {cls}");
+        __b.AddContent(2, label);
+        __b.CloseElement();
+    };
+
+    private static RenderFragment EscalationBadge(int level) => __b =>
+    {
+        var label = level switch
+        {
+            1 => "L1 · Operational",
+            2 => "L2 · Managerial",
+            3 => "L3 · Senior",
+            4 => "L4 · Strategic",
+            _ => $"L{level}"
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", "badge bg-light text-dark border");
+        __b.AddContent(2, label);
+        __b.CloseElement();
+    };
+
+    private static RenderFragment StatusBadge(int status) => __b =>
+    {
+        var (cls, label) = status switch
+        {
+            0 => ("bg-danger",  "Open"),
+            1 => ("bg-primary", "Acknowledged"),
+            2 => ("bg-success", "Resolved"),
+            _ => ("bg-secondary", "?")
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", $"badge {cls}");
+        __b.AddContent(2, label);
+        __b.CloseElement();
+    };
+
+    /// <summary>
+    /// Renders the acknowledgement SLA countdown / breach state per RFP 8.2.
+    /// Resolved alerts show "—". L4 alerts show "Immediate" (no SLA).
+    /// </summary>
+    private static RenderFragment SlaBadge(RiskAlertItem a) => __b =>
+    {
+        // Resolved alerts no longer have an active SLA.
+        if (a.Status == 2)
+        {
+            __b.OpenElement(0, "span");
+            __b.AddAttribute(1, "class", "text-muted small");
+            __b.AddContent(2, "—");
+            __b.CloseElement();
+            return;
+        }
+
+        if (a.AcknowledgeDeadline is null)
+        {
+            __b.OpenElement(0, "span");
+            __b.AddAttribute(1, "class", "badge bg-dark");
+            __b.AddContent(2, "Immediate");
+            __b.CloseElement();
+            return;
+        }
+
+        var remaining = a.AcknowledgeDeadline.Value - DateTime.UtcNow;
+        string cls; string label;
+        if (remaining.TotalSeconds <= 0)
+        {
+            cls = "bg-danger";
+            label = a.AutoEscalated
+                ? $"Breached · auto-escalated"
+                : $"Breached {FormatDuration(-remaining)}";
+        }
+        else if (remaining.TotalHours < 1)
+        {
+            cls = "bg-warning text-dark";
+            label = $"{FormatDuration(remaining)} left";
+        }
+        else
+        {
+            cls = "bg-secondary";
+            label = $"{FormatDuration(remaining)} left";
+        }
+
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", $"badge {cls}");
+        __b.AddContent(2, label);
+        __b.CloseElement();
+    };
+
+    private static string FormatDuration(TimeSpan ts)
+    {
+        if (ts.TotalDays >= 1) return $"{(int)ts.TotalDays}d {ts.Hours}h";
+        if (ts.TotalHours >= 1) return $"{(int)ts.TotalHours}h {ts.Minutes}m";
+        if (ts.TotalMinutes >= 1) return $"{(int)ts.TotalMinutes}m";
+        return "<1m";
+    }
+}

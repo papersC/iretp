@@ -1,0 +1,232 @@
+@page "/analytics/embed/{Token}"
+@rendermode InteractiveServer
+@layout IRETP.Web.Components.Layout.EmbedLayout
+@inject MarketDataService Market
+@inject SavedViewsService Saved
+@inject CurrencyService Currency
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP — Analytics embed</PageTitle>
+
+@if (_invalid)
+{
+    <div class="container py-5">
+        <div class="alert alert-warning mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            This embed link is invalid or malformed. Please request a fresh link from the sender.
+        </div>
+    </div>
+}
+else
+{
+    <div class="embed-frame p-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <div>
+                <div class="small text-muted">Dubai Land Department — IRETP Analytics</div>
+                <h2 class="mb-0 h5">@PrettyTitle()</h2>
+            </div>
+            <a href="/analytics/@Token" class="btn btn-outline-primary btn-sm" target="_top">
+                <i class="bi bi-box-arrow-up-right"></i> Open in IRETP
+            </a>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body" style="height: 380px; position: relative;">
+                @if (Config.ChartType == "table")
+                {
+                    <div class="table-responsive" style="max-height: 360px;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="sticky-top bg-white">
+                                <tr><th>@Config.Dimension</th><th class="text-end">@MetricLabel()</th></tr>
+                            </thead>
+                            <tbody>
+                                @if (_series != null)
+                                {
+                                    @foreach (var s in _series)
+                                    {
+                                        <tr>
+                                            <td>@s.Label</td>
+                                            <td class="text-end fw-bold">@FormatMetric(s.Value)</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <canvas id="analyticsEmbedChart"></canvas>
+                }
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center small text-muted">
+                <span>Source: DLD transaction registry</span>
+                <span>@(_series?.Count ?? 0) data point(s) · read-only embed</span>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Token { get; set; } = "";
+
+    private SavedViewsService.AnalyticsConfig Config { get; set; } = new();
+    private bool _invalid;
+    private List<(string Label, decimal Value)>? _series;
+    private List<SalesTxnDto>? _allSales;
+
+    private static readonly string[] _palette =
+        { "#066735", "#1B4F72", "#F1B44C", "#6B2F9C", "#C0392B", "#9199a4" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Token)) { _invalid = true; return; }
+
+        var decoded = Saved.Decode(Token);
+        if (decoded is null) { _invalid = true; return; }
+
+        Config = decoded;
+        _allSales = (await Market.GetSalesAsync(new TxnFilter { Page = 1, PageSize = int.MaxValue })).Items;
+        Recalc();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_invalid || _series is null || Config.ChartType == "table") return;
+        if (firstRender || _series.Count > 0) await RenderChart();
+    }
+
+    private void Recalc()
+    {
+        if (_allSales is null) return;
+
+        var q = _allSales.AsEnumerable();
+        if (!string.IsNullOrEmpty(Config.PropertyTypeFilter))
+            q = q.Where(s => s.PropertyType == Config.PropertyTypeFilter);
+        if (!string.IsNullOrEmpty(Config.StatusFilter))
+            q = q.Where(s => s.TransactionType == Config.StatusFilter);
+
+        Func<SalesTxnDto, string> dim = Config.Dimension switch
+        {
+            "PropertyType" => s => s.PropertyType,
+            "Status" => s => s.TransactionType,
+            "Developer" => FauxDeveloper,
+            _ => s => s.AreaName
+        };
+
+        var grouped = q.GroupBy(dim)
+            .Select(g =>
+            {
+                var rows = g.ToList();
+                decimal value = Config.Metric switch
+                {
+                    "Value" => rows.Sum(s => s.AmountAed),
+                    "AvgPrice" => rows.Count == 0 ? 0m : Math.Round(rows.Average(s => s.PricePerSqft), 0),
+                    "MarketShare" => rows.Count,
+                    _ => rows.Count
+                };
+                return (Label: g.Key, Value: value, TotalAed: rows.Sum(r => r.AmountAed));
+            })
+            .ToList();
+
+        if (Config.Metric == "MarketShare")
+        {
+            var totalAed = grouped.Sum(x => x.TotalAed);
+            grouped = grouped
+                .Select(x => (x.Label, Value: totalAed == 0 ? 0m
+                    : Math.Round(x.TotalAed / totalAed * 100m, 2), x.TotalAed))
+                .ToList();
+        }
+
+        _series = grouped
+            .OrderByDescending(g => g.Value)
+            .Take(Config.TopN <= 0 ? 10 : Math.Min(Config.TopN, 25))
+            .Select(g => (g.Label, g.Value))
+            .ToList();
+    }
+
+    private static string FauxDeveloper(SalesTxnDto s)
+    {
+        var first = s.BuildingName.Split(' ')[0];
+        return first switch
+        {
+            "Marina" or "Emaar" or "Creek" => "Emaar Properties",
+            "Address" or "Bellavista" or "Meraas" => "Meraas",
+            "Burj" => "Emaar Properties",
+            "Silicon" or "Liwa" => "Damac",
+            "Executive" => "Sobha Realty",
+            _ => "Nakheel"
+        };
+    }
+
+    private async Task RenderChart()
+    {
+        if (_series is null || _series.Count == 0) return;
+
+        var labels = _series.Select(s => s.Label).ToArray();
+        var data = _series.Select(s => (double)s.Value).ToArray();
+
+        var type = Config.ChartType switch
+        {
+            "donut" => "doughnut",
+            "stackedBar" => "bar",
+            "treemap" => "bar",
+            "kpi" => "bar",
+            _ => Config.ChartType
+        };
+
+        object dataset = Config.ChartType == "donut"
+            ? new { data, backgroundColor = _palette }
+            : new
+            {
+                label = MetricLabel(),
+                data,
+                backgroundColor = Config.ChartType is "line" or "area" ? "rgba(6,103,53,0.15)" : "#066735",
+                borderColor = "#066735",
+                fill = Config.ChartType == "area",
+                tension = 0.3,
+                borderRadius = 4
+            };
+
+        var config = new
+        {
+            type,
+            data = new { labels, datasets = new[] { dataset } },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                plugins = new { legend = new { display = Config.ChartType == "donut" } }
+            }
+        };
+
+        try { await JS.InvokeVoidAsync("iretpChart.render", "analyticsEmbedChart", config); }
+        catch { /* ignore — chart.js may not be loaded */ }
+    }
+
+    private string MetricLabel() => Config.Metric switch
+    {
+        "Value" => "Total Value (AED)",
+        "AvgPrice" => "Avg Price / sqft (AED)",
+        "MarketShare" => "Market Share %",
+        _ => "Transaction Count"
+    };
+
+    private string FormatMetric(decimal v) => Config.Metric switch
+    {
+        "Value" => Currency.FormatExact(v),
+        "AvgPrice" => Currency.FormatExact(v),
+        "MarketShare" => $"{v:F2}%",
+        _ => v.ToString("N0")
+    };
+
+    private string PrettyTitle() => $"{MetricLabel()} by {Config.Dimension}"
+        + (string.IsNullOrEmpty(Config.SecondaryDimension) ? "" : $" × {Config.SecondaryDimension}");
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "analyticsEmbedChart"); } catch { }
+    }
+}

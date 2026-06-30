@@ -1,0 +1,97 @@
+# =============================================================================
+# IRETP — local development compose file.
+# Brings up SQL Server, both APIs, and the Blazor frontend. Matches the URLs
+# expected by IRETP.Web's appsettings (WebApiUrl/AdminApiUrl).
+#
+#   docker compose up -d --build
+#   docker compose logs -f webapi
+#   docker compose down -v           # remove volumes too
+#
+# Not a production deployment — production uses the DESC-CSP-certified hosting
+# stack vendored separately (RFP Section 11.2/11.3).
+#
+# Hardening applied to every app service (RFP §10.2.1 access control):
+#   • cap_drop: ALL  — strip Linux capabilities (containers don't need any)
+#   • no-new-privileges — refuse setuid escalation
+#   • restart policy on failure to keep the 99.9% uptime SLA
+# Containers also run as non-root via the Dockerfile USER directive.
+# =============================================================================
+name: iretp
+
+x-app-hardening: &app-hardening
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: iretp-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Iretp_Dev_Password_Change_Me_2026!"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - iretp-sql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$SA_PASSWORD\" -Q \"SELECT 1\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  webapi:
+    <<: *app-hardening
+    build:
+      context: .
+      dockerfile: src/IRETP.WebAPI/Dockerfile
+    container_name: iretp-webapi
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: >-
+        Server=sqlserver,1433;Database=IRETP;User Id=sa;
+        Password=Iretp_Dev_Password_Change_Me_2026!;TrustServerCertificate=True
+    ports:
+      - "5000:5000"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  adminapi:
+    <<: *app-hardening
+    build:
+      context: .
+      dockerfile: src/IRETP.AdminAPI/Dockerfile
+    container_name: iretp-adminapi
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: >-
+        Server=sqlserver,1433;Database=IRETP;User Id=sa;
+        Password=Iretp_Dev_Password_Change_Me_2026!;TrustServerCertificate=True
+    ports:
+      - "5002:5002"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  web:
+    <<: *app-hardening
+    build:
+      context: .
+      dockerfile: src/IRETP.Web/Dockerfile
+    container_name: iretp-web
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ApiSettings__WebApiUrl: "http://webapi:5000"
+      ApiSettings__AdminApiUrl: "http://adminapi:5002"
+    ports:
+      - "5010:5010"
+    depends_on:
+      - webapi
+      - adminapi
+
+volumes:
+  iretp-sql-data:

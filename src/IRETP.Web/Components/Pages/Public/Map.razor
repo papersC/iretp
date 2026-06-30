@@ -1,0 +1,579 @@
+@page "/map"
+@rendermode InteractiveServer
+@inject MapDataService MapData
+@inject IJSRuntime JS
+@inject AiChatService Ai
+@inject NavigationManager Nav
+@implements IAsyncDisposable
+
+<PageTitle>IRETP - Interactive Map</PageTitle>
+
+<div class="dld-map-page">
+<h1 class="visually-hidden">Interactive Map — Dubai real estate</h1>
+@if (isLoading)
+{
+    <div class="loading-spinner"><div class="spinner"></div></div>
+}
+else if (kpi != null)
+{
+    <!-- Top KPI Strip — with sparklines + trend pills -->
+    <div class="dash-kpi-strip">
+        @RenderKpi("green",    "Total Sales Volume",       MapDataService.FormatAed(kpi.TotalSalesVolume),     "+26.78% YoY", true,  "#4ade80", new double[]{8,12,10,14,16,13,18,22,20,26,28,30})
+        @RenderKpi("blue",     "Total Sales Transactions", kpi.TotalSalesTransactions.ToString("N0"),          "+15.24% YoY", true,  "#93bbfd", new double[]{10,12,15,13,17,19,16,20,23,25,27,28})
+        @RenderKpi("teal",     "Avg Price per sq ft",      $"AED {kpi.AveragePricePerSqft:N0}",                "+5.85% YoY",  true,  "#5eead4", new double[]{14,15,14,16,17,16,18,19,20,21,21,22})
+        @RenderKpi("orange",   "Top Region by Value",      kpi.TopRegionByValue,                                "9.85B total", true,  "#fbbf24", new double[]{12,14,18,16,20,22,19,24,26,28,30,32})
+    </div>
+
+    <!-- Main Body: Area Panel + Map -->
+    <div class="dash-body">
+        @if (selectedArea != null)
+        {
+            <div class="dash-area-panel @(areaPanelCollapsed ? "collapsed" : "")">
+                @if (!areaPanelCollapsed)
+                {
+                    <div class="area-panel-header-v2">
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="area-title">@selectedArea.Name</div>
+                            <div class="area-subtitle">Dubai · @(selectedArea.OffPlanPercent >= 50 ? "Off-plan heavy" : "Ready market")</div>
+                        </div>
+                        <div class="area-panel-btns">
+                            <button class="panel-icon-btn @(pinnedAreas.Any(p => p.AreaId == selectedArea.AreaId) ? "active" : "")"
+                                    @onclick="TogglePin" title="Pin for comparison">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+                            </button>
+                            <button class="panel-icon-btn" @onclick="() => areaPanelCollapsed = true" title="Collapse">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                            </button>
+                            <button class="panel-icon-btn" @onclick="CloseAreaPanel" title="Close">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- DEMAND TREND -->
+                    <div class="panel-section">
+                        <div class="panel-section-header" @onclick="() => demandOpen = !demandOpen">
+                            <span>DEMAND TREND</span>
+                            <svg class="chevron @(demandOpen ? "open" : "")" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        @if (demandOpen)
+                        {
+                            <div class="panel-section-body">
+                                <div class="panel-stat-row">
+                                    <span class="stat-label">Total Sales Transactions</span>
+                                    <span class="stat-value accent">@selectedArea.TransactionCount.ToString("N0")</span>
+                                </div>
+                                <div class="panel-stat-row">
+                                    <span class="stat-label">Total Sales Value</span>
+                                    <span class="stat-value accent">@MapDataService.FormatAed(selectedArea.TotalValue)</span>
+                                </div>
+                                <div class="panel-stat-row">
+                                    <span class="stat-label">vs Dubai Avg</span>
+                                    @{
+                                        var delta = dubaiAvg == null ? 0 : ((double)selectedArea.AvgPricePerSqft / (double)dubaiAvg.AvgPricePerSqft - 1) * 100;
+                                        var deltaClass = delta >= 0 ? "up" : "down";
+                                        var deltaSign = delta >= 0 ? "+" : "";
+                                    }
+                                    <span class="stat-delta @deltaClass">@deltaSign@delta.ToString("F0")%</span>
+                                </div>
+                                <div class="sparkline-wrap">
+                                    @((MarkupString)MapDataService.RenderSparkline(selectedArea.VolumeTrend, "#4ade80", 300, 44))
+                                    <div class="spark-axis"><span>12M ago</span><span>Now</span></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- VALUE & PRICE TREND -->
+                    <div class="panel-section">
+                        <div class="panel-section-header" @onclick="() => valueTrendOpen = !valueTrendOpen">
+                            <span>VALUE &amp; PRICE TREND</span>
+                            <svg class="chevron @(valueTrendOpen ? "open" : "")" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        @if (valueTrendOpen)
+                        {
+                            <div class="panel-section-body">
+                                <div class="area-stat-cards">
+                                    <div class="area-stat-card">
+                                        <span class="asc-label">Avg price per sq ft</span>
+                                        <span class="asc-value accent-green">AED @selectedArea.AvgPricePerSqft.ToString("N0")</span>
+                                    </div>
+                                    <div class="area-stat-card">
+                                        <span class="asc-label">Median value</span>
+                                        <span class="asc-value">@MapDataService.FormatAed(selectedArea.TotalValue / Math.Max(selectedArea.TransactionCount, 1))</span>
+                                    </div>
+                                </div>
+                                <div class="area-stat-cards" style="margin-top:8px;">
+                                    <div class="area-stat-card">
+                                        <span class="asc-label">Off-plan share</span>
+                                        <span class="asc-value accent-orange">@selectedArea.OffPlanPercent%</span>
+                                    </div>
+                                    <div class="area-stat-card">
+                                        <span class="asc-label">&gt;10M Transactions</span>
+                                        <span class="asc-value">@((int)(selectedArea.TransactionCount * 0.08))</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- MARKET COMPOSITION -->
+                    <div class="panel-section">
+                        <div class="panel-section-header" @onclick="() => compositionOpen = !compositionOpen">
+                            <span>MARKET COMPOSITION</span>
+                            <svg class="chevron @(compositionOpen ? "open" : "")" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        @if (compositionOpen)
+                        {
+                            <div class="panel-section-body">
+                                <div class="panel-stat-row">
+                                    <span class="stat-label">Most Sold Property</span>
+                                    <span class="stat-value">Apartment</span>
+                                </div>
+                                <div class="panel-stat-row">
+                                    <span class="stat-label">Top Project</span>
+                                    <span class="stat-value">@(selectedArea.Name) Tower</span>
+                                </div>
+                                <div class="split-bar-wrap">
+                                    <div class="split-bar-label">OFF-PLAN VS READY</div>
+                                    <div class="split-bar">
+                                        <div class="split-bar-off" style="width:@(selectedArea.OffPlanPercent)%"></div>
+                                    </div>
+                                    <div class="split-bar-legend">
+                                        <span><i class="dot off"></i>Off-plan @selectedArea.OffPlanPercent%</span>
+                                        <span><i class="dot ready"></i>Ready @(100 - selectedArea.OffPlanPercent)%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (pinnedAreas.Count > 0)
+                    {
+                        <div class="panel-section">
+                            <div class="panel-section-header"><span>COMPARING (@pinnedAreas.Count)</span></div>
+                            <div class="panel-section-body">
+                                @foreach (var p in pinnedAreas)
+                                {
+                                    <div class="pinned-row">
+                                        <span class="pinned-name">@p.Name</span>
+                                        <span class="pinned-val">@MapDataService.FormatAed(p.TotalValue)</span>
+                                        <button class="panel-icon-btn small" @onclick="() => pinnedAreas.Remove(p)">✕</button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="area-panel-collapsed-btn">
+                        <button class="panel-icon-btn" @onclick="() => areaPanelCollapsed = false" title="Expand">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="dash-panel-toggle">
+                <button class="panel-icon-btn" title="Select an area on the map">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+        }
+
+        <!-- Map Area -->
+        <div class="dash-map-area">
+            <!-- Toolbar: Search + Modes + Time range + Assistant -->
+            <div class="map-tabs">
+                <!-- Search -->
+                <div class="map-search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Search an area..." @bind="searchQuery" @bind:event="oninput" aria-label="Search an area" />
+                    @if (!string.IsNullOrWhiteSpace(searchQuery))
+                    {
+                        <div class="map-search-results">
+                            @foreach (var a in areaMapData.Where(a => a.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)).Take(6))
+                            {
+                                <button type="button" class="map-search-item" @onclick="() => JumpTo(a)">
+                                    <span class="ms-name">@a.Name</span>
+                                    <span class="ms-meta">@a.TransactionCount.ToString("N0") txns</span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Modes -->
+                <button class="map-tab @(mapMode == "projects" ? "active" : "")" @onclick='() => SetMapMode("projects")'>Projects</button>
+                <button class="map-tab @(mapMode == "volume" ? "active" : "")" @onclick='() => SetMapMode("volume")'>Transaction Activity</button>
+                <button class="map-tab @(mapMode == "pricesqft" ? "active" : "")" @onclick='() => SetMapMode("pricesqft")'>Avg Price/Sqft</button>
+                <button class="map-tab @(mapMode == "yield" ? "active" : "")" @onclick='() => SetMapMode("yield")'>Rental Yield</button>
+                <button class="map-tab @(mapMode == "esg" ? "active" : "")" @onclick='() => SetMapMode("esg")'>ESG Coverage</button>
+
+                <div style="flex:1;"></div>
+
+                <!-- Time range -->
+                <div class="time-range">
+                    @foreach (var r in new[] { "1M","3M","6M","12M","YTD","All" })
+                    {
+                        <button class="tr-pill @(timeRange == r ? "active" : "")" @onclick="() => timeRange = r">@r</button>
+                    }
+                </div>
+
+                <button class="assistant-btn" @onclick="OpenFullChat">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    ASSISTANT
+                </button>
+            </div>
+
+            <div id="dubaiMap" class="map-container"></div>
+
+            <!-- Legend (bottom-left) -->
+            <div class="map-legend">
+                <div class="legend-title">@LegendTitle()</div>
+                @foreach (var r in LegendRows())
+                {
+                    <div class="legend-row"><i style="background:@r.color"></i><span>@r.label</span></div>
+                }
+            </div>
+
+            <!-- Custom controls cluster (bottom-right extras; native zoom ctrls stay put) -->
+            <div class="map-ctrls">
+                <button class="mc-btn" title="Recenter Dubai" @onclick="Recenter">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+                </button>
+                <button class="mc-btn" title="Fullscreen" @onclick="ToggleFullscreen">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                </button>
+            </div>
+
+            <div class="map-timestamp">*Data as of @kpi.DataAsOf.ToString("dd MMM yyyy") · @timeRange</div>
+
+            <!-- AI Insight Overlay (with suggested queries) -->
+            <div class="ai-overlay @(aiExpanded ? "expanded" : "")">
+                <div class="ai-overlay-header" @onclick="() => aiExpanded = !aiExpanded">
+                    <div class="ai-overlay-title">
+                        <span class="ai-sparkle">&#10024;</span>
+                        <span>AI INSIGHT</span>
+                        @if (_aiLoading)
+                        {
+                            <span class="ai-mini-spin" title="Generating…"></span>
+                        }
+                        else if (!string.IsNullOrEmpty(_aiModel))
+                        {
+                            <span class="ai-model-badge" title="Answered by @_aiModel">@_aiModel</span>
+                        }
+                    </div>
+                    <svg class="chevron @(aiExpanded ? "open" : "")" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                @if (aiExpanded)
+                {
+                    <div class="ai-overlay-body">
+                        @if (!string.IsNullOrWhiteSpace(_aiInsight))
+                        {
+                            <p>@_aiInsight</p>
+                        }
+                        else if (selectedArea != null)
+                        {
+                            <p>
+                                <strong>@selectedArea.Name</strong> recorded <strong>@selectedArea.TransactionCount.ToString("N0")</strong>
+                                transactions with total value of <strong>@MapDataService.FormatAed(selectedArea.TotalValue)</strong>.
+                                Avg price per sq ft <strong>AED @selectedArea.AvgPricePerSqft.ToString("N0")</strong>, off-plan share <strong>@selectedArea.OffPlanPercent%</strong>.
+                            </p>
+                        }
+                        else
+                        {
+                            <p>
+                                The Dubai property market shows continued strength with off-plan transactions driving volume growth.
+                                <strong>@kpi.TopRegionByValue</strong> leads by sales value; <strong>Jumeirah Village Circle</strong>
+                                leads by transaction count. Avg price per sq ft: <strong>AED @kpi.AveragePricePerSqft.ToString("N0")</strong>.
+                            </p>
+                        }
+                        <div class="ai-chips">
+                            @foreach (var chip in AiChips())
+                            {
+                                <button class="ai-chip" disabled="@_aiLoading" @onclick="() => RunAiAsync(chip.Query)">@chip.Label</button>
+                            }
+                        </div>
+                        <div class="ai-overlay-actions">
+                            <button class="ai-link-btn" disabled="@_aiLoading" @onclick="GenerateInsightAsync">↻ Refresh insight</button>
+                            <button class="ai-link-btn primary" @onclick="OpenFullChat">Ask AI ↗</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+</div>
+
+<style>
+    .ai-mini-spin { width:12px; height:12px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; display:inline-block; animation:aiSpin .7s linear infinite; margin-left:6px; vertical-align:middle; opacity:.7; }
+    @@keyframes aiSpin { to { transform: rotate(360deg); } }
+    .ai-model-badge { margin-left:6px; font-size:9px; font-weight:700; letter-spacing:.04em; padding:1px 6px; border-radius:999px; background:rgba(52,211,153,.18); color:#34d399; text-transform:uppercase; vertical-align:middle; }
+    .ai-overlay-body p { white-space: pre-wrap; }
+    .ai-chip[disabled], .ai-link-btn[disabled] { opacity:.5; cursor:default; }
+</style>
+
+@code {
+    private MapKpiSummaryDto? kpi;
+    private DubaiAveragesDto? dubaiAvg;
+    private List<AreaMapDataDto> areaMapData = new();
+    private List<ProjectPinDto> projectPins = new();
+    private bool isLoading = true;
+
+    // UI state
+    private bool demandOpen = true;
+    private bool valueTrendOpen = true;
+    private bool compositionOpen = true;
+    private bool aiExpanded = true;
+    private string mapMode = "projects";
+    private string timeRange = "12M";
+    private string searchQuery = "";
+    private bool mapInitialized = false;
+    private bool areaPanelCollapsed = false;
+
+    private AreaMapDataDto? selectedArea;
+    private List<AreaMapDataDto> pinnedAreas = new();
+    private DotNetObjectReference<Map>? dotNetRef;
+
+    // ----- AI Insight (live, via the IRETP AI agent / gpt-4o) -----
+    private string? _aiInsight;
+    private string? _aiModel;
+    private bool _aiLoading;
+    private bool _aiStarted;
+    private int _aiSeq;
+    private readonly AiChatService.Session _aiSession = new();
+
+    private record AiChip(string Label, string Query);
+    private IEnumerable<AiChip> AiChips() => selectedArea != null
+        ? new[]
+        {
+            new AiChip("Compare to Dubai avg", $"How does {selectedArea.Name} compare to the Dubai average on price per square foot?"),
+            new AiChip("Rental yield", $"What is the rental yield in {selectedArea.Name}?"),
+            new AiChip("Active developers", $"Which developers are most active in {selectedArea.Name}?"),
+        }
+        : new[]
+        {
+            new AiChip("Top areas by value", "Which areas have the highest total sales value?"),
+            new AiChip("Highest yields", "Which zones have the highest gross rental yield?"),
+            new AiChip("Active developers", "Which developers have the most projects?"),
+        };
+
+    private async Task RunAiAsync(string query)
+    {
+        var seq = ++_aiSeq;
+        _aiLoading = true; _aiInsight = null; _aiModel = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var reply = await Ai.AskAsync(_aiSession, query, "en");
+            if (seq != _aiSeq) return;            // superseded by a newer request
+            _aiInsight = reply?.Text;
+            _aiModel = reply?.ModelUsed;
+        }
+        catch { /* keep the templated fallback */ }
+        finally
+        {
+            if (seq == _aiSeq) { _aiLoading = false; await InvokeAsync(StateHasChanged); }
+        }
+    }
+
+    private Task GenerateInsightAsync() => RunAiAsync(selectedArea != null
+        ? $"In one or two short sentences, give a factual DLD market insight for {selectedArea.Name} in Dubai — transactions, average price per square foot, and off-plan share."
+        : "In one or two short sentences, summarise the current Dubai real-estate market from DLD data — the sales-value leader, the busiest area by transactions, and the average price per square foot.");
+
+    private void OpenFullChat()
+    {
+        var q = selectedArea != null
+            ? $"Tell me about the {selectedArea.Name} real estate market in Dubai"
+            : "Give me an overview of the current Dubai real estate market";
+        Nav.NavigateTo("/ai-agent?q=" + Uri.EscapeDataString(q));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        kpi = await MapData.GetKpiSummaryAsync();
+        areaMapData = await MapData.GetAreaMapDataAsync();
+        projectPins = await MapData.GetProjectPinsAsync();
+        dubaiAvg = await MapData.GetDubaiAveragesAsync();
+        isLoading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!isLoading && !mapInitialized && areaMapData.Count > 0)
+        {
+            mapInitialized = true;
+            dotNetRef = DotNetObjectReference.Create(this);
+            try
+            {
+                await JS.InvokeVoidAsync("dldMap.init", "dubaiMap", dotNetRef);
+                // FR-011: seed the project-pin layer once on init. After that
+                // `setMarkers` drives its visibility from the active mode, so
+                // we don't re-add the source on every tab click.
+                await JS.InvokeVoidAsync("dldMap.setProjectPins", projectPins);
+                await JS.InvokeVoidAsync("dldMap.setMarkers", areaMapData, mapMode);
+            }
+            catch (JSException)
+            {
+                mapInitialized = false;
+            }
+        }
+
+        if (firstRender && !_aiStarted)
+        {
+            _aiStarted = true;
+            _ = GenerateInsightAsync();   // populate the AI Insight overlay with a live answer
+        }
+    }
+
+    private async Task SetMapMode(string mode)
+    {
+        mapMode = mode;
+        if (mapInitialized)
+        {
+            await JS.InvokeVoidAsync("dldMap.setMarkers", areaMapData, mode);
+        }
+    }
+
+    private async Task JumpTo(AreaMapDataDto a)
+    {
+        searchQuery = "";
+        if (mapInitialized)
+        {
+            await JS.InvokeVoidAsync("dldMap.jumpToArea", a.AreaId);
+        }
+    }
+
+    private async Task Recenter()
+    {
+        if (mapInitialized) await JS.InvokeVoidAsync("dldMap.recenter");
+    }
+
+    private async Task ToggleFullscreen()
+    {
+        if (mapInitialized) await JS.InvokeVoidAsync("dldMap.toggleFullscreen", "dubaiMap");
+    }
+
+    private void TogglePin()
+    {
+        if (selectedArea == null) return;
+        var existing = pinnedAreas.FirstOrDefault(p => p.AreaId == selectedArea.AreaId);
+        if (existing != null) pinnedAreas.Remove(existing);
+        else if (pinnedAreas.Count < 4) pinnedAreas.Add(selectedArea);
+    }
+
+    [JSInvokable]
+    public void OnAreaSelected(int areaId, string name, int txnCount, decimal totalValue, decimal avgPsf)
+    {
+        var full = areaMapData.FirstOrDefault(a => a.AreaId == areaId);
+        selectedArea = full ?? new AreaMapDataDto
+        {
+            AreaId = areaId, Name = name, TransactionCount = txnCount,
+            TotalValue = totalValue, AvgPricePerSqft = avgPsf
+        };
+        areaPanelCollapsed = false;
+        InvokeAsync(StateHasChanged);
+        _ = GenerateInsightAsync();        // refresh the AI insight for the selected area
+    }
+
+    [JSInvokable]
+    public void OnAreaDeselected()
+    {
+        selectedArea = null;
+        InvokeAsync(StateHasChanged);
+        _ = GenerateInsightAsync();        // back to the market-overview insight
+    }
+
+    private async Task CloseAreaPanel()
+    {
+        selectedArea = null;
+        await JS.InvokeVoidAsync("dldMap.deselectArea");
+    }
+
+    // ----- Legend helpers -----
+    private string LegendTitle() => mapMode switch
+    {
+        "pricesqft" => "AVG PRICE / SQFT",
+        "volume"    => "TRANSACTION ACTIVITY",
+        "yield"     => "GROSS RENTAL YIELD",
+        "esg"       => "CERTIFIED GREEN COVERAGE",
+        "projects"  => "PROJECT STATUS",
+        _           => "TRANSACTION DENSITY"
+    };
+
+    private record LegendRow(string color, string label);
+    private IEnumerable<LegendRow> LegendRows() => mapMode switch
+    {
+        "pricesqft" => new[]
+        {
+            new LegendRow("#22c55e", "> 2,500 AED/sqft"),
+            new LegendRow("#328B4D", "1,800 – 2,500"),
+            new LegendRow("#1a5c30", "1,200 – 1,800"),
+            new LegendRow("#0f3d1f", "< 1,200"),
+        },
+        "volume" => new[]
+        {
+            new LegendRow("#22c55e", "> 800 txns / month"),
+            new LegendRow("#328B4D", "400 – 800"),
+            new LegendRow("#1a5c30", "200 – 400"),
+            new LegendRow("#0f3d1f", "< 200"),
+        },
+        "yield" => new[]
+        {
+            new LegendRow("#22c55e", "> 8.0% gross yield"),
+            new LegendRow("#328B4D", "6.0% – 8.0%"),
+            new LegendRow("#1a5c30", "4.0% – 6.0%"),
+            new LegendRow("#0f3d1f", "< 4.0%"),
+        },
+        "esg" => new[]
+        {
+            new LegendRow("#22c55e", "> 60% certified (LEED/Pearl/BREEAM)"),
+            new LegendRow("#328B4D", "35% – 60%"),
+            new LegendRow("#1a5c30", "15% – 35%"),
+            new LegendRow("#0f3d1f", "< 15%"),
+        },
+        "projects" => new[]
+        {
+            new LegendRow("#22c55e", "Completed"),
+            new LegendRow("#F1B44C", "Under Construction"),
+            new LegendRow("#50A5F1", "Future / Announced"),
+            new LegendRow("#EF4444", "Stalled"),
+        },
+        _ => new[]
+        {
+            new LegendRow("#22c55e", "> 800 txns"),
+            new LegendRow("#328B4D", "400 – 800"),
+            new LegendRow("#1a5c30", "200 – 400"),
+            new LegendRow("#0f3d1f", "< 200"),
+        }
+    };
+
+    // ----- KPI card render helper -----
+    private RenderFragment RenderKpi(string tone, string label, string value, string change, bool up, string sparkColor, double[] spark) => __builder =>
+    {
+        <div class="dash-kpi-item">
+            <div class="dash-kpi-icon @tone">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+            </div>
+            <div class="dash-kpi-info">
+                <span class="dash-kpi-label">@label</span>
+                <span class="dash-kpi-value">@value</span>
+                <span class="dash-kpi-change @(up ? "positive" : "negative")">@(up ? "▲" : "▼") @change</span>
+            </div>
+            <div class="dash-kpi-spark">
+                @((MarkupString)MapDataService.RenderSparkline(spark, sparkColor, 100, 36))
+            </div>
+        </div>
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("dldMap.destroy"); } catch { }
+        dotNetRef?.Dispose();
+    }
+}

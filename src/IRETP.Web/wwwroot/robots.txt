@@ -1,0 +1,16 @@
+# robots.txt — IRETP public portal (DLD-IRETP-2026-001 RFP Section 4 SEO)
+# Crawl the public data pages, keep admin/account/auth paths off search engines.
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /account
+Disallow: /auth/
+Disallow: /notifications
+Disallow: /watchlist
+Disallow: /alerts
+Disallow: /api-portal
+Disallow: /cms/preview/
+
+Sitemap: /sitemap.xml

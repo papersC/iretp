@@ -1,0 +1,126 @@
+@page "/watchlist"
+@rendermode InteractiveServer
+@inject WatchlistService Watch
+@implements IDisposable
+
+<PageTitle>IRETP - Watchlist</PageTitle>
+
+<ModuleBanner Icon="bookmark-star"
+              Title="My Watchlist"
+              Subtitle="Projects, zones, and developers you follow. Updates trigger alerts per your preferences."
+              ButtonText="Add to watchlist"
+              ButtonIcon="plus-lg"
+              OnButtonClick="@(() => _showAdd = true)" />
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Kind</th>
+                    <th>Name</th>
+                    <th>Detail</th>
+                    <th>Added</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var w in Watch.Watches())
+                {
+                    <tr>
+                        <td>@KindBadge(w.Kind)</td>
+                        <td class="fw-semibold">@w.Name</td>
+                        <td class="text-muted">@(w.Detail ?? "—")</td>
+                        <td>@w.AddedAt.ToString("dd MMM yyyy")</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger" aria-label="Remove from watchlist" title="Remove" @onclick="() => Watch.RemoveWatch(w.Id)">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                @if (Watch.Watches().Count == 0)
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">Nothing yet — add a zone, project, or developer to get started.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (_showAdd)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.4);" @onclick="() => _showAdd = false">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add to Watchlist</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showAdd = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="kind" class="form-label">Kind</label>
+                        <select id="kind" class="form-select" @bind="_newKind">
+                            <option>Project</option>
+                            <option>Zone</option>
+                            <option>Developer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input id="name" type="text" class="form-control" @bind="_newName" placeholder="e.g. Emaar Beachfront" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes-optional" class="form-label">Notes (optional)</label>
+                        <input id="notes-optional" type="text" class="form-control" @bind="_newDetail" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="() => _showAdd = false">Cancel</button>
+                    <button class="btn btn-primary" @onclick="DoAdd"
+                            disabled="@string.IsNullOrWhiteSpace(_newName)">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _showAdd;
+    private string _newKind = "Project";
+    private string _newName = "";
+    private string _newDetail = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Watch.OnChange += OnChange;
+        await Watch.RefreshAsync();
+    }
+    public void Dispose() => Watch.OnChange -= OnChange;
+    private void OnChange() => InvokeAsync(StateHasChanged);
+
+    private void DoAdd()
+    {
+        Watch.AddWatch(_newKind, _newName.Trim(),
+            string.IsNullOrWhiteSpace(_newDetail) ? null : _newDetail.Trim());
+        _newKind = "Project";
+        _newName = "";
+        _newDetail = "";
+        _showAdd = false;
+    }
+
+    private static RenderFragment KindBadge(string k) => __b =>
+    {
+        var (cls, icon) = k switch
+        {
+            "Project"   => ("bg-primary",   "bi-buildings"),
+            "Zone"      => ("bg-success",   "bi-geo-alt"),
+            "Developer" => ("bg-warning text-dark", "bi-person-badge"),
+            _           => ("bg-secondary", "bi-bookmark")
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", $"badge {cls}");
+        __b.AddMarkupContent(2, $"<i class=\"bi {icon} me-1\"></i>{k}");
+        __b.CloseElement();
+    };
+}

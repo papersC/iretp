@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "iretp-web",
+      "runtimeExecutable": "C:/Program Files/dotnet/dotnet.exe",
+      "runtimeArgs": ["run", "--project", "src/IRETP.Web", "--urls", "http://0.0.0.0:5010"],
+      "port": 5010
+    },
+    {
+      "name": "iretp-webapi",
+      "runtimeExecutable": "C:/Program Files/dotnet/dotnet.exe",
+      "runtimeArgs": ["run", "--project", "src/IRETP.WebAPI", "--urls", "http://0.0.0.0:5000"],
+      "port": 5000
+    },
+    {
+      "name": "iretp-adminapi",
+      "runtimeExecutable": "C:/Program Files/dotnet/dotnet.exe",
+      "runtimeArgs": ["run", "--project", "src/IRETP.AdminAPI", "--urls", "http://0.0.0.0:5002"],
+      "port": 5002
+    }
+  ]
+}

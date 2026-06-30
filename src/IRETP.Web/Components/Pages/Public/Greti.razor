@@ -1,0 +1,309 @@
+@page "/greti"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+@inject WebApiClient Api
+@implements IAsyncDisposable
+
+<PageTitle>IRETP - GRETI Progress</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="trophy-fill"
+                  IconColor="text-warning"
+                  Title="GRETI Progress Tracker"
+                  Subtitle="JLL Global Real Estate Transparency Index — Dubai trajectory across the six sub-indices, aligned with the IRETP platform delivery (RFP Section 2.2).">
+        <ActionsContent>
+            <span class="badge bg-primary fs-6">Current tier: Transparent → Highly Transparent (target 2027)</span>
+        </ActionsContent>
+    </ModuleBanner>
+
+    <!-- Headline score tile -->
+    @{
+        var compositeDisplay = _live?.CompositeScore ?? 2.14m;
+        var compositeDelta = _live is null ? 0.38m : (_live.CompositeBaseline2022 - _live.CompositeScore);
+        var rankDisplay = _live?.GlobalRank2024 ?? 28;
+        var liftDisplay = _live?.ProjectedLift ?? 0.42m;
+    }
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card card-stats shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Composite GRETI score</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <div class="fs-1 fw-bold text-primary">@compositeDisplay.ToString("F2")</div>
+                        <div class="text-success fw-bold">
+                            <i class="bi bi-arrow-up"></i> @compositeDelta.ToString("F2") vs 2022
+                        </div>
+                    </div>
+                    <div class="small text-muted">Lower is better · 1.00 = perfectly transparent</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-stats success shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Global rank (2024)</div>
+                    <div class="fs-1 fw-bold text-success">#@rankDisplay</div>
+                    <div class="small text-success">↑ from #38 in 2022 (across 89 countries)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-stats warning shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">IRETP-driven lift (projected)</div>
+                    <div class="fs-1 fw-bold text-warning">+@liftDisplay.ToString("F2")</div>
+                    <div class="small text-muted">post-platform, end of Phase 4 go-live</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sub-index detail + chart -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white"><h2 class="mb-0 h5">Sub-index progress (lower = better)</h2></div>
+                <div class="card-body" style="height: 340px; position: relative;">
+                    <canvas id="gretiRadar"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white"><h2 class="mb-0 h5">Sub-index contributions</h2></div>
+                <div class="list-group list-group-flush">
+                    @foreach (var row in _subIndices)
+                    {
+                        var pct = (decimal)(row.Baseline2022 - row.Target) /
+                                  Math.Max(row.Baseline2022 - 1, 0.01m) * 100;
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <strong>@row.Name</strong>
+                                <span class="small text-muted">weight @row.Weight%</span>
+                            </div>
+                            <div class="d-flex align-items-baseline gap-3 small mb-1">
+                                <span class="text-muted">2022: @row.Baseline2022.ToString("F2")</span>
+                                <span class="fw-bold">2024: @row.Current2024.ToString("F2")</span>
+                                <span class="text-success">→ @row.Target.ToString("F2")</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-@BarColor(row)"
+                                     style="width: @Math.Clamp((double)pct, 5, 100).ToString("F0")%"></div>
+                            </div>
+                            <div class="small text-muted mt-1"><em>IRETP lever:</em> @row.IretpLever</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time trajectory -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white"><h2 class="mb-0 h5">Composite score trajectory</h2></div>
+        <div class="card-body" style="height: 260px; position: relative;">
+            <canvas id="gretiTrajectory"></canvas>
+        </div>
+    </div>
+
+    <!-- Gap bridge table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white"><h2 class="mb-0 h5">Gap bridge to 'Highly Transparent' tier</h2></div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sub-index</th>
+                        <th>Gap (2024 → target)</th>
+                        <th>Delivery phase</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in _subIndices)
+                    {
+                        var gap = row.Current2024 - row.Target;
+                        <tr>
+                            <td class="fw-semibold">@row.Name</td>
+                            <td class="fw-bold">@gap.ToString("F2")</td>
+                            <td>@row.Phase</td>
+                            <td>@PhaseBadge(row.DeliveredPct)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private record SubIndex(string Name, int Weight,
+        decimal Baseline2022, decimal Current2024, decimal Target,
+        string IretpLever, string Phase, int DeliveredPct);
+
+    private readonly List<SubIndex> _subIndices = new()
+    {
+        new("Investment Performance Measurement", 20, 3.15m, 2.45m, 1.85m,
+            "Real-time price/sqft index, rental-yield heatmaps, 10-year transaction history.",
+            "Phase 1", 100),
+        new("Market Fundamentals & Data Availability", 20, 3.02m, 2.32m, 1.75m,
+            "Open Data API, Excel/CSV/PDF exports, zone + period filters.",
+            "Phase 1", 100),
+        new("Transaction Process Transparency", 15, 2.87m, 2.10m, 1.65m,
+            "Searchable full transaction registry (sales / gifts / mortgages / auctions).",
+            "Phase 1", 100),
+        new("Governance of Listed Vehicles", 15, 3.45m, 2.78m, 1.95m,
+            "Public Developer Scorecard + Internal Developer Rating.",
+            "Phase 3", 60),
+        new("Technology & AI Integration", 15, 3.30m, 1.92m, 1.45m,
+            "RAG-grounded AI Agent, Slice & Dice analytics, in-chat dashboards.",
+            "Phase 1 onward", 100),
+        new("Sustainability / ESG", 15, 3.62m, 2.95m, 2.10m,
+            "LEED/Estidama Pearl data layer on GIS map + International benchmarking.",
+            "Phase 4", 25),
+    };
+
+    private GretiDashboardDto? _live;
+    private List<GretiTrajectoryPoint> _trajectory = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _live = await Api.GetGretiDashboardAsync();
+            if (_live is not null)
+            {
+                _subIndices.Clear();
+                foreach (var s in _live.SubIndices)
+                {
+                    _subIndices.Add(new SubIndex(
+                        s.Name, s.Weight, s.Baseline2022, s.Current2024, s.Target,
+                        s.IretpLever, s.Phase, s.DeliveredPct));
+                }
+                _trajectory = _live.Trajectory;
+            }
+        }
+        catch
+        {
+            // Fixture fallback already in place.
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await RenderRadar();
+        await RenderTrajectory();
+    }
+
+    private async Task RenderRadar()
+    {
+        var config = new
+        {
+            type = "radar",
+            data = new
+            {
+                labels = _subIndices.Select(s => s.Name).ToArray(),
+                datasets = new[]
+                {
+                    new {
+                        label = "Baseline 2022",
+                        data = _subIndices.Select(s => (double)s.Baseline2022).ToArray(),
+                        borderColor = "#9199a4",
+                        backgroundColor = "rgba(145,153,164,0.14)",
+                        pointBackgroundColor = "#9199a4"
+                    },
+                    new {
+                        label = "Current 2024",
+                        data = _subIndices.Select(s => (double)s.Current2024).ToArray(),
+                        borderColor = "#F1B44C",
+                        backgroundColor = "rgba(241,180,76,0.14)",
+                        pointBackgroundColor = "#F1B44C"
+                    },
+                    new {
+                        label = "Target (post-IRETP)",
+                        data = _subIndices.Select(s => (double)s.Target).ToArray(),
+                        borderColor = "#066735",
+                        backgroundColor = "rgba(6,103,53,0.2)",
+                        pointBackgroundColor = "#066735"
+                    }
+                }
+            },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                scales = new { r = new { suggestedMin = 1, suggestedMax = 4, reverse = true } },
+                plugins = new { legend = new { position = "bottom" } }
+            }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "gretiRadar", config); } catch { }
+    }
+
+    private async Task RenderTrajectory()
+    {
+        var config = new
+        {
+            type = "line",
+            data = new
+            {
+                labels = new[] { "2018", "2020", "2022", "2024", "2025 (proj)", "2026 (proj)", "2027 target" },
+                datasets = new object[]
+                {
+                    new {
+                        label = "Dubai composite",
+                        data = new[] { 3.15, 2.92, 2.57, 2.14, 2.02, 1.80, 1.72 },
+                        borderColor = "#066735",
+                        backgroundColor = "rgba(6,103,53,0.15)",
+                        fill = true,
+                        tension = 0.3
+                    },
+                    new {
+                        label = "Tier threshold · Highly Transparent",
+                        data = new[] { 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9 },
+                        borderColor = "#F46A6A",
+                        borderDash = new[] { 5, 5 },
+                        pointRadius = 0,
+                        fill = false
+                    }
+                }
+            },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                scales = new { y = new { reverse = true, suggestedMin = 1.5, suggestedMax = 3.2 } },
+                plugins = new { legend = new { position = "bottom" } }
+            }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "gretiTrajectory", config); } catch { }
+    }
+
+    private static string BarColor(SubIndex s)
+    {
+        var delivered = s.DeliveredPct;
+        if (delivered >= 90) return "success";
+        if (delivered >= 50) return "primary";
+        return "warning";
+    }
+
+    private static RenderFragment PhaseBadge(int pct) => __b =>
+    {
+        var (cls, label) = pct switch
+        {
+            >= 90 => ("bg-success", $"Delivered — {pct}%"),
+            >= 50 => ("bg-primary", $"In progress — {pct}%"),
+            _     => ("bg-warning text-dark", $"Upcoming — {pct}%")
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", $"badge {cls}");
+        __b.AddContent(2, label);
+        __b.CloseElement();
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "gretiRadar"); } catch { }
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "gretiTrajectory"); } catch { }
+    }
+}

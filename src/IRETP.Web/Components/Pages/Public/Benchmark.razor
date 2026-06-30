@@ -1,0 +1,197 @@
+@page "/benchmark"
+@rendermode InteractiveServer
+@inject WebApiClient Api
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP — International Benchmark</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="globe"
+                  Title="International Market Benchmarking"
+                  Subtitle="Dubai compared against 5 global peer cities — London, Singapore, New York, Paris, Hong Kong (RFP Section 20). Updated quarterly from publicly-available index publishers.">
+        <ActionsContent>
+            @if (_data is not null && _data.Cities.Count > 0)
+            {
+                <span class="badge bg-primary fs-6">
+                    Last refreshed @(_data.LastRefreshedAt == DateTime.MinValue ? "—" : _data.LastRefreshedAt.ToString("yyyy-MM-dd"))
+                </span>
+            }
+        </ActionsContent>
+    </ModuleBanner>
+
+    @if (_loading)
+    {
+        <SkeletonTable Rows="6" Columns="6" WithCard="true" Class="mb-3" />
+        <Skeleton Width="100%" Height="320px" />
+    }
+    else if (_data is null || _data.Cities.Count == 0)
+    {
+        <div class="alert alert-warning">
+            Benchmark API unreachable or no data loaded yet. Reload after the data-refresh job completes.
+        </div>
+    }
+    else
+    {
+        <!-- City cards -->
+        <div class="row g-3 mb-4">
+            @foreach (var c in _data.Cities)
+            {
+                var isDxb = c.CityCode == "DXB";
+                <div class="col-md-2">
+                    <div class="card shadow-sm @(isDxb ? "border-primary" : "")">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <strong>@c.CityName</strong>
+                                @if (isDxb) { <span class="badge bg-primary">Home</span> }
+                            </div>
+                            <div class="small text-muted">GRETI</div>
+                            <div class="fs-5 fw-bold">@c.GretiCompositeScore.ToString("F2")</div>
+                            <div class="small text-muted mt-2">Prime price</div>
+                            <div>$@c.AveragePricePerSqft.ToString("N0")/sqft</div>
+                            <div class="small text-muted mt-2">Yield</div>
+                            <div>@c.AverageGrossRentalYieldPct.ToString("F1")%</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Charts -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h2 class="mb-0 h5">GRETI composite — lower is more transparent</h2></div>
+                    <div class="card-body" style="height: 260px; position:relative;">
+                        <canvas id="benchmarkGreti"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h2 class="mb-0 h5">Average gross rental yield</h2></div>
+                    <div class="card-body" style="height: 260px; position:relative;">
+                        <canvas id="benchmarkYield"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matrix -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white"><h2 class="mb-0 h5">Metric matrix</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Metric</th>
+                            <th class="text-end">Unit</th>
+                            @foreach (var c in _data.Cities)
+                            {
+                                <th class="text-end">@c.CityCode</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _data.Matrix)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@row.Metric</td>
+                                <td class="text-end small text-muted">@row.Unit</td>
+                                @foreach (var c in _data.Cities)
+                                {
+                                    var val = row.ValuesByCity.TryGetValue(c.CityCode, out var v) ? v : 0m;
+                                    <td class="text-end">@val.ToString("F2")</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private BenchmarkDashboardDto? _data;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _data = await Api.GetBenchmarkDashboardAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _data is null) return;
+        await RenderGreti();
+        await RenderYield();
+    }
+
+    private async Task RenderGreti()
+    {
+        if (_data is null) return;
+        var config = new
+        {
+            type = "bar",
+            data = new
+            {
+                labels = _data.Cities.Select(c => c.CityName).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = "GRETI",
+                        data = _data.Cities.Select(c => (double)c.GretiCompositeScore).ToArray(),
+                        backgroundColor = _data.Cities.Select(c => c.CityCode == "DXB" ? "#066735" : "#9199a4").ToArray()
+                    }
+                }
+            },
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                scales = new { y = new { reverse = true, suggestedMin = 1, suggestedMax = 3.5 } },
+                plugins = new { legend = new { display = false } }
+            }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "benchmarkGreti", config); } catch { }
+    }
+
+    private async Task RenderYield()
+    {
+        if (_data is null) return;
+        var config = new
+        {
+            type = "bar",
+            data = new
+            {
+                labels = _data.Cities.Select(c => c.CityName).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = "Yield %",
+                        data = _data.Cities.Select(c => (double)c.AverageGrossRentalYieldPct).ToArray(),
+                        backgroundColor = _data.Cities.Select(c => c.CityCode == "DXB" ? "#066735" : "#1B4F72").ToArray()
+                    }
+                }
+            },
+            options = new { responsive = true, maintainAspectRatio = false, plugins = new { legend = new { display = false } } }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "benchmarkYield", config); } catch { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "benchmarkGreti"); } catch { }
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "benchmarkYield"); } catch { }
+    }
+}

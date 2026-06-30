@@ -1,0 +1,6 @@
+@IRETP.WebAPI_HostAddress = http://localhost:5168
+
+GET {{IRETP.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

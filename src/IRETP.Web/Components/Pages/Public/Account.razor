@@ -1,0 +1,246 @@
+@page "/account"
+@rendermode InteractiveServer
+@inject WebApiClient Api
+@inject AuthStateService Auth
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>IRETP — Account &amp; privacy</PageTitle>
+
+<div class="container py-4">
+    <ModuleBanner Icon="person-circle"
+                  Title="Account &amp; privacy"
+                  Subtitle="Manage your profile, consent preferences, and personal data (UAE Federal Decree-Law No. 45 of 2021 — Personal Data Protection Law · RFP Section 19.2)." />
+
+    @if (!Auth.IsAuthenticated)
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-lock me-2"></i>Sign in to manage your account.
+            <a href="/auth/login" class="btn btn-sm btn-primary ms-2">Sign in</a>
+        </div>
+    }
+    else if (_loading)
+    {
+        <div class="card shadow-sm mb-4 p-3">
+            <Skeleton Width="120px" Height="1rem" Class="mb-3" />
+            <div class="row g-3">
+                <div class="col-md-6"><Skeleton Width="80px" Height=".75rem" Class="mb-1" /><Skeleton Width="100%" Height="2.25rem" /></div>
+                <div class="col-md-6"><Skeleton Width="80px" Height=".75rem" Class="mb-1" /><Skeleton Width="100%" Height="2.25rem" /></div>
+                <div class="col-md-6"><Skeleton Width="80px" Height=".75rem" Class="mb-1" /><Skeleton Width="100%" Height="2.25rem" /></div>
+                <div class="col-md-6"><Skeleton Width="80px" Height=".75rem" Class="mb-1" /><Skeleton Width="100%" Height="2.25rem" /></div>
+            </div>
+        </div>
+    }
+    else if (_profile is null)
+    {
+        <NetworkError Service="Account" Detail="Try again in a moment." />
+    }
+    else
+    {
+        <!-- Profile card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white"><h2 class="mb-0 h5"><i class="bi bi-person me-2"></i>Profile</h2></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="email" class="form-label small text-muted">Email</label>
+                        <input id="email" class="form-control" value="@_profile.Email" disabled />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="first-name" class="form-label small text-muted">First name</label>
+                        <input id="first-name" class="form-control" @bind="_profile.FirstName" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="last-name" class="form-label small text-muted">Last name</label>
+                        <input id="last-name" class="form-control" @bind="_profile.LastName" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="preferred-language" class="form-label small text-muted">Preferred language</label>
+                        <select id="preferred-language" class="form-select" @bind="_profile.PreferredLanguage">
+                            @foreach (var c in UiStateService.SupportedLanguages)
+                            {
+                                <option value="@c">@(UiStateService.LanguageNames.TryGetValue(c, out var n) ? n : c)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="preferred-currency" class="form-label small text-muted">Preferred currency</label>
+                        <select id="preferred-currency" class="form-select" @bind="_profile.PreferredCurrency">
+                            <option>AED</option><option>USD</option><option>EUR</option>
+                            <option>GBP</option><option>CNY</option><option>RUB</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-primary btn-sm" @onclick="SaveProfile" disabled="@_saving">
+                        @if (_saving) { <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> }
+                        else { <i class="bi bi-save me-1" aria-hidden="true"></i> }
+                        Save profile
+                    </button>
+                    @if (_profileSavedAt.HasValue)
+                    {
+                        <span class="small text-success align-self-center">
+                            Saved @_profileSavedAt.Value.ToString("HH:mm:ss")
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Consent card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h2 class="mb-0 h5"><i class="bi bi-shield-check me-2"></i>Consent &amp; preferences</h2>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">
+                    All consents default to off. Change takes effect immediately and is recorded with a
+                    timestamp for the PDPL audit trail.
+                </p>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="c-marketing" @bind="_profile.ConsentMarketing" />
+                    <label class="form-check-label" for="c-marketing">
+                        <strong>Marketing &amp; periodic digest emails</strong>
+                        <div class="small text-muted">Weekly / monthly market digests and regulatory updates.</div>
+                    </label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="c-ai" @bind="_profile.ConsentAiMemory" />
+                    <label class="form-check-label" for="c-ai">
+                        <strong>Cross-session AI Agent memory</strong>
+                        <div class="small text-muted">
+                            Lets the Real Estate AI Agent remember your zone preferences and frequent queries
+                            across sessions (RFP AI006). Off by default.
+                        </div>
+                    </label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="c-analytics" @bind="_profile.ConsentUsageAnalytics" />
+                    <label class="form-check-label" for="c-analytics">
+                        <strong>Usage analytics</strong>
+                        <div class="small text-muted">
+                            Anonymous page-flow metrics to help DLD improve the portal.
+                        </div>
+                    </label>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-primary btn-sm" @onclick="SaveConsent" disabled="@_saving">
+                        <i class="bi bi-check-circle me-1" aria-hidden="true"></i> Update consent
+                    </button>
+                    @if (_profile.ConsentUpdatedAt.HasValue)
+                    {
+                        <span class="small text-muted align-self-center">
+                            Last updated @_profile.ConsentUpdatedAt.Value.ToString("yyyy-MM-dd HH:mm") UTC
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Data export card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h2 class="mb-0 h5"><i class="bi bi-box-arrow-down me-2"></i>Personal data export (DSAR)</h2>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">
+                    Download a JSON archive of every record the IRETP platform holds on your account — profile,
+                    consent log, watchlist, alert configurations, notifications, and AI Agent history.
+                    Guaranteed under <strong>UAE PDPL Article 13</strong> (Data Subject Access Right).
+                </p>
+                <button class="btn btn-outline-primary btn-sm" @onclick="DownloadData" disabled="@_exporting">
+                    @if (_exporting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-download me-1" aria-hidden="true"></i>
+                    }
+                    Download my data (JSON)
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private AccountProfileResponse? _profile;
+    private bool _loading = true;
+    private bool _saving;
+    private bool _exporting;
+    private DateTime? _profileSavedAt;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsAuthenticated) { _loading = false; return; }
+        try
+        {
+            _profile = await Api.GetAccountProfileAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveProfile()
+    {
+        if (_profile is null) return;
+        _saving = true;
+        try
+        {
+            var ok = await Api.UpdateAccountProfileAsync(new
+            {
+                firstName = _profile.FirstName,
+                lastName = _profile.LastName,
+                preferredLanguage = _profile.PreferredLanguage,
+                preferredCurrency = _profile.PreferredCurrency
+            });
+            if (ok) _profileSavedAt = DateTime.Now;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task SaveConsent()
+    {
+        if (_profile is null) return;
+        _saving = true;
+        try
+        {
+            var ok = await Api.UpdateAccountConsentAsync(
+                _profile.ConsentMarketing,
+                _profile.ConsentAiMemory,
+                _profile.ConsentUsageAnalytics);
+            if (ok) _profile.ConsentUpdatedAt = DateTime.UtcNow;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DownloadData()
+    {
+        _exporting = true;
+        try
+        {
+            var result = await Api.DownloadPersonalDataAsync();
+            if (result is null)
+            {
+                await JS.InvokeVoidAsync("alert", "Personal data export is unavailable. Please try again.");
+                return;
+            }
+            var base64 = Convert.ToBase64String(result.Value.Content);
+            await JS.InvokeVoidAsync("iretpDownload.fromBase64",
+                result.Value.FileName, "application/json", base64);
+        }
+        finally
+        {
+            _exporting = false;
+        }
+    }
+}

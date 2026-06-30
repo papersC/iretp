@@ -1,0 +1,112 @@
+name: security
+
+# RFP §10.2.2 — security testing requirements:
+#   • OWASP scan integrated into CI/CD (this workflow runs on every PR/push)
+#   • Vulnerable dependency report exported as a build artifact
+# Vulnerability assessment + VAPT are external to CI per the RFP, but the
+# job below ensures the dependency surface is monitored continuously.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Weekly catch-all — picks up newly disclosed CVEs in unchanged
+    # dependencies between code changes.
+    - cron: "11 5 * * 1"
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  dotnet-vulnerable-packages:
+    name: dotnet vulnerable packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore IRETP.sln
+
+      - name: List vulnerable transitive dependencies
+        run: |
+          dotnet list IRETP.sln package --vulnerable --include-transitive > vulnerable.txt || true
+          cat vulnerable.txt
+          if grep -E "Critical|High" vulnerable.txt; then
+            echo "::error::Critical or High vulnerable packages detected — see vulnerable.txt"
+            exit 1
+          fi
+
+      - name: Upload vulnerability report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-vulnerability-report
+          path: vulnerable.txt
+          retention-days: 30
+
+  owasp-zap-baseline:
+    name: OWASP ZAP baseline (web portal)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Only run on main pushes — full ZAP scans take 5-10 min and require
+    # the dev stack to be up. PR builds rely on the dependency scan above.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bring up the stack
+        run: docker compose -f docker-compose.yml up -d --build
+
+      - name: Wait for web portal
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5010/ > /dev/null; then
+              echo "web up"; exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::web portal did not come up"
+          docker compose logs --no-color
+          exit 1
+
+      - name: ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:5010'
+          fail_action: false   # surface findings as artifacts; don't block pipeline
+          allow_issue_writing: false
+          artifact_name: zap-baseline-report
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose -f docker-compose.yml down -v
+
+  bicep-validate:
+    name: bicep validate (infra)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bicep
+        run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x ./bicep && sudo mv ./bicep /usr/local/bin/bicep
+          bicep --version
+
+      - name: Build (lint) Bicep templates
+        run: |
+          for f in infra/bicep/*.bicep; do
+            echo "🔍 $f"
+            bicep build "$f"
+          done

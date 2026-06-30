@@ -1,0 +1,209 @@
+@page "/admin/audit"
+@rendermode InteractiveServer
+@inject AdminApiClient AdminApi
+
+<PageTitle>IRETP — Audit Trail</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="shield-lock"
+                  Title="Audit trail"
+                  Subtitle="Immutable activity log of all changes recorded in the IRETP platform (RFP 10.3). Restricted to DLD Supervisor and System Administrator roles.">
+        <ActionsContent>
+            <span class="admin-env-badge"><span class="dot"></span> Immutable</span>
+            <button class="btn btn-outline-primary btn-sm" @onclick="Refresh">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </ActionsContent>
+    </ModuleBanner>
+
+    <!-- Filters -->
+    <div class="admin-card mb-3">
+        <div class="admin-card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label for="entity-type" class="form-label small text-muted">Entity type</label>
+                    <input id="entity-type" class="form-control form-control-sm" placeholder="e.g. Project"
+                           @bind="_entityType" @bind:event="oninput" />
+                </div>
+                <div class="col-md-2">
+                    <label for="action" class="form-label small text-muted">Action</label>
+                    <select id="action" class="form-select form-select-sm" @bind="_action">
+                        <option value="">All</option>
+                        <option value="Create">Create</option>
+                        <option value="Update">Update</option>
+                        <option value="Delete">Delete</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="from" class="form-label small text-muted">From</label>
+                    <input id="from" type="date" class="form-control form-control-sm" @bind="_from" />
+                </div>
+                <div class="col-md-2">
+                    <label for="to" class="form-label small text-muted">To</label>
+                    <input id="to" type="date" class="form-control form-control-sm" @bind="_to" />
+                </div>
+                <div class="col-md-3">
+                    <label for="free-text-search" class="form-label small text-muted">Free-text search</label>
+                    <input id="free-text-search" class="form-control form-control-sm" placeholder="Search entity id, user, payloads…"
+                           @bind="_search" @bind:event="oninput" />
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button class="btn btn-primary btn-sm" @onclick="Refresh">
+                        <i class="bi bi-funnel"></i> Apply
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <SkeletonTable Rows="10" Columns="6" WithCard="true" />
+    }
+    else if (_page is null)
+    {
+        <NetworkError Service="Audit" Detail="Ensure the Admin API is running and you are signed in as a Supervisor or System Administrator." />
+    }
+    else
+    {
+        <div class="admin-card">
+            <div class="admin-card-head">
+                <h2 class="admin-card-title"><i class="bi bi-clipboard-data"></i> @_page.TotalCount.ToString("N0") entries</h2>
+                <div class="small text-muted">Page @_page.Page of @Math.Max(1, (int)Math.Ceiling(_page.TotalCount / (double)_page.PageSize))</div>
+            </div>
+            <div class="table-responsive admin-scroll">
+                <table class="table table-sm mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width:160px;">Timestamp (UTC)</th>
+                            <th>Entity</th>
+                            <th>Action</th>
+                            <th>User</th>
+                            <th>IP</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in _page.Items)
+                        {
+                            <tr>
+                                <td class="text-nowrap small">@log.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>
+                                    <div class="fw-semibold">@log.EntityType</div>
+                                    <div class="small text-muted">@log.EntityId</div>
+                                </td>
+                                <td>@ActionBadge(log.Action)</td>
+                                <td class="small">@(log.UserName ?? log.UserId ?? "—")</td>
+                                <td class="small text-muted">@(log.IpAddress ?? "—")</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            @onclick="() => ToggleExpanded(log.Id)">
+                                        @(_expanded.Contains(log.Id) ? "Hide" : "View") <i class="bi bi-chevron-down"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @if (_expanded.Contains(log.Id))
+                            {
+                                <tr class="bg-light">
+                                    <td colspan="6">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="small text-muted fw-semibold mb-1">Before</div>
+                                                <pre class="p-2 bg-white border rounded small mb-0" style="max-height: 200px; overflow:auto;">@(log.OldValues ?? "—")</pre>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="small text-muted fw-semibold mb-1">After</div>
+                                                <pre class="p-2 bg-white border rounded small mb-0" style="max-height: 200px; overflow:auto;">@(log.NewValues ?? "—")</pre>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        @if (_page.Items.Count == 0)
+                        {
+                            <tr><td colspan="6" class="text-center text-muted py-4">No audit entries match the current filters.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <div class="small text-muted">Page size: @_page.PageSize</div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" disabled="@(_page.Page <= 1)"
+                            @onclick="() => Go(_page!.Page - 1)">← Previous</button>
+                    <button class="btn btn-outline-primary"
+                            disabled="@(_page.Page * _page.PageSize >= _page.TotalCount)"
+                            @onclick="() => Go(_page!.Page + 1)">Next →</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private AuditLogPageResult? _page;
+    private bool _loading;
+    private readonly HashSet<Guid> _expanded = new();
+
+    private string _entityType = "";
+    private string _action = "";
+    private string _search = "";
+    private DateTime? _from;
+    private DateTime? _to;
+    private int _pageNumber = 1;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Refresh()
+    {
+        _pageNumber = 1;
+        await Load();
+    }
+
+    private async Task Go(int pageNumber)
+    {
+        _pageNumber = Math.Max(1, pageNumber);
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        try
+        {
+            _page = await AdminApi.GetAuditLogsAsync(
+                entityType: string.IsNullOrWhiteSpace(_entityType) ? null : _entityType,
+                action: string.IsNullOrWhiteSpace(_action) ? null : _action,
+                search: string.IsNullOrWhiteSpace(_search) ? null : _search,
+                from: _from,
+                to: _to,
+                page: _pageNumber,
+                pageSize: 50);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ToggleExpanded(Guid id)
+    {
+        if (!_expanded.Add(id)) _expanded.Remove(id);
+    }
+
+    private static RenderFragment ActionBadge(string action) => __b =>
+    {
+        var (cls, label) = action switch
+        {
+            "Create" => ("bg-success", "Create"),
+            "Update" => ("bg-primary", "Update"),
+            "Delete" => ("bg-danger", "Delete"),
+            _ => ("bg-secondary", action)
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", $"badge {cls}");
+        __b.AddContent(2, label);
+        __b.CloseElement();
+    };
+}

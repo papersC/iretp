@@ -1,0 +1,278 @@
+@page "/projects"
+@page "/projects/{Id:guid}"
+@rendermode InteractiveServer
+@inject ProjectCatalogService Catalog
+@inject CurrencyService Currency
+@inject NavigationManager Nav
+@inject WebApiClient Api
+@inject CaptchaGateService CaptchaGate
+@inject IJSRuntime JS
+
+<PageTitle>IRETP - Projects Database</PageTitle>
+
+<ModuleBanner Icon="buildings"
+              Title="Projects Database"
+              Subtitle="All DLD-registered real-estate projects across Dubai.">
+    <ActionsContent>
+        <span class="badge bg-secondary">@Filtered().Count projects</span>
+    </ActionsContent>
+</ModuleBanner>
+
+@if (Id.HasValue)
+{
+    var project = Catalog.Find(Id.Value);
+    if (project == null)
+    {
+        <div class="alert alert-warning">Project not found.</div>
+        <a href="/projects" class="btn btn-outline-primary">← Back to Projects</a>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="/projects" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> All projects
+            </a>
+            <button class="btn btn-sm btn-outline-primary" @onclick="() => DownloadProjectProfile(project.Id)"
+                    disabled="@_downloading">
+                @if (_downloading)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                }
+                else
+                {
+                    <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>
+                }
+                Download Investment Profile PDF
+            </button>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between flex-wrap gap-3 mb-3">
+                    <div>
+                        <h3 class="mb-1">@project.Name</h3>
+                        <div class="text-muted">@project.NameAr · @project.Developer · @project.Zone</div>
+                    </div>
+                    @StatusBadge(project.Status)
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="p-3 rounded border h-100">
+                            <div class="small text-muted text-uppercase">Completion</div>
+                            <div class="fs-3 fw-bold text-primary">@project.CompletionPercent.ToString("N0")%</div>
+                            <div class="progress mt-2" style="height: 6px;">
+                                <div class="progress-bar" style="width: @project.CompletionPercent.ToString("F0")%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded border h-100">
+                            <div class="small text-muted text-uppercase">Units</div>
+                            <div class="fs-3 fw-bold">@project.SoldUnits.ToString("N0") / @project.TotalUnits.ToString("N0")</div>
+                            @{ var soldPct = project.SoldUnits * 100.0 / Math.Max(project.TotalUnits, 1); }
+                            <div class="small text-muted">@soldPct.ToString("N0")% sold</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded border h-100">
+                            <div class="small text-muted text-uppercase">Expected Delivery</div>
+                            <div class="fs-4 fw-bold">@project.ExpectedDelivery.ToString("MMM yyyy")</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded border h-100">
+                            <div class="small text-muted text-uppercase">Property Type</div>
+                            <div class="fs-4 fw-bold">@project.PropertyType</div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+                <dl class="row mb-0">
+                    <dt class="col-sm-3 text-muted">RERA Licence</dt>
+                    <dd class="col-sm-9 fw-semibold"><code>@project.LicenseNumber</code></dd>
+                    <dt class="col-sm-3 text-muted">Coordinates</dt>
+                    <dd class="col-sm-9">@project.Latitude.ToString("F4"), @project.Longitude.ToString("F4")</dd>
+                </dl>
+
+                <div class="d-flex gap-2 mt-3">
+                    <a href="/map" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-geo-alt"></i> Locate on map
+                    </a>
+                    <a href="/watchlist" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-bookmark-plus"></i> Add to watchlist
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="pfStatus" class="form-label small text-muted">Status</label>
+                    <select id="pfStatus" class="form-select" @bind="filterStatus" @bind:after="StateHasChanged">
+                        <option value="">All statuses</option>
+                        @foreach (var s in Catalog.Statuses)
+                        {
+                            <option value="@s">@HumanStatus(s)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="pfZone" class="form-label small text-muted">Zone</label>
+                    <select id="pfZone" class="form-select" @bind="filterZone" @bind:after="StateHasChanged">
+                        <option value="">All zones</option>
+                        @foreach (var z in Catalog.Zones())
+                        {
+                            <option value="@z">@z</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="pfType" class="form-label small text-muted">Property Type</label>
+                    <select id="pfType" class="form-select" @bind="filterType" @bind:after="StateHasChanged">
+                        <option value="">All types</option>
+                        @foreach (var t in Catalog.PropertyTypes)
+                        {
+                            <option value="@t">@t</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="pfDev" class="form-label small text-muted">Developer</label>
+                    <select id="pfDev" class="form-select" @bind="filterDev" @bind:after="StateHasChanged">
+                        <option value="">All developers</option>
+                        @foreach (var d in Catalog.Developers())
+                        {
+                            <option value="@d">@d</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="pfSearch" class="form-label small text-muted">Search</label>
+                    <input id="pfSearch" type="text" class="form-control" placeholder="Name, developer, zone…"
+                           @bind="searchTerm" @bind:event="oninput" @bind:after="StateHasChanged" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Developer</th>
+                        <th>Zone</th>
+                        <th>Status</th>
+                        <th class="text-end">Completion</th>
+                        <th class="text-end">Units</th>
+                        <th>Delivery</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Filtered())
+                    {
+                        <tr>
+                            <td class="fw-semibold">
+                                <a href="/projects/@p.Id" class="text-decoration-none">@p.Name</a>
+                                <div class="small text-muted">@p.NameAr · @p.LicenseNumber</div>
+                            </td>
+                            <td>@p.Developer</td>
+                            <td>@p.Zone</td>
+                            <td>@StatusBadge(p.Status)</td>
+                            <td class="text-end">
+                                <div class="fw-semibold">@p.CompletionPercent.ToString("N0")%</div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar" style="width: @p.CompletionPercent.ToString("F0")%"></div>
+                                </div>
+                            </td>
+                            <td class="text-end">@p.SoldUnits.ToString("N0") / @p.TotalUnits.ToString("N0")</td>
+                            <td>@p.ExpectedDelivery.ToString("MMM yyyy")</td>
+                            <td class="text-end">
+                                <a href="/projects/@p.Id" class="btn btn-sm btn-outline-primary" aria-label="View @p.Name details" title="View details">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private string filterStatus = "";
+    private string filterZone = "";
+    private string filterType = "";
+    private string filterDev = "";
+    private string searchTerm = "";
+    private bool _downloading;
+
+    private async Task DownloadProjectProfile(Guid projectId)
+    {
+        if (_downloading) return;
+        _downloading = true;
+        try
+        {
+            if (!await CaptchaGate.EnsureVerifiedAsync()) return;
+
+            var result = await Api.DownloadProjectInvestmentProfileAsync(projectId);
+            if (result is null)
+            {
+                await JS.InvokeVoidAsync("alert",
+                    "Investment Profile PDF is unavailable — the backend API may not be reachable.");
+                return;
+            }
+            var base64 = Convert.ToBase64String(result.Value.Content);
+            await JS.InvokeVoidAsync("iretpDownload.fromBase64",
+                result.Value.FileName, "application/pdf", base64);
+        }
+        finally
+        {
+            _downloading = false;
+        }
+    }
+
+    private List<ProjectCatalogService.Project> Filtered() =>
+        Catalog.Search(
+            zone: string.IsNullOrEmpty(filterZone) ? null : filterZone,
+            status: string.IsNullOrEmpty(filterStatus) ? null : filterStatus,
+            propertyType: string.IsNullOrEmpty(filterType) ? null : filterType,
+            developer: string.IsNullOrEmpty(filterDev) ? null : filterDev,
+            term: string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm
+        ).ToList();
+
+    private static string HumanStatus(string s) => s switch
+    {
+        "UnderConstruction" => "Under Construction",
+        _ => s
+    };
+
+    private static RenderFragment StatusBadge(string status) => __b =>
+    {
+        var (cls, label) = status switch
+        {
+            "Completed"         => ("bg-success", "Completed"),
+            "UnderConstruction" => ("bg-primary", "Under Construction"),
+            "Announced"         => ("bg-info text-dark", "Announced"),
+            "Stalled"           => ("bg-danger", "Stalled"),
+            _                   => ("bg-secondary", status)
+        };
+        __b.OpenElement(0, "span");
+        __b.AddAttribute(1, "class", $"badge {cls}");
+        __b.AddContent(2, label);
+        __b.CloseElement();
+    };
+}

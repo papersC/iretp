@@ -1,0 +1,87 @@
+name: build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  build:
+    name: build (.NET 9)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore IRETP.sln
+
+      - name: Build (Release)
+        run: dotnet build IRETP.sln --configuration Release --no-restore /warnaserror
+
+      - name: Test (if any test projects exist)
+        run: |
+          shopt -s nullglob
+          projects=(tests/*/*.csproj)
+          if [ ${#projects[@]} -gt 0 ]; then
+            dotnet test IRETP.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+          else
+            echo "No test projects found — skipping."
+          fi
+
+      - name: Publish WebAPI
+        run: dotnet publish src/IRETP.WebAPI/IRETP.WebAPI.csproj --configuration Release --no-build --output artifacts/webapi
+
+      - name: Publish AdminAPI
+        run: dotnet publish src/IRETP.AdminAPI/IRETP.AdminAPI.csproj --configuration Release --no-build --output artifacts/adminapi
+
+      - name: Publish Web
+        run: dotnet publish src/IRETP.Web/IRETP.Web.csproj --configuration Release --no-build --output artifacts/web
+
+      - name: Upload artifacts
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: iretp-artifacts-${{ github.sha }}
+          path: artifacts/
+          retention-days: 14
+          if-no-files-found: error
+
+  docker:
+    name: docker compose sanity
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compose config validation
+        run: docker compose -f docker-compose.yml config --quiet
+
+      - name: Compose build
+        run: docker compose -f docker-compose.yml build --pull

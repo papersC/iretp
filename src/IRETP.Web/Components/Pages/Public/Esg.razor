@@ -1,0 +1,276 @@
+@page "/esg"
+@rendermode InteractiveServer
+@inject WebApiClient Api
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>IRETP — ESG / Sustainability</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="tree"
+                  IconColor="text-success"
+                  Title="ESG / Sustainability"
+                  Subtitle="Certified green-building coverage across Dubai projects — LEED, Estidama Pearl, BREEAM and WELL (RFP Section 20). Data sourced from awarding bodies and verified via DLD records.">
+        <ActionsContent>
+            <span class="badge bg-success fs-6">GRETI Sustainability sub-index contributor</span>
+        </ActionsContent>
+    </ModuleBanner>
+
+    @if (_loading)
+    {
+        <SkeletonKpiGrid Count="4" />
+        <Skeleton Width="100%" Height="320px" Class="mb-3" />
+    }
+    else if (_data is null)
+    {
+        <NetworkError Service="ESG" Detail="Make sure the backend is running and that certification data is seeded." />
+    }
+    else
+    {
+        <!-- Rubric explainer — maps each scheme/level so international
+             investors can read the badges without scheme-specific knowledge
+             (RFP Section 20: LEED + Estidama Pearl + BREEAM normalisation). -->
+        <div class="card border-success-subtle mb-4">
+            <div class="card-header bg-success-subtle">
+                <h2 class="mb-0 h5"><i class="bi bi-mortarboard me-2"></i>Reading the certifications</h2>
+            </div>
+            <div class="card-body py-3">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tier</th>
+                                <th><i class="bi bi-globe-americas me-1"></i>LEED (USGBC)</th>
+                                <th><i class="bi bi-flower2 me-1"></i>Estidama Pearl (UAE)</th>
+                                <th><i class="bi bi-buildings me-1"></i>BREEAM (UK)</th>
+                                <th>Investor signal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><span class="badge bg-success">Exemplary</span></td>
+                                <td>—</td><td>5 Pearl</td><td>Outstanding</td>
+                                <td class="small text-muted">Best-in-class sustainability + lifecycle performance.</td></tr>
+                            <tr><td><span class="badge bg-primary">Platinum</span></td>
+                                <td>Platinum (≥ 80 pts)</td><td>4 Pearl</td><td>Excellent</td>
+                                <td class="small text-muted">Premium operating efficiency, lower long-term opex.</td></tr>
+                            <tr><td><span class="badge bg-warning text-dark">Gold</span></td>
+                                <td>Gold (60–79 pts)</td><td>3 Pearl</td><td>Very Good</td>
+                                <td class="small text-muted">Material energy/water savings vs. baseline.</td></tr>
+                            <tr><td><span class="badge bg-secondary">Silver</span></td>
+                                <td>Silver (50–59 pts)</td><td>2 Pearl</td><td>Good</td>
+                                <td class="small text-muted">Above local code; demonstrable design intent.</td></tr>
+                            <tr><td><span class="badge bg-light text-dark border">Entry</span></td>
+                                <td>Certified (40–49 pts)</td><td>1 Pearl</td><td>Pass</td>
+                                <td class="small text-muted">Baseline compliance with the scheme.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Headline cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-success shadow-sm text-center py-3">
+                    <h3 class="text-success fw-bold mb-0">@_data.TotalCertifiedProjects</h3>
+                    <small class="text-muted">Certified projects</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-primary shadow-sm text-center py-3">
+                    <h3 class="text-primary fw-bold mb-0">@_data.CertifiedCoveragePct.ToString("F1")%</h3>
+                    <small class="text-muted">Coverage across @_data.TotalProjects projects</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-warning shadow-sm text-center py-3">
+                    <h3 class="text-warning fw-bold mb-0">@_data.TotalUnitsInCertifiedProjects.ToString("N0")</h3>
+                    <small class="text-muted">Certified units</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-info shadow-sm text-center py-3">
+                    <h3 class="text-info fw-bold mb-0">@_data.BySchemes.Count</h3>
+                    <small class="text-muted">Active schemes</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h2 class="mb-0 h5">By certification scheme</h2></div>
+                    <div class="card-body" style="height: 260px; position:relative;">
+                        <canvas id="esgSchemes"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white"><h2 class="mb-0 h5">By certification level</h2></div>
+                    <div class="card-body" style="height: 260px; position:relative;">
+                        <canvas id="esgLevels"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone table -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h2 class="mb-0 h5">Zone coverage</h2>
+                <span class="small text-muted">Top @_data.ByZones.Count zones by certified coverage</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Zone</th>
+                            <th class="text-end">Projects</th>
+                            <th class="text-end">Certified</th>
+                            <th class="text-end">Coverage</th>
+                            <th class="text-end">Avg level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var zone in _data.ByZones.Take(15))
+                        {
+                            <tr>
+                                <td class="fw-semibold">@zone.ZoneName</td>
+                                <td class="text-end">@zone.ProjectCount</td>
+                                <td class="text-end">@zone.CertifiedProjectCount</td>
+                                <td class="text-end">
+                                    <div class="d-flex align-items-center gap-2 justify-content-end">
+                                        <div class="progress" style="height:6px; width:80px;">
+                                            <div class="progress-bar bg-success" style="width:@(zone.CoveragePct.ToString("F0"))%"></div>
+                                        </div>
+                                        <span>@zone.CoveragePct.ToString("F1")%</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">@(zone.AverageLevel == 0 ? "—" : zone.AverageLevel.ToString("F1"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Certified projects -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white"><h2 class="mb-0 h5">Recently certified projects</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Project</th>
+                            <th>Developer</th>
+                            <th>Zone</th>
+                            <th>Scheme</th>
+                            <th>Level</th>
+                            <th>Score</th>
+                            <th>Awarded</th>
+                            <th>Certificate #</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in _data.TopProjects)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@p.ProjectName</td>
+                                <td>@p.DeveloperName</td>
+                                <td>@p.ZoneName</td>
+                                <td>@p.Scheme</td>
+                                <td><span class="badge bg-success">@p.Level</span></td>
+                                <td>@(p.ScorePct.HasValue ? p.ScorePct.Value.ToString("F1") + "%" : "—")</td>
+                                <td>@p.AwardedAt.ToString("yyyy-MM-dd")</td>
+                                <td class="small text-muted">@(p.CertificateNumber ?? "—")</td>
+                            </tr>
+                        }
+                        @if (_data.TopProjects.Count == 0)
+                        {
+                            <tr><td colspan="8" class="text-center text-muted py-4">No certifications recorded yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private EsgDashboardDto? _data;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _data = await Api.GetEsgDashboardAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _data is null) return;
+        await RenderSchemes();
+        await RenderLevels();
+    }
+
+    private async Task RenderSchemes()
+    {
+        if (_data is null || _data.BySchemes.Count == 0) return;
+        var config = new
+        {
+            type = "doughnut",
+            data = new
+            {
+                labels = _data.BySchemes.Select(s => s.Scheme).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        data = _data.BySchemes.Select(s => s.Count).ToArray(),
+                        backgroundColor = new[] { "#066735", "#1B4F72", "#F1B44C", "#6B2F9C", "#C0392B" }
+                    }
+                }
+            },
+            options = new { responsive = true, maintainAspectRatio = false, plugins = new { legend = new { position = "bottom" } } }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "esgSchemes", config); } catch { }
+    }
+
+    private async Task RenderLevels()
+    {
+        if (_data is null || _data.ByLevels.Count == 0) return;
+        var config = new
+        {
+            type = "bar",
+            data = new
+            {
+                labels = _data.ByLevels.Select(l => l.Level).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = "Projects",
+                        data = _data.ByLevels.Select(l => l.Count).ToArray(),
+                        backgroundColor = "#066735"
+                    }
+                }
+            },
+            options = new { responsive = true, maintainAspectRatio = false, plugins = new { legend = new { display = false } } }
+        };
+        try { await JS.InvokeVoidAsync("iretpChart.render", "esgLevels", config); } catch { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "esgSchemes"); } catch { }
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "esgLevels"); } catch { }
+    }
+}

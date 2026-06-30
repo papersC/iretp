@@ -1,0 +1,22 @@
+@*
+    Single shimmering placeholder block. Drop in anywhere a value is loading.
+
+    Usage:
+        <Skeleton Width="120px" Height="20px" />
+        <Skeleton Class="mb-2" Width="80%" Height="14px" />
+        <Skeleton Width="100%" Height="240px" />   (chart placeholder)
+
+    The shimmer animation is defined in design-system.css under `.esems-skeleton`.
+    Defaults: full-width, 1rem tall.
+*@
+
+@code {
+    [Parameter] public string Width { get; set; } = "100%";
+    [Parameter] public string Height { get; set; } = "1rem";
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? Style { get; set; }
+}
+
+<div class="esems-skeleton @Class"
+     style="width: @Width; height: @Height; @Style"
+     aria-hidden="true"></div>

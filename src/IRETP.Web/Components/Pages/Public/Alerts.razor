@@ -1,0 +1,198 @@
+@page "/alerts"
+@rendermode InteractiveServer
+@inject WatchlistService Watch
+@implements IDisposable
+
+<PageTitle>IRETP - Alert Configuration</PageTitle>
+
+<ModuleBanner Icon="bell"
+              Title="Alert Configuration"
+              Subtitle="Six alert types defined in RFP Section 6 — Email, SMS, and in-platform delivery."
+              ButtonText="New alert"
+              ButtonIcon="plus-lg"
+              OnButtonClick="OpenNew" />
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Active</th>
+                    <th>Type</th>
+                    <th>Target</th>
+                    <th>Threshold</th>
+                    <th>Frequency</th>
+                    <th>Delivery</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Watch.Alerts())
+                {
+                    <tr>
+                        <td>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" checked="@a.Active"
+                                       aria-label="Toggle alert active"
+                                       @onchange="() => Watch.ToggleAlert(a.Id)" />
+                            </div>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">@FriendlyType(a.Type)</span></td>
+                        <td class="fw-semibold">@a.Target</td>
+                        <td>
+                            @if (a.Threshold.HasValue)
+                            {
+                                <text>@(a.Direction ?? "=") @a.Threshold@(a.Type is "PriceMovement" or "RentalYield" ? "%" : "")</text>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>@a.Frequency</td>
+                        <td>
+                            @if (a.InApp) { <span class="badge bg-primary me-1"><i class="bi bi-bell"></i> In-app</span> }
+                            @if (a.Email) { <span class="badge bg-info text-dark me-1"><i class="bi bi-envelope"></i> Email</span> }
+                            @if (a.Sms)   { <span class="badge bg-secondary"><i class="bi bi-chat-dots"></i> SMS</span> }
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger" aria-label="Delete alert" title="Delete alert" @onclick="() => Watch.RemoveAlert(a.Id)">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                @if (Watch.Alerts().Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No alerts configured yet.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (_showNew)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.4);" @onclick="() => _showNew = false">
+        <div class="modal-dialog modal-dialog-centered modal-lg" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Alert</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showNew = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="alert-type" class="form-label">Alert type</label>
+                            <select id="alert-type" class="form-select" @bind="_draftType">
+                                @foreach (var t in WatchlistService.AlertTypes)
+                                {
+                                    <option value="@t">@FriendlyType(t)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="target-zone-project-deve" class="form-label">Target (zone / project / developer / "All Dubai")</label>
+                            <input id="target-zone-project-deve" type="text" class="form-control" @bind="_draftTarget" />
+                        </div>
+                        @if (_draftType is "PriceMovement" or "RentalYield")
+                        {
+                            <div class="col-md-4">
+                                <label class="form-label">Threshold</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.1" class="form-control" @bind="_draftThreshold" />
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="direction" class="form-label">Direction</label>
+                                <select id="direction" class="form-select" @bind="_draftDirection">
+                                    <option>Above</option>
+                                    <option>Below</option>
+                                </select>
+                            </div>
+                        }
+                        <div class="col-md-4">
+                            <label for="frequency" class="form-label">Frequency</label>
+                            <select id="frequency" class="form-select" @bind="_draftFrequency">
+                                @foreach (var f in WatchlistService.Frequencies) { <option>@f</option> }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Delivery channels</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="chInapp" @bind="_draftInApp" />
+                                    <label class="form-check-label" for="chInapp">In-app</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="chEmail" @bind="_draftEmail" />
+                                    <label class="form-check-label" for="chEmail">Email</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="chSms" @bind="_draftSms" />
+                                    <label class="form-check-label" for="chSms">SMS</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="() => _showNew = false">Cancel</button>
+                    <button class="btn btn-primary" @onclick="SaveNew"
+                            disabled="@string.IsNullOrWhiteSpace(_draftTarget)">Create alert</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _showNew;
+    private string _draftType = "PriceMovement";
+    private string _draftTarget = "";
+    private decimal? _draftThreshold;
+    private string _draftDirection = "Above";
+    private string _draftFrequency = "Instant";
+    private bool _draftEmail = true;
+    private bool _draftSms;
+    private bool _draftInApp = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Watch.OnChange += OnChange;
+        await Watch.RefreshAlertsAsync();
+    }
+    public void Dispose() => Watch.OnChange -= OnChange;
+    private void OnChange() => InvokeAsync(StateHasChanged);
+
+    private void OpenNew()
+    {
+        _draftType = "PriceMovement";
+        _draftTarget = "";
+        _draftThreshold = 5;
+        _draftDirection = "Above";
+        _draftFrequency = "Instant";
+        _draftEmail = true; _draftSms = false; _draftInApp = true;
+        _showNew = true;
+    }
+
+    private void SaveNew()
+    {
+        Watch.AddAlert(new WatchlistService.AlertConfig(
+            Guid.NewGuid(), _draftType, _draftTarget.Trim(), _draftThreshold, _draftDirection,
+            _draftFrequency, _draftEmail, _draftSms, _draftInApp, true));
+        _showNew = false;
+    }
+
+    private static string FriendlyType(string t) => t switch
+    {
+        "PriceMovement"    => "Price Movement",
+        "NewProject"       => "New Project Launch",
+        "WatchlistChange"  => "Watchlist Change",
+        "RentalYield"      => "Rental Yield Threshold",
+        "MarketDigest"     => "Periodic Market Digest",
+        "RegulationUpdate" => "Regulation / Policy Update",
+        _ => t
+    };
+}

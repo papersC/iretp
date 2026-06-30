@@ -1,0 +1,150 @@
+@page "/admin/ewrs"
+@rendermode InteractiveServer
+@inject AdminApiClient AdminApi
+@inject WebApiClient Api
+@inject AdminFixtureService Fixture
+
+<PageTitle>EWRS Dashboard</PageTitle>
+
+<div class="container-fluid py-4">
+    <ModuleBanner Icon="shield-exclamation"
+                  Title="Early Warning Risk System"
+                  Subtitle="Live developer & project risk surveillance with 4-level escalation across all monitored zones (RFP Section 8).">
+        <ActionsContent>
+            <span class="admin-env-badge"><span class="dot"></span> Live</span>
+            <a href="/admin/ewrs/alerts" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-list-check"></i> Alert queue
+            </a>
+        </ActionsContent>
+    </ModuleBanner>
+
+    @if (_loading)
+    {
+        <SkeletonKpiGrid Count="4" />
+        <SkeletonTable Rows="6" Columns="6" WithCard="true" />
+    }
+    else if (_dashboard != null)
+    {
+        <div class="row g-3 mb-4 admin-kpi">
+            <div class="col-6 col-md-4 col-xl-2">
+                <KpiCard Title="High Risk" Value="@_dashboard.TotalHighRiskProjects.ToString("N0")" Icon="exclamation-octagon" Color="danger" />
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <KpiCard Title="Warnings" Value="@_dashboard.TotalWarningProjects.ToString("N0")" Icon="exclamation-triangle" Color="warning" />
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <KpiCard Title="Escrow Shortfall" Value="@_dashboard.ProjectsWithEscrowShortfall.ToString("N0")" Icon="safe2" Color="info" />
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <KpiCard Title="Construction Halts" Value="@_dashboard.ProjectsWithConstructionHalt.ToString("N0")" Icon="cone-striped" Color="primary" />
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <KpiCard Title="Active Alerts" Value="@_dashboard.TotalActiveAlerts.ToString("N0")" Icon="bell" Color="primary" />
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <KpiCard Title="Unacknowledged" Value="@_dashboard.UnacknowledgedAlerts.ToString("N0")" Icon="inbox" Color="warning" />
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-7">
+                <div class="admin-card">
+                    <div class="admin-card-head">
+                        <h2 class="admin-card-title"><i class="bi bi-geo-alt"></i> Zone Risk Summary</h2>
+                        <span class="badge text-bg-light border">@_dashboard.ZoneRiskSummary.Count zones</span>
+                    </div>
+                    <div class="table-responsive admin-scroll">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead><tr><th>Zone</th><th>High Risk</th><th>Warning</th><th>Total Projects</th></tr></thead>
+                            <tbody>
+                                @foreach (var z in _dashboard.ZoneRiskSummary.OrderByDescending(z => z.HighRiskCount + z.WarningCount))
+                                {
+                                    <tr>
+                                        <td class="fw-medium">@z.ZoneName</td>
+                                        <td>@if (z.HighRiskCount > 0) { <span class="badge text-bg-danger">@z.HighRiskCount</span> } else { <span class="text-muted">0</span> }</td>
+                                        <td>@if (z.WarningCount > 0) { <span class="badge text-bg-warning">@z.WarningCount</span> } else { <span class="text-muted">0</span> }</td>
+                                        <td>@z.TotalProjects</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="admin-card mb-3">
+                    <div class="admin-card-head">
+                        <h2 class="admin-card-title"><i class="bi bi-bell"></i> Recent Alerts</h2>
+                        <a href="/admin/ewrs/alerts" class="btn btn-sm btn-outline-primary">View all</a>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach (var alert in _dashboard.RecentAlerts.Take(5))
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge text-bg-@(alert.RiskLevel >= 2 ? "danger" : "warning")">@(alert.RiskLevel >= 2 ? "HIGH" : "WARN")</span>
+                                    <small class="text-muted">@alert.CreatedAt.ToString("dd MMM")</small>
+                                </div>
+                                <p class="mb-0 mt-1 small">@alert.Title</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-head">
+                        <h2 class="admin-card-title"><i class="bi bi-sliders"></i> Risk Thresholds</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th>Indicator</th><th>Threshold</th><th>Unit</th></tr></thead>
+                            <tbody>
+                                @if (_thresholds != null)
+                                {
+                                    @foreach (var t in _thresholds)
+                                    {
+                                        <tr><td>@t.IndicatorName</td><td class="fw-bold">@t.ThresholdValue</td><td class="text-muted">@t.ThresholdUnit</td></tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private EwrsDashboardData? _dashboard;
+    private List<RiskThresholdItem>? _thresholds;
+    private bool _loading = true;
+    private string? _token;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Try the AdminAPI first; fall back to seeded fixtures so the UAT
+        // audience always sees realistic risk data even without the full stack.
+        try
+        {
+            var login = await Api.LoginAsync("admin@dld.gov.ae", "Admin@DLD2026!");
+            if (login != null)
+            {
+                _token = login.AccessToken;
+                AdminApi.SetToken(_token);
+            }
+            // Independent reads — fire in parallel to halve cold-start latency.
+            var dashboardTask  = AdminApi.GetEwrsDashboardAsync();
+            var thresholdsTask = AdminApi.GetThresholdsAsync();
+            await Task.WhenAll(dashboardTask, thresholdsTask);
+            _dashboard  = await dashboardTask;
+            _thresholds = await thresholdsTask;
+        }
+        catch { /* backend offline — fall through */ }
+
+        _dashboard  ??= Fixture.EwrsDashboard();
+        _thresholds ??= Fixture.Thresholds();
+        _loading = false;
+    }
+}

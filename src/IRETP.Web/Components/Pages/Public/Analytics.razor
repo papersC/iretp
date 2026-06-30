@@ -1,0 +1,685 @@
+@page "/analytics"
+@page "/analytics/{Token}"
+@rendermode InteractiveServer
+@inject MarketDataService Market
+@inject SavedViewsService Saved
+@inject CurrencyService Currency
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject WebApiClient Api
+@inject CaptchaGateService CaptchaGate
+@implements IAsyncDisposable
+
+<PageTitle>IRETP - Analytics (Slice &amp; Dice)</PageTitle>
+
+<ModuleBanner Icon="bar-chart-line"
+              Title="Interactive Analytics"
+              Subtitle="Slice &amp; Dice engine — construct and export custom analyses over the DLD registry.">
+    <ActionsContent>
+        <button class="btn btn-outline-primary btn-sm" @onclick="CopyShareLink">
+            <i class="bi bi-share"></i> Share link
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" @onclick="CopyEmbedLink" title="Read-only embed suitable for iframes">
+            <i class="bi bi-code-slash"></i> Embed
+        </button>
+        <button class="btn btn-outline-success btn-sm" @onclick="OpenSaveDialog">
+            <i class="bi bi-bookmark-plus"></i> Save view
+        </button>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-dark" @onclick='() => DoExport("excel")' disabled="@_exporting">
+                <i class="bi bi-file-earmark-excel"></i> XLSX
+            </button>
+            <button class="btn btn-outline-dark" @onclick='() => DoExport("csv")' disabled="@_exporting">
+                <i class="bi bi-filetype-csv"></i> CSV
+            </button>
+            <button class="btn btn-outline-dark" @onclick='() => DoExport("pdf")' disabled="@_exporting">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </button>
+            <button class="btn btn-outline-dark" @onclick='() => DoExport("json")' disabled="@_exporting">
+                <i class="bi bi-braces"></i> JSON
+            </button>
+        </div>
+    </ActionsContent>
+</ModuleBanner>
+
+<!-- Configuration bar -->
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label for="dimension" class="form-label small text-muted">Dimension</label>
+                <select id="dimension" class="form-select" @bind="Config.Dimension" @bind:after="Refresh">
+                    <option value="Zone">Zone</option>
+                    <option value="Developer">Developer</option>
+                    <option value="PropertyType">Property Type</option>
+                    <option value="Status">Status</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="secondary-dimension" class="form-label small text-muted">Secondary dimension</label>
+                <select id="secondary-dimension" class="form-select" @bind="Config.SecondaryDimension" @bind:after="Refresh">
+                    <option value="">— none —</option>
+                    <option value="PropertyType">Property Type</option>
+                    <option value="Status">Status</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="metric" class="form-label small text-muted">Metric</label>
+                <select id="metric" class="form-select" @bind="Config.Metric" @bind:after="Refresh">
+                    <option value="Count">Transaction Count</option>
+                    <option value="Value">Total Value (AED)</option>
+                    <option value="AvgPrice">Avg Price / sqft</option>
+                    <option value="MarketShare">Market Share %</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="top-n" class="form-label small text-muted">Top N</label>
+                <input id="top-n" type="number" class="form-control" min="3" max="25" @bind="Config.TopN" @bind:after="Refresh" />
+            </div>
+            <div class="col-md-2">
+                <label for="property-type-filter" class="form-label small text-muted">Property Type filter</label>
+                <select id="property-type-filter" class="form-select" @bind="Config.PropertyTypeFilter" @bind:after="Refresh">
+                    <option value="">All</option>
+                    <option>Apartment</option><option>Villa</option><option>Townhouse</option>
+                    <option>Land</option><option>Office</option><option>Retail</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="status-filter" class="form-label small text-muted">Status filter</label>
+                <select id="status-filter" class="form-select" @bind="Config.StatusFilter" @bind:after="Refresh">
+                    <option value="">All</option>
+                    <option value="Ready">Ready</option>
+                    <option value="Off-Plan">Off-Plan</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart type selector -->
+<div class="card mb-3">
+    <div class="card-body py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-1">
+            @foreach (var t in SavedViewsService.ChartTypes)
+            {
+                var active = Config.ChartType == t;
+                <button type="button" class="btn btn-sm @(active ? "btn-primary" : "btn-outline-secondary")"
+                        @onclick="() => ChooseChartType(t)">
+                    <i class="bi @ChartIcon(t) me-1"></i>@ChartLabel(t)
+                </button>
+            }
+        </div>
+        <span class="small text-muted">
+            Recommended: <span class="badge bg-success">@SavedViewsService.Recommend(Config)</span>
+        </span>
+    </div>
+</div>
+
+<!-- Chart canvas + summary -->
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h2 class="mb-0 h5">@PrettyTitle()</h2>
+                <span class="small text-muted">@(series?.Count ?? 0) points</span>
+            </div>
+            <div class="card-body" style="height: 420px; position: relative;">
+                @if (Config.ChartType == "table")
+                {
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="sticky-top bg-white">
+                                <tr><th>@Config.Dimension</th><th class="text-end">@MetricLabel()</th></tr>
+                            </thead>
+                            <tbody>
+                                @if (series != null)
+                                {
+                                    @foreach (var s in series)
+                                    {
+                                        <tr>
+                                            <td>@s.Label</td>
+                                            <td class="text-end fw-bold">@FormatMetric(s.Value)</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else if (Config.ChartType == "kpi" && series != null)
+                {
+                    <div class="row g-3 h-100 align-content-center">
+                        @foreach (var s in series.Take(6))
+                        {
+                            <div class="col-6 col-md-4">
+                                <div class="p-3 rounded border h-100">
+                                    <div class="small text-muted text-uppercase">@s.Label</div>
+                                    <div class="fs-4 fw-bold text-primary">@FormatMetric(s.Value)</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <canvas id="analyticsChart"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><h2 class="mb-0 h5">Summary</h2></div>
+            <div class="card-body">
+                @if (series != null && series.Count > 0)
+                {
+                    <dl class="row mb-0">
+                        <dt class="col-6 text-muted">Total</dt>
+                        <dd class="col-6 text-end fw-bold">@FormatMetric(series.Sum(s => s.Value))</dd>
+                        <dt class="col-6 text-muted">Average</dt>
+                        <dd class="col-6 text-end">@FormatMetric(series.Average(s => s.Value))</dd>
+                        <dt class="col-6 text-muted">Max</dt>
+                        <dd class="col-6 text-end">@series.OrderByDescending(s => s.Value).First().Label</dd>
+                        <dt class="col-6 text-muted">Min</dt>
+                        <dd class="col-6 text-end">@series.OrderBy(s => s.Value).First().Label</dd>
+                    </dl>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Saved views -->
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h2 class="mb-0 h5"><i class="bi bi-collection me-2"></i>My Saved Views</h2>
+        <span class="text-muted small">
+            @Saved.List().Count / @SavedViewsService.MaxSavedViews views · drag to reorder
+        </span>
+    </div>
+    <div class="card-body">
+        @if (Saved.List().Count == 0)
+        {
+            <div class="text-muted">No saved views yet — click "Save view" to store the current configuration.</div>
+        }
+        else
+        {
+            <div class="row g-2">
+                @foreach (var v in Saved.List())
+                {
+                    var view = v;
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded d-flex align-items-center gap-2 h-100 saved-view-card @(_draggingId == view.Id ? "dragging" : "")"
+                             draggable="true"
+                             @ondragstart="() => OnDragStart(view.Id)"
+                             @ondragover:preventDefault="true"
+                             @ondragenter="() => OnDragEnter(view.Id)"
+                             @ondrop="() => OnDrop(view.Id)"
+                             @ondragend="OnDragEnd"
+                             style="cursor:grab;">
+                            <i class="bi bi-grip-vertical text-muted"></i>
+                            <i class="bi bi-bookmark text-success"></i>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-semibold text-truncate">@view.Name</div>
+                                <div class="small text-muted">@view.Config.Dimension · @view.Config.Metric · @view.Config.ChartType</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => LoadSaved(view)" title="Load">
+                                <i class="bi bi-box-arrow-in-down"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Saved.Delete(view.Id)" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .saved-view-card.dragging { opacity: .4; }
+    .saved-view-card.drop-target { box-shadow: inset 0 0 0 2px var(--bs-primary); }
+</style>
+
+@if (_showSaveDialog)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.4);" @onclick="() => _showSaveDialog = false">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Save Analysis View</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showSaveDialog = false"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="name" class="form-label">Name</label>
+                    <input id="name" type="text" class="form-control" @bind="_saveName" placeholder="e.g. Q2 Dubai Marina breakdown" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="() => _showSaveDialog = false">Cancel</button>
+                    <button class="btn btn-primary" @onclick="DoSave" disabled="@string.IsNullOrWhiteSpace(_saveName)">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string? Token { get; set; }
+
+    private record SeriesPoint(string Label, decimal Value, string? GroupLabel = null);
+
+    private SavedViewsService.AnalyticsConfig Config = new(
+        "Zone", "Value", "bar", null, 10, null, null);
+    private List<SeriesPoint>? series;
+    private List<SalesTxnDto>? _allSales;
+    private bool _showSaveDialog;
+    private string _saveName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allSales = (await Market.GetSalesAsync(new TxnFilter { Page = 1, PageSize = int.MaxValue })).Items;
+        if (!string.IsNullOrEmpty(Token))
+        {
+            var decoded = Saved.Decode(Token);
+            if (decoded != null) Config = decoded;
+        }
+        Recalc();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (series == null) return;
+        if (Config.ChartType is "table" or "kpi") return;
+        await RenderCurrentChart();
+    }
+
+    private void Refresh()
+    {
+        Recalc();
+        StateHasChanged();
+    }
+
+    private void ChooseChartType(string t)
+    {
+        Config.ChartType = t;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Recalc()
+    {
+        if (_allSales == null) return;
+        var q = _allSales.AsEnumerable();
+        if (!string.IsNullOrEmpty(Config.PropertyTypeFilter))
+            q = q.Where(s => s.PropertyType == Config.PropertyTypeFilter);
+        if (!string.IsNullOrEmpty(Config.StatusFilter))
+            q = q.Where(s => s.TransactionType == Config.StatusFilter);
+
+        Func<SalesTxnDto, string> dim = Config.Dimension switch
+        {
+            "PropertyType" => s => s.PropertyType,
+            "Status"       => s => s.TransactionType,
+            "Developer"    => s => FauxDeveloper(s),
+            _              => s => s.AreaName
+        };
+
+        var grouped = q.GroupBy(dim)
+            .Select(g =>
+            {
+                decimal value = Config.Metric switch
+                {
+                    "Value"       => g.Sum(s => s.AmountAed),
+                    "AvgPrice"    => Math.Round(g.Average(s => s.PricePerSqft), 0),
+                    "MarketShare" => 0, // computed below
+                    _             => g.Count()
+                };
+                return new { Label = g.Key, Value = value, Rows = g.ToList() };
+            })
+            .ToList();
+
+        if (Config.Metric == "MarketShare")
+        {
+            var totalAed = grouped.Sum(x => x.Rows.Sum(r => r.AmountAed));
+            grouped = grouped.Select(x => new
+            {
+                x.Label,
+                Value = totalAed == 0 ? 0m : Math.Round(x.Rows.Sum(r => r.AmountAed) / totalAed * 100, 2),
+                x.Rows
+            }).ToList();
+        }
+
+        series = grouped
+            .OrderByDescending(x => x.Value)
+            .Take(Math.Max(3, Math.Min(25, Config.TopN)))
+            .Select(x => new SeriesPoint(x.Label, x.Value))
+            .ToList();
+    }
+
+    private string FauxDeveloper(SalesTxnDto s)
+    {
+        // Map building prefix -> demo developer so we can slice by developer.
+        var first = s.BuildingName.Split(' ')[0];
+        return first switch
+        {
+            "Marina" or "Emaar" or "Creek" => "Emaar Properties",
+            "Address" or "Bellavista" or "Meraas" => "Meraas",
+            "Burj" => "Emaar Properties",
+            "Silicon" or "Liwa" => "Damac",
+            "Executive" => "Sobha Realty",
+            _ => "Nakheel"
+        };
+    }
+
+    private async Task RenderCurrentChart()
+    {
+        if (series == null || series.Count == 0) return;
+        var type = Config.ChartType switch
+        {
+            "stackedBar" => "bar",
+            "area"       => "line",
+            "treemap"    => "bar",
+            _            => Config.ChartType
+        };
+        var palette = new[] { "#066735", "#F1B44C", "#50A5F1", "#F46A6A", "#34C38F",
+                               "#8b5cf6", "#ec4899", "#f97316", "#14b8a6", "#a16207" };
+        object data;
+        if (Config.ChartType == "donut")
+        {
+            data = new
+            {
+                labels = series.Select(s => s.Label).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        data = series.Select(s => (double)s.Value).ToArray(),
+                        backgroundColor = palette.Take(series.Count).ToArray(),
+                    }
+                }
+            };
+        }
+        else if (Config.ChartType == "scatter")
+        {
+            data = new
+            {
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = MetricLabel(),
+                        data = series.Select((s, i) => new { x = i + 1, y = (double)s.Value }).ToArray(),
+                        backgroundColor = "#066735"
+                    }
+                }
+            };
+        }
+        else if (Config.ChartType == "stackedBar" && !string.IsNullOrEmpty(Config.SecondaryDimension))
+        {
+            var secondaries = _allSales!
+                .Select(s => Config.SecondaryDimension == "Status" ? s.TransactionType : s.PropertyType)
+                .Distinct().Take(6).ToList();
+            var datasets = secondaries.Select((sec, i) => new
+            {
+                label = sec,
+                data = series.Select(sp =>
+                {
+                    var rowsInBucket = _allSales!.Where(r =>
+                    {
+                        var bucketMatch = Config.Dimension switch
+                        {
+                            "PropertyType" => r.PropertyType == sp.Label,
+                            "Status"       => r.TransactionType == sp.Label,
+                            "Developer"    => FauxDeveloper(r) == sp.Label,
+                            _              => r.AreaName == sp.Label
+                        };
+                        var secMatch = Config.SecondaryDimension == "Status"
+                            ? r.TransactionType == sec
+                            : r.PropertyType == sec;
+                        return bucketMatch && secMatch;
+                    });
+                    return Config.Metric switch
+                    {
+                        "Value" => (double)rowsInBucket.Sum(r => r.AmountAed),
+                        _       => rowsInBucket.Count()
+                    };
+                }).ToArray(),
+                backgroundColor = palette[i % palette.Length],
+                stack = "a"
+            }).ToArray<object>();
+            data = new { labels = series.Select(s => s.Label).ToArray(), datasets };
+        }
+        else
+        {
+            data = new
+            {
+                labels = series.Select(s => s.Label).ToArray(),
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = MetricLabel(),
+                        data = series.Select(s => (double)s.Value).ToArray(),
+                        backgroundColor = Config.ChartType == "line" || Config.ChartType == "area"
+                            ? "rgba(6,103,53,0.15)" : "#066735",
+                        borderColor = "#066735",
+                        fill = Config.ChartType == "area",
+                        tension = 0.3,
+                        borderRadius = 4
+                    }
+                }
+            };
+        }
+
+        var options = new Dictionary<string, object?>
+        {
+            ["responsive"] = true,
+            ["maintainAspectRatio"] = false,
+            ["indexAxis"] = Config.ChartType == "bar" && series.Count > 8 ? "y" : "x",
+            ["plugins"] = new
+            {
+                legend = new { display = Config.ChartType is "donut" or "stackedBar" }
+            }
+        };
+        if (Config.ChartType == "stackedBar")
+        {
+            options["scales"] = new
+            {
+                x = new { stacked = true },
+                y = new { stacked = true }
+            };
+        }
+
+        var config = new { type, data, options };
+        await JS.InvokeVoidAsync("iretpChart.render", "analyticsChart", config);
+    }
+
+    private string MetricLabel() => Config.Metric switch
+    {
+        "Value" => "Total Value (AED)",
+        "AvgPrice" => "Avg Price / sqft (AED)",
+        "MarketShare" => "Market Share %",
+        _ => "Transaction Count"
+    };
+
+    private string FormatMetric(decimal v) => Config.Metric switch
+    {
+        "Value"       => Currency.FormatExact(v),
+        "AvgPrice"    => Currency.FormatExact(v),
+        "MarketShare" => $"{v:N2}%",
+        _             => v.ToString("N0")
+    };
+
+    private string PrettyTitle() => $"{MetricLabel()} by {Config.Dimension}"
+        + (string.IsNullOrEmpty(Config.SecondaryDimension) ? "" : $" × {Config.SecondaryDimension}");
+
+    private static string ChartIcon(string t) => t switch
+    {
+        "bar" => "bi-bar-chart",
+        "stackedBar" => "bi-bar-chart-steps",
+        "line" => "bi-graph-up",
+        "area" => "bi-activity",
+        "scatter" => "bi-grid-3x3-gap",
+        "donut" => "bi-pie-chart",
+        "treemap" => "bi-grid-1x2",
+        "table" => "bi-table",
+        "kpi" => "bi-card-list",
+        _ => "bi-bar-chart"
+    };
+
+    private static string ChartLabel(string t) => t switch
+    {
+        "bar" => "Bar",
+        "stackedBar" => "Stacked",
+        "line" => "Line",
+        "area" => "Area",
+        "scatter" => "Scatter",
+        "donut" => "Donut",
+        "treemap" => "Treemap",
+        "table" => "Table",
+        "kpi" => "KPI",
+        _ => t
+    };
+
+    private async Task CopyShareLink()
+    {
+        var token = Saved.Encode(Config);
+        var url = Nav.ToAbsoluteUri($"/analytics/{token}").ToString();
+        await JS.InvokeVoidAsync("iretpDownload.copyToClipboard", url);
+    }
+
+    private async Task CopyEmbedLink()
+    {
+        var token = Saved.Encode(Config);
+        var url = Nav.ToAbsoluteUri($"/analytics/embed/{token}").ToString();
+        var snippet = $"<iframe src=\"{url}\" width=\"900\" height=\"480\" frameborder=\"0\" loading=\"lazy\"></iframe>";
+        await JS.InvokeVoidAsync("iretpDownload.copyToClipboard", snippet);
+    }
+
+    private bool _exporting;
+
+    /// <summary>
+    /// Build an AnalyticsQueryRequest from the current UI configuration and
+    /// stream the resulting file to the browser via a JS download helper.
+    /// Falls back gracefully if the backend is unreachable.
+    /// </summary>
+    private async Task DoExport(string format)
+    {
+        if (_exporting) return;
+        _exporting = true;
+        try
+        {
+            // Anonymous users must pass CAPTCHA (RFP 10.3). Authenticated
+            // investors are exempt and the gate returns true immediately.
+            if (!await CaptchaGate.EnsureVerifiedAsync()) return;
+
+            var request = new
+            {
+                dimensions = new[] { MapDimension(Config.Dimension) }
+                    .Concat(string.IsNullOrEmpty(Config.SecondaryDimension)
+                        ? Array.Empty<string>()
+                        : new[] { MapDimension(Config.SecondaryDimension) })
+                    .ToArray(),
+                metrics = new[] { MapMetric(Config.Metric) },
+                propertyTypes = string.IsNullOrEmpty(Config.PropertyTypeFilter)
+                    ? null
+                    : new[] { Config.PropertyTypeFilter },
+                chartType = MapChartType(Config.ChartType)
+            };
+
+            var result = await Api.ExportAnalyticsAsync(format, request);
+            if (result is null)
+            {
+                await JS.InvokeVoidAsync("alert",
+                    "Analytics export is unavailable — the backend API may not be reachable from this environment.");
+                return;
+            }
+
+            var base64 = Convert.ToBase64String(result.Value.Content);
+            await JS.InvokeVoidAsync("iretpDownload.fromBase64",
+                result.Value.FileName, result.Value.ContentType, base64);
+        }
+        finally
+        {
+            _exporting = false;
+        }
+    }
+
+    private static string MapDimension(string uiKey) => uiKey switch
+    {
+        "Status" => "ConstructionStatus",
+        _ => uiKey
+    };
+
+    private static string MapMetric(string uiKey) => uiKey switch
+    {
+        "Value" => "TotalValue",
+        "AvgPrice" => "AvgPricePerSqft",
+        "MarketShare" => "TransactionCount", // derived client-side; backend uses count basis
+        _ => "TransactionCount"
+    };
+
+    private static string? MapChartType(string uiKey) => uiKey switch
+    {
+        "bar" => "Bar",
+        "stackedBar" => "StackedBar",
+        "line" => "Line",
+        "area" => "Area",
+        "scatter" => "Scatter",
+        "donut" => "Donut",
+        "treemap" => "Treemap",
+        "table" => "DataTable",
+        "kpi" => "KpiSummary",
+        _ => null
+    };
+
+    private void OpenSaveDialog()
+    {
+        _saveName = $"{Config.Dimension} by {Config.Metric}";
+        _showSaveDialog = true;
+    }
+
+    private void DoSave()
+    {
+        Saved.Save(_saveName.Trim(), "investor", Config);
+        _showSaveDialog = false;
+    }
+
+    private void LoadSaved(SavedViewsService.SavedView v)
+    {
+        Config = v.Config.Clone();
+        Recalc();
+        StateHasChanged();
+    }
+
+    // -------------------------------------------------------------------
+    // Drag-and-drop reorder for saved views (RFP AN-003 — drag-drop grid).
+    // We track the dragged id in component state because HTML5 dataTransfer
+    // is not first-class in Blazor Server. ondragover preventDefault on the
+    // target is required for ondrop to fire.
+    // -------------------------------------------------------------------
+    private Guid? _draggingId;
+
+    private void OnDragStart(Guid id) => _draggingId = id;
+
+    private void OnDragEnter(Guid _)
+    {
+        // Visual feedback only — the highlight is driven by CSS class on
+        // the dragging card. Empty handler keeps Blazor wiring simple.
+    }
+
+    private void OnDrop(Guid targetId)
+    {
+        if (_draggingId.HasValue)
+        {
+            Saved.Reorder(_draggingId.Value, targetId);
+        }
+        _draggingId = null;
+    }
+
+    private void OnDragEnd() => _draggingId = null;
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("iretpChart.destroy", "analyticsChart"); } catch { }
+    }
+}
