@@ -9,6 +9,9 @@ agent.
 > Demo data is seeded in `Development`. No production credentials, no live
 > DLD integrations — replace connection strings and OIDC configuration
 > before any non-dev deployment.
+>
+> **Deploying?** See [`DEPLOYMENT.md`](DEPLOYMENT.md) — quick start, the
+> dev-vs-production settings matrix, and the required env-var overrides.
 
 ---
 
