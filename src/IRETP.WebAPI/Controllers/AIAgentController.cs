@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using IRETP.Application.Features.AIAgent.Commands;
+using IRETP.Application.Interfaces;
 using IRETP.Infrastructure.Services.Rag;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +13,13 @@ public class AIAgentController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IVectorStore _vectorStore;
+    private readonly IComplianceAsk _complianceAsk;
 
-    public AIAgentController(IMediator mediator, IVectorStore vectorStore)
+    public AIAgentController(IMediator mediator, IVectorStore vectorStore, IComplianceAsk complianceAsk)
     {
         _mediator = mediator;
         _vectorStore = vectorStore;
+        _complianceAsk = complianceAsk;
     }
 
     /// <summary>
@@ -35,6 +38,22 @@ public class AIAgentController : ControllerBase
         };
 
         var result = await _mediator.Send(command, ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Meta-Q&amp;A about the implementation itself: "how / why does the build
+    /// address requirement X". Grounded on the Compliance Matrix, not the DLD
+    /// data store — used by the evaluator-facing compliance search page.
+    /// </summary>
+    [HttpPost("compliance-ask")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ComplianceAsk([FromBody] ComplianceAskRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Question))
+            return BadRequest(new { message = "Provide a question" });
+
+        var result = await _complianceAsk.AskAsync(request.Question.Trim(), ct);
         return Ok(result);
     }
 
@@ -71,4 +90,9 @@ public class AIQueryRequest
     public string Query { get; set; } = default!;
     public string? Language { get; set; }
     public string? SessionId { get; set; }
+}
+
+public class ComplianceAskRequest
+{
+    public string Question { get; set; } = default!;
 }

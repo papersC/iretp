@@ -63,6 +63,10 @@ public static class DependencyInjection
         services.AddScoped<IUserConsent, Identity.UserConsentService>();
         services.AddScoped<IAiAccuracyHarness, AiAccuracyHarness>();
 
+        // Meta-Q&A over the Compliance Matrix ("how/why does the build address
+        // requirement X") — grounds on docs/COMPLIANCE_MATRIX.md, not DLD data.
+        services.AddScoped<IComplianceAsk, ComplianceAskService>();
+
         // Deterministic time-series analytics for the AI Agent's "deep
         // analysis" capability (RFP AI004). Singleton — pure functions,
         // no per-request state.
